@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">PrayerTimes</string>
+    <string name="app_name">KalkKıl</string>
+    <string name="widget_description">Bir sonraki ezan vaktini ve kalan süreyi gösterir</string>
 </resources>

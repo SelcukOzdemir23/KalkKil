@@ -1,0 +1,60 @@
+package com.prayertimes.widget
+
+import android.app.PendingIntent
+import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProvider
+import android.content.Context
+import android.content.Intent
+import android.widget.RemoteViews
+import com.prayertimes.MainActivity
+import com.prayertimes.R
+
+class PrayerWidgetProvider : AppWidgetProvider() {
+
+    companion object {
+        const val PREFS_NAME = "PrayerTimesWidgetPrefs"
+        const val KEY_NEXT_PRAYER_NAME = "next_prayer_name"
+        const val KEY_NEXT_PRAYER_TIME = "next_prayer_time"
+        const val KEY_COUNTDOWN = "countdown"
+        const val KEY_ALL_TIMES = "all_times"
+
+        fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val views = RemoteViews(context.packageName, R.layout.widget_prayer_times)
+
+            val allTimes = prefs.getString(KEY_ALL_TIMES, "") ?: ""
+            val countdown = prefs.getString(KEY_COUNTDOWN, "--:--") ?: "--:--"
+
+            views.setTextViewText(R.id.widget_all_times, allTimes)
+            views.setTextViewText(R.id.widget_countdown, countdown)
+
+            // Open app on click
+            val intent = Intent(context, MainActivity::class.java)
+            val pendingIntent = PendingIntent.getActivity(
+                context, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            views.setOnClickPendingIntent(R.id.widget_layout, pendingIntent)
+
+            appWidgetManager.updateAppWidget(appWidgetId, views)
+        }
+    }
+
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
+        for (appWidgetId in appWidgetIds) {
+            updateWidget(context, appWidgetManager, appWidgetId)
+        }
+    }
+
+    override fun onEnabled(context: Context) {
+        super.onEnabled(context)
+    }
+
+    override fun onDisabled(context: Context) {
+        super.onDisabled(context)
+    }
+}

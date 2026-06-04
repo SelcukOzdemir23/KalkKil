@@ -1,79 +1,141 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Ezan Vakti - Prayer Times
 
-# Getting Started
+Minimalist, ad-free prayer times app built with React Native. Shows daily prayer times based on your location, provides countdown to the next prayer, and includes an Android home screen widget.
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+## Features
 
-## Step 1: Start the Metro Server
+- **Daily Prayer Times**: Displays all 6 prayer times (Imsak, Gunes, Ogle, Ikindi, Aksam, Yatsi) calculated offline using the Diyanet (Turkey) method
+- **Countdown Timer**: Live countdown to the next prayer
+- **Notifications**: Optional local notifications 5 minutes before and at each prayer time
+- **Android Widget**: Home screen widget showing next prayer time and countdown
+- **Dark/Light Theme**: Follows system theme or manual selection
+- **Offline Support**: Prayer times are calculated locally using the `adhan` library - no internet required after initial setup
+- **Turkish Localization**: All UI text in Turkish
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+## Tech Stack
 
-To start Metro, run the following command from the _root_ of your React Native project:
+- **React Native** 0.76 with TypeScript
+- **adhan** - Offline prayer time calculation (Diyanet method)
+- **@notifee/react-native** - Local notifications
+- **@react-native-community/geolocation** - GPS location
+- **react-native-mmkv** - Fast local storage
+- **react-native-permissions** - Permission management
+- **@react-navigation** - Bottom tab navigation
+- **Native Kotlin** - Android widget (AppWidgetProvider)
 
-```bash
-# using npm
-npm start
+## Project Structure
 
-# OR using Yarn
-yarn start
+```
+src/
+  components/       UI components (CountdownTimer, PrayerCard, PrayerList)
+  context/          AppContext (theme, notifications, location state)
+  hooks/            Custom hooks (usePrayerTimes, useCountdown)
+  screens/          HomeScreen, SettingsScreen
+  services/         prayerTimes, location, notifications, storage, widget
+  theme/            Light/dark color definitions
+  utils/            Formatting utilities
+android/
+  app/src/main/java/com/prayertimes/
+    widget/         PrayerWidgetProvider (Kotlin)
+    bridge/         WidgetBridgeModule (React Native <-> Native)
 ```
 
-## Step 2: Start your Application
+## Getting Started
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
+### Prerequisites
 
-### For Android
+- Node.js >= 18
+- Android SDK (API 24+)
+- Xcode 14+ (for iOS)
+- CocoaPods (for iOS)
+
+### Install Dependencies
 
 ```bash
-# using npm
+npm install
+```
+
+### Run on Android
+
+```bash
 npm run android
-
-# OR using Yarn
-yarn android
 ```
 
-### For iOS
+### Run on iOS
 
 ```bash
-# using npm
+cd ios && pod install && cd ..
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+### Start Metro Bundler
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+```bash
+npm start
+```
 
-## Step 3: Modifying your App
+## Android Widget
 
-Now that you have successfully run the app, let's modify it.
+The app includes a home screen widget that shows:
+- Next prayer name and time
+- Live countdown
+- All daily prayer times in compact format
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+### Adding the Widget
 
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+1. Long-press on an empty area of your home screen
+2. Select "Widgets"
+3. Find "Ezan Vakti" widget
+4. Drag and drop to your home screen
 
-## Congratulations! :tada:
+The widget updates automatically when the app is opened. It also refreshes every 30 minutes via the system's AppWidgetProvider.
 
-You've successfully run and modified your React Native App. :partying_face:
+### Widget Architecture
 
-### Now what?
+- **PrayerWidgetProvider.kt** - Handles widget lifecycle (onUpdate, onEnabled)
+- **WidgetBridgeModule.kt** - React Native native module that writes prayer data to SharedPreferences and triggers widget updates
+- **widget_prayer_times.xml** - RemoteViews layout for the widget
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
+## Notifications
 
-# Troubleshooting
+When enabled (default: on), the app schedules local notifications:
+- 5 minutes before each prayer time
+- At the exact prayer time
 
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+Notifications can be toggled from the Settings screen.
 
-# Learn More
+## Prayer Time Calculation
 
-To learn more about React Native, take a look at the following resources:
+Prayer times are calculated using the `adhan` library with the **Turkey (Diyanet)** calculation method. This method uses:
+- Fajr angle: 18 degrees
+- Isha angle: 17 degrees
+- Asr: Standard (Shafi'i)
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+The app requires location permission to calculate times for your area. If permission is denied, you'll see an error message.
+
+## Known Limitations
+
+- iOS widget not implemented (MVP scope)
+- Manual city selection not yet available (GPS only)
+- Hijri calendar not yet supported
+- Only Turkish language
+
+## Build for Production
+
+### Android
+
+```bash
+cd android
+./gradlew assembleRelease
+```
+
+### iOS
+
+```bash
+cd ios
+xcodebuild -workspace PrayerTimes.xcworkspace -scheme PrayerTimes -configuration Release
+```
+
+## License
+
+MIT

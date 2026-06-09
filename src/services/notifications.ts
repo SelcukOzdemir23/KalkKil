@@ -1,5 +1,6 @@
 import notifee, {
   AndroidImportance,
+  AuthorizationStatus,
   TimestampTrigger,
   TriggerType,
 } from '@notifee/react-native';
@@ -95,10 +96,30 @@ export async function schedulePrayerNotifications(
   }
 }
 
+export async function sendTestNotification(): Promise<void> {
+  await notifee.displayNotification({
+    title: '🔔 KalkKıl Test',
+    body: 'Bildirimler sorunsuz çalışıyor! ✅',
+    android: {
+      channelId: CHANNEL_ID,
+      importance: AndroidImportance.HIGH,
+      pressAction: {id: 'default'},
+    },
+    ios: {
+      sound: 'default',
+      interruptionLevel: 'timeSensitive',
+    },
+  });
+}
+
 export async function requestNotificationPermission(): Promise<boolean> {
-  if (Platform.OS === 'ios') {
-    const settings = await notifee.requestPermission();
-    return settings.authorizationStatus >= 1;
-  }
-  return true;
+  const settings = await notifee.requestPermission();
+
+  // iOS: AUTHORIZED / PROVISIONAL
+  // Android 13+: AUTHORIZED when POST_NOTIFICATIONS is granted
+  // Android <=12: Notifee reports AUTHORIZED because runtime permission is not required
+  return (
+    settings.authorizationStatus === AuthorizationStatus.AUTHORIZED ||
+    settings.authorizationStatus === AuthorizationStatus.PROVISIONAL
+  );
 }

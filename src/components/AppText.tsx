@@ -2,20 +2,20 @@ import React from 'react';
 import {Text as RNText, TextProps, StyleSheet} from 'react-native';
 
 const FONT_MAP: Record<string, string> = {
-  '400': 'EBGaramond-Regular',
-  normal: 'EBGaramond-Regular',
-  '500': 'EBGaramond-Medium',
-  '600': 'EBGaramond-SemiBold',
-  '700': 'EBGaramond-Bold',
-  bold: 'EBGaramond-Bold',
-  '800': 'EBGaramond-Bold',
+  '400': 'Alegreya-Regular',
+  normal: 'Alegreya-Regular',
+  '500': 'Alegreya-Medium',
+  '600': 'Alegreya-SemiBold',
+  '700': 'Alegreya-Bold',
+  bold: 'Alegreya-Bold',
+  '800': 'Alegreya-Bold',
 };
 
 export function AppText({style, ...props}: TextProps) {
   const s = StyleSheet.flatten(style) || {};
 
   // Özel font (monospace gibi) kullanılıyorsa dokunma
-  if (s.fontFamily && !s.fontFamily.startsWith('EBGaramond')) {
+  if (s.fontFamily && !s.fontFamily.startsWith('Alegreya')) {
     return <RNText {...props} style={style} />;
   }
 

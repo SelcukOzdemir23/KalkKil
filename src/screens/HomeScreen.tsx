@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState, useCallback} from 'react';
-import {View, ActivityIndicator} from 'react-native';
+import {View, ActivityIndicator, ScrollView} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAppContext} from '../context/AppContext';
 import {usePrayerTimes} from '../hooks/usePrayerTimes';
@@ -10,84 +10,106 @@ import {GlassView} from '../components/GlassView';
 import {AlertModal} from '../components/AlertModal';
 import {AppText} from '../components/AppText';
 import {getGreeting} from '../utils/format';
-import {schedulePrayerNotifications, cancelAllNotifications} from '../services/notifications';
+import {schedulePrayerNotifications, cancelAllNotifications, requestNotificationPermission} from '../services/notifications';
 import {updateWidget} from '../services/widget';
-import {getCurrentLocation} from '../services/location';
-import {
-  saveLocation,
-  setLocationPermissionGranted,
-  getLocationPermissionGranted,
-  getLocation,
-  getPrayerMode,
-} from '../services/storage';
+import {getCurrentLocation, requestLocationPermission, checkLocationPermission} from '../services/location';
+import {saveLocation, setLocationPermissionGranted, getLocation, getPrayerMode} from '../services/storage';
+import {colors, radius} from '../theme/tokens';
 
 export function HomeScreen() {
-  const {notificationsEnabled, kerahatTimes, requestRefresh, prayerMode} = useAppContext();
+  const {notificationsEnabled, kerahatTimes, requestRefresh} = useAppContext();
   const insets = useSafeAreaInsets();
   const {entries, nextPrayer, dailyTimes, isLoading, error} = usePrayerTimes();
   const {countdown} = useCountdown(nextPrayer ? nextPrayer.time : null);
   const initDone = useRef(false);
   const prevNextPrayerName = useRef<string | null>(null);
   const [locationLoading, setLocationLoading] = useState(true);
-  const [locationInfo, setLocationInfo] = useState<{
-    type: 'gps';
-    label: string;
-  } | null>(null);
+  const [locationInfo, setLocationInfo] = useState<{type: 'gps'; label: string} | null>(null);
+  const [alertState, setAlertState] = useState<{visible: boolean; title: string; message: string; icon?: string}>({visible: false, title: '', message: ''});
 
-  // ── Alert state ──
-  const [alertState, setAlertState] = useState<{
-    visible: boolean;
-    title: string;
-    message: string;
-    icon?: string;
-  }>({visible: false, title: '', message: ''});
-
-  const showAlert = useCallback(
-    (title: string, message: string, icon?: string) => {
-      setAlertState({visible: true, title, message, icon});
-    },
-    [],
-  );
+  const showAlert = useCallback((title: string, message: string, icon?: string) => {
+    setAlertState({visible: true, title, message, icon});
+  }, []);
 
   const hideAlert = useCallback(() => {
     setAlertState(prev => ({...prev, visible: false}));
   }, []);
 
-  // ── Konum bilgisini güncelle: city varsa şehri, yoksa koordinatları göster ──
+  // ── İlk açılış: konum izni + GPS + bildirim izni ──
+  // Sonraki açılışlarda: sadece cache'teki konumu yükle, asla otomatik GPS yok
+  useEffect(() => {
+    const init = async () => {
+      // Cache'te kayıtlı konum varsa her açılışta hemen yükle
+      const cached = getLocation();
+      if (cached) {
+        setLocationInfo({type: 'gps', label: cached.city || 'Kayıtlı konum'});
+      }
+
+      // ── SADECE İLK AÇILIŞ: permission + GPS ──
+      if (!initDone.current) {
+        initDone.current = true;
+
+        const hasPerm = await checkLocationPermission();
+        if (!hasPerm) {
+          // İzin yoksa dialog göster, kullanıcı görsün
+          setLocationLoading(!cached); // Sadece cached yoksa loading göster
+          const granted = await requestLocationPermission();
+          if (granted && !cached) {
+            const result = await getCurrentLocation();
+            if (result.success) {
+              saveLocation(result.latitude, result.longitude);
+              setLocationPermissionGranted(true);
+              requestRefresh();
+              setLocationInfo({type: 'gps', label: 'GPS konumu'});
+            }
+          }
+        } else if (!cached) {
+          // İzin var ama cached konum yok → GPS dene
+          setLocationLoading(true);
+          const result = await getCurrentLocation();
+          if (result.success) {
+            saveLocation(result.latitude, result.longitude);
+              setLocationPermissionGranted(true);
+            requestRefresh();
+            setLocationInfo({type: 'gps', label: 'GPS konumu'});
+          }
+        }
+
+        // Bildirim iznini ilk açılışta bir kere iste
+        requestNotificationPermission().catch(() => {});
+      }
+
+      // Loading'i her durumda kapat (cache var veya yok)
+      setLocationLoading(false);
+    };
+
+    init();
+  }, []);
+
   useEffect(() => {
     const loc = getLocation();
     if (!loc) {
       setLocationInfo(null);
       return;
     }
-    const latStr = loc.latitude.toFixed(2);
-    const lngStr = loc.longitude.toFixed(2);
-    setLocationInfo({
-      type: 'gps',
-      label: loc.city || `${latStr}°K, ${lngStr}°D`,
-    });
+    setLocationInfo({type: 'gps', label: loc.city || 'Kayıtlı konum'});
   }, [entries]);
 
-  // ── Vakit girdi Alert + Namazdayım modu ──
   useEffect(() => {
     if (!nextPrayer) return;
-    if (
-      prevNextPrayerName.current !== null &&
-      prevNextPrayerName.current !== nextPrayer.name
-    ) {
+    if (prevNextPrayerName.current !== null && prevNextPrayerName.current !== nextPrayer.name) {
       const timeStr = `${nextPrayer.time.getHours().toString().padStart(2, '0')}:${nextPrayer.time.getMinutes().toString().padStart(2, '0')}`;
-      
+
       if (getPrayerMode()) {
-        // Namazdayım modu: bildirimleri 15dk ertele
         if (dailyTimes) schedulePrayerNotifications(dailyTimes, 15);
         showAlert(
-          `${nextPrayer.nameTr} vakti girdi!`,
+          `${nextPrayer.nameTr} vakti girdi`,
           `Namazdayım modu aktif. Bildirimler 15 dakika susturuldu.\n\n${nextPrayer.nameTr} - ${timeStr}`,
-          '🌙',
+          '☾',
         );
       } else {
         showAlert(
-          `${nextPrayer.nameTr} vakti girdi!`,
+          `${nextPrayer.nameTr} vakti girdi`,
           `Saat ${timeStr} itibarıyla ${nextPrayer.nameTr} vakti başladı.`,
           '🕌',
         );
@@ -96,49 +118,30 @@ export function HomeScreen() {
     prevNextPrayerName.current = nextPrayer.name;
   }, [nextPrayer, showAlert, dailyTimes]);
 
-  // ── Konum alma + bilgilendirme ──
-  useEffect(() => {
-    if (initDone.current) return;
-    initDone.current = true;
-
-    const initLocation = async () => {
-      setLocationLoading(true);
-
-      const result = await getCurrentLocation();
-      if (result.success) {
-        saveLocation(result.latitude, result.longitude);
-        setLocationPermissionGranted(true);
-        requestRefresh();
-        // Konum bulundu → bilgiyi güncelle
-        setLocationInfo({
-          type: 'gps',
-          label: 'GPS',
-        });
-        showAlert(
-          'Konum Alındı',
-          'Namaz vakitleri bulunduğunuz konuma göre hesaplanacaktır.',
-          '📍',
-        );
-      }
-      setLocationLoading(false);
-    };
-    initLocation();
-  }, [requestRefresh, showAlert]);
-
-  // ── Widget güncelleme ──
   useEffect(() => {
     if (entries.length > 0) {
       updateWidget(nextPrayer, countdown, entries);
     }
   }, [nextPrayer, countdown, entries]);
 
-  // ── Bildirimleri güncelle ──
   useEffect(() => {
-    if (dailyTimes && notificationsEnabled) {
-      schedulePrayerNotifications(dailyTimes);
-    } else if (!notificationsEnabled) {
-      cancelAllNotifications();
-    }
+    let cancelled = false;
+
+    const updateNotifications = async () => {
+      if (dailyTimes && notificationsEnabled) {
+        const granted = await requestNotificationPermission();
+        if (!cancelled && granted) {
+          await schedulePrayerNotifications(dailyTimes);
+        }
+      } else if (!notificationsEnabled) {
+        await cancelAllNotifications();
+      }
+    };
+
+    updateNotifications();
+    return () => {
+      cancelled = true;
+    };
   }, [dailyTimes, notificationsEnabled]);
 
   const activeKerahat = kerahatTimes.find(k => {
@@ -147,118 +150,131 @@ export function HomeScreen() {
   });
 
   const today = new Date();
-  const dateStr = today.toLocaleDateString('tr-TR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+  const dateStr = today.toLocaleDateString('tr-TR', {weekday: 'long', day: 'numeric', month: 'long'});
 
-  // ── Loading: konum alınırken ──
   if (locationLoading || isLoading) {
     return (
-      <View style={{flex: 1, backgroundColor: '#0A0E1A', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32}}>
-        <View style={{
-          width: 64,
-          height: 64,
-          borderRadius: 32,
-          backgroundColor: 'rgba(0, 212, 255, 0.08)',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 20,
-          borderWidth: 1,
-          borderColor: 'rgba(0, 212, 255, 0.15)',
-        }}>
-          <ActivityIndicator size="large" color="#00D4FF" />
+      <View style={{flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32}}>
+        <View
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 32,
+            backgroundColor: colors.accentSoft,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 20,
+            borderWidth: 1,
+            borderColor: colors.borderStrong,
+          }}>
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
-        <AppText style={{fontSize: 16, fontWeight: '600', color: '#FFFFFF', marginBottom: 6, textAlign: 'center'}}>
-          Konumunuz alınıyor
+        <AppText style={{fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 6, textAlign: 'center'}}>
+          Vakitler hazırlanıyor
         </AppText>
-        <AppText style={{fontSize: 12, color: 'rgba(255, 255, 255, 0.4)', textAlign: 'center', lineHeight: 18}}>
-          Namaz vakitlerini hesaplamak için konumunuzu belirliyoruz...
+        <AppText style={{fontSize: 13, color: colors.textMuted, textAlign: 'center', lineHeight: 20}}>
+          Konum ve namaz vakitleri kontrol ediliyor.
         </AppText>
       </View>
     );
   }
 
   return (
-    <View style={{flex: 1, backgroundColor: '#0A0E1A'}}>
-      <View
-        style={{
-          flex: 1,
-          paddingTop: insets.top + 12,
-          paddingBottom: insets.bottom + 90,
-          paddingHorizontal: 14,
-        }}>
+    <View style={{flex: 1, backgroundColor: colors.background}}>
+      <ScrollView
+        style={{flex: 1}}
+        contentContainerStyle={{paddingTop: insets.top + 16, paddingBottom: insets.bottom + 106, paddingHorizontal: 16}}
+        showsVerticalScrollIndicator={false}>
+        <View
+          style={{
+            position: 'absolute',
+            top: -120,
+            right: -100,
+            width: 240,
+            height: 240,
+            borderRadius: 120,
+            backgroundColor: colors.greenSoft,
+          }}
+        />
 
-        {/* Header */}
-        <View style={{marginBottom: 12}}>
-          <View style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
-            <AppText style={{fontSize: 11, fontWeight: '600', color: 'rgba(0, 212, 255, 0.5)', textTransform: 'uppercase', letterSpacing: 2}}>
-              {dateStr.toUpperCase()}
-            </AppText>
-            {/* Location badge */}
+        <View style={{marginBottom: 18}}>
+          <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12}}>
+            <View style={{flex: 1}}>
+              <AppText style={{fontSize: 13, color: colors.accentMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5}}>
+                {dateStr}
+              </AppText>
+              <AppText style={{fontSize: 34, fontWeight: '700', color: colors.text, marginTop: 2}}>
+                {getGreeting()}
+              </AppText>
+            </View>
             {locationInfo && (
-              <View style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 3,
-                backgroundColor: 'rgba(0, 212, 255, 0.06)',
-                borderRadius: 8,
-                paddingHorizontal: 7,
-                paddingVertical: 3,
-              }}>
-                <AppText style={{fontSize: 9}}>📍</AppText>
-                <AppText style={{fontSize: 9, color: 'rgba(0, 212, 255, 0.7)', fontWeight: '500'}}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  backgroundColor: colors.surfaceMuted,
+                  borderRadius: radius.pill,
+                  paddingHorizontal: 12,
+                  paddingVertical: 7,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  maxWidth: 150,
+                }}>
+                <AppText style={{fontSize: 12}}>📍</AppText>
+                <AppText style={{fontSize: 12, color: colors.textMuted, fontWeight: '600'}} numberOfLines={1}>
                   {locationInfo.label}
                 </AppText>
               </View>
             )}
           </View>
-          <AppText style={{fontSize: 26, fontWeight: '700', color: '#FFFFFF', marginTop: 2, marginBottom: 8}}>
-            {getGreeting()}
-          </AppText>
         </View>
 
-        {/* Active kerahat banner */}
         {activeKerahat && !error && (
-          <GlassView intensity="heavy" style={{marginBottom: 10, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255, 107, 53, 0.2)', paddingHorizontal: 12, paddingVertical: 8}}>
+          <GlassView
+            intensity="heavy"
+            style={{
+              marginBottom: 12,
+              borderRadius: radius.md,
+              overflow: 'hidden',
+              borderWidth: 1,
+              borderColor: 'rgba(217, 135, 95, 0.24)',
+              paddingHorizontal: 14,
+              paddingVertical: 10,
+            }}>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-              <AppText style={{fontSize: 12}}>⚠️</AppText>
-              <AppText style={{fontSize: 11, fontWeight: '600', color: '#FF6B35', flex: 1}}>
+              <AppText style={{fontSize: 13}}>⚠️</AppText>
+              <AppText style={{fontSize: 13, fontWeight: '600', color: colors.danger, flex: 1}}>
                 Kerâhet vakti — {activeKerahat.label.toLowerCase()}
               </AppText>
             </View>
           </GlassView>
         )}
 
-        {/* Error banner */}
         {error ? (
-          <GlassView intensity="heavy" style={{marginBottom: 10, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255, 179, 71, 0.2)', paddingHorizontal: 12, paddingVertical: 10}}>
-            <AppText style={{fontSize: 12, fontWeight: '500', color: '#FFB347'}}>{error}</AppText>
+          <GlassView
+            intensity="heavy"
+            style={{
+              marginBottom: 12,
+              borderRadius: radius.md,
+              overflow: 'hidden',
+              borderWidth: 1,
+              borderColor: 'rgba(217, 135, 95, 0.24)',
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+            }}>
+            <AppText style={{fontSize: 13, fontWeight: '600', color: colors.danger}}>{error}</AppText>
           </GlassView>
         ) : null}
 
-        {/* Countdown - full size */}
-        <View style={{marginBottom: 14}}>
-          <CountdownTimer
-            nextPrayer={nextPrayer}
-            kerahatActive={!!activeKerahat}
-            kerahatLabel={activeKerahat?.label}
-          />
+        <View style={{marginBottom: 18}}>
+          <CountdownTimer nextPrayer={nextPrayer} kerahatActive={!!activeKerahat} kerahatLabel={activeKerahat?.label} />
         </View>
 
-        {/* Prayer List - 2x3 grid */}
         <PrayerList entries={entries} nextPrayer={nextPrayer} />
-      </View>
+      </ScrollView>
 
-      {/* Custom Alert Modal */}
-      <AlertModal
-        visible={alertState.visible}
-        title={alertState.title}
-        message={alertState.message}
-        icon={alertState.icon}
-        onClose={hideAlert}
-      />
+      <AlertModal visible={alertState.visible} title={alertState.title} message={alertState.message} icon={alertState.icon} onClose={hideAlert} />
     </View>
   );
 }

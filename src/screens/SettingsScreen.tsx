@@ -6,14 +6,16 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAppContext} from '../context/AppContext';
 import {GlassView} from '../components/GlassView';
 import {getCurrentLocation} from '../services/location';
+import {requestNotificationPermission, sendTestNotification} from '../services/notifications';
 import {saveLocation, setLocationPermissionGranted} from '../services/storage';
 import {Navigation, Bell, BellOff, Clock, Sunrise, Moon} from 'lucide-react-native';
+import {colors, radius, shadows} from '../theme/tokens';
 
 const TIMING_OPTIONS = [
   {label: 'Vaktinde', value: 0},
-  {label: '5dk', value: 5},
-  {label: '15dk', value: 15},
-  {label: '30dk', value: 30},
+  {label: '5 dk', value: 5},
+  {label: '15 dk', value: 15},
+  {label: '30 dk', value: 30},
 ];
 
 const PRAYERS = [
@@ -27,7 +29,17 @@ const PRAYERS = [
 
 function GlassCard({children}: {children: React.ReactNode}) {
   return (
-    <GlassView intensity="medium" style={{borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.06)', marginBottom: 16, padding: 20}}>
+    <GlassView
+      intensity="medium"
+      style={{
+        borderRadius: radius.xl,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: colors.border,
+        marginBottom: 18,
+        padding: 18,
+        ...shadows.subtle,
+      }}>
       {children}
     </GlassView>
   );
@@ -35,9 +47,25 @@ function GlassCard({children}: {children: React.ReactNode}) {
 
 function SectionTitle({text}: {text: string}) {
   return (
-    <AppText style={{fontSize: 11, fontWeight: '700', color: 'rgba(0, 212, 255, 0.5)', textTransform: 'uppercase', letterSpacing: 2.5, marginBottom: 10, marginTop: 4}}>
+    <AppText style={{fontSize: 12, fontWeight: '700', color: colors.textSubtle, textTransform: 'uppercase', letterSpacing: 1.8, marginBottom: 10, marginTop: 2}}>
       {text}
     </AppText>
+  );
+}
+
+function RowIcon({children, active = true}: {children: React.ReactNode; active?: boolean}) {
+  return (
+    <View
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: 14,
+        backgroundColor: active ? colors.accentSoft : 'rgba(244, 241, 234, 0.06)',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+      {children}
+    </View>
   );
 }
 
@@ -62,150 +90,267 @@ export function SettingsScreen() {
       saveLocation(result.latitude, result.longitude);
       setLocationPermissionGranted(true);
       requestRefresh();
-      showAlert('Konum Güncellendi', 'Vakitler bulunduğunuz konuma göre hesaplanacaktır.', '📍');
+      showAlert('Konum Güncellendi', 'Vakitler kayıtlı konuma göre yeniden hesaplanacaktır.', '📍');
     } else {
       showAlert('Konum Alınamadı', result.error, '⚠️');
     }
     setLocationLoading(false);
   }, [requestRefresh, showAlert]);
 
-  const accent = '#00D4FF';
+  const handleToggleNotifications = useCallback(async () => {
+    if (!notificationsEnabled) {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        showAlert(
+          'Bildirim İzni Gerekli',
+          'Ezan bildirimlerini alabilmek için bildirim iznini vermelisiniz. İzni daha önce reddettiyseniz telefon ayarlarından tekrar açabilirsiniz.',
+          '🔔',
+        );
+        return;
+      }
+    }
+    toggleNotifications();
+  }, [notificationsEnabled, showAlert, toggleNotifications]);
 
   return (
     <>
-    <ScrollView style={{flex: 1, backgroundColor: '#0A0E1A'}}
-      contentContainerStyle={{paddingTop: insets.top + 20, paddingBottom: insets.bottom + 100, paddingHorizontal: 16}}
-      showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{flex: 1, backgroundColor: colors.background}}
+        contentContainerStyle={{paddingTop: insets.top + 20, paddingBottom: insets.bottom + 106, paddingHorizontal: 16}}
+        showsVerticalScrollIndicator={false}>
+        <View
+          style={{
+            position: 'absolute',
+            top: -100,
+            right: -120,
+            width: 240,
+            height: 240,
+            borderRadius: 120,
+            backgroundColor: colors.accentSoft,
+          }}
+        />
 
-      <AppText style={{fontSize: 28, fontWeight: '700', color: '#FFFFFF', marginBottom: 4}}>Ayarlar</AppText>
-      <AppText style={{fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 24}}>KalkKıl v1.0.0</AppText>
+        <AppText style={{fontSize: 36, fontWeight: '700', color: colors.text, marginBottom: 2}}>Ayarlar</AppText>
+        <AppText style={{fontSize: 13, color: colors.textSubtle, marginBottom: 26}}>KalkKıl deneyimini sade şekilde düzenleyin</AppText>
 
-      {/* LOCATION */}
-      <SectionTitle text="KONUM" />
-      <GlassCard>
-        <AppText style={{fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 12, lineHeight: 18}}>
-          Uygulama, namaz vakitlerini bulunduğunuz konuma göre otomatik hesaplar.
-        </AppText>
-
-        {/* Refresh location button */}
-        <Pressable
-          onPress={handleRefreshLocation}
-          disabled={locationLoading}
-          style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(0, 212, 255, 0.1)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(0, 212, 255, 0.15)', paddingVertical: 14}}>
-          {locationLoading ? (
-            <ActivityIndicator size="small" color={accent} />
-          ) : (
-            <Navigation size={16} color={accent} />
-          )}
-          <AppText style={{fontSize: 14, fontWeight: '600', color: locationLoading ? 'rgba(255,255,255,0.3)' : accent}}>
-            {locationLoading ? 'Konum alınıyor...' : 'GPS ile Konum Al'}
-          </AppText>
-        </Pressable>
-      </GlassCard>
-
-      {/* PRAYER MODE */}
-      <SectionTitle text="NAMAZ MODU" />
-      <GlassCard>
-        <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8}}>
-          <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1}}>
-            <View style={{width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(0, 212, 255, 0.08)', alignItems: 'center', justifyContent: 'center'}}>
-              <Moon size={16} color={prayerMode ? accent : 'rgba(255,255,255,0.3)'} />
-            </View>
-            <View>
-              <AppText style={{fontSize: 14, fontWeight: '500', color: '#FFFFFF'}}>Namazdayım Modu</AppText>
-              <AppText style={{fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 1, maxWidth: 200}}>
-                Vakit girdiğinde bildirimleri 15 dk susturur
+        <SectionTitle text="Konum" />
+        <GlassCard>
+          <View style={{flexDirection: 'row', gap: 12, alignItems: 'center', marginBottom: 14}}>
+            <RowIcon>
+              <Navigation size={18} color={colors.accent} />
+            </RowIcon>
+            <View style={{flex: 1}}>
+              <AppText style={{fontSize: 16, fontWeight: '700', color: colors.text}}>Kayıtlı konum</AppText>
+              <AppText style={{fontSize: 13, color: colors.textMuted, lineHeight: 19, marginTop: 2}}>
+                Uygulama her açılışta GPS aramaz; kayıtlı konumla vakitleri hesaplar.
               </AppText>
             </View>
           </View>
-          <Switch value={prayerMode} onValueChange={togglePrayerMode} trackColor={{false: 'rgba(255,255,255,0.1)', true: `${accent}50`}} thumbColor={prayerMode ? accent : 'rgba(255,255,255,0.3)'} />
-        </View>
-      </GlassCard>
 
-      {/* NOTIFICATIONS */}
-      <SectionTitle text="BİLDİRİMLER" />
-      <GlassCard>
-        <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8}}>
-          <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1}}>
-            <View style={{width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(0, 212, 255, 0.08)', alignItems: 'center', justifyContent: 'center'}}>
-              {notificationsEnabled ? <Bell size={16} color={accent} /> : <BellOff size={16} color="rgba(255,255,255,0.3)" />}
+          <Pressable
+            onPress={handleRefreshLocation}
+            disabled={locationLoading}
+            style={({pressed}) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              backgroundColor: pressed ? colors.surfaceMuted : 'transparent',
+              borderRadius: radius.md,
+              borderWidth: 1,
+              borderColor: colors.borderStrong,
+              paddingVertical: 13,
+              opacity: locationLoading ? 0.6 : 1,
+            })}>
+            {locationLoading ? (
+              <ActivityIndicator size="small" color={colors.accent} />
+            ) : (
+              <Navigation size={16} color={colors.accent} />
+            )}
+            <AppText style={{fontSize: 15, fontWeight: '600', color: locationLoading ? colors.textMuted : colors.accent}}>
+              {locationLoading ? 'Konum alınıyor…' : 'Konumu yenile'}
+            </AppText>
+          </Pressable>
+        </GlassCard>
+
+        <SectionTitle text="Namaz Modu" />
+        <GlassCard>
+          <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+            <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1}}>
+              <RowIcon active={prayerMode}>
+                <Moon size={18} color={prayerMode ? colors.accent : colors.textSubtle} />
+              </RowIcon>
+              <View style={{flex: 1}}>
+                <AppText style={{fontSize: 16, fontWeight: '700', color: colors.text}}>Namazdayım Modu</AppText>
+                <AppText style={{fontSize: 13, color: colors.textMuted, lineHeight: 18, marginTop: 2}}>
+                  Vakit girdiğinde bildirimleri kısa süre susturur.
+                </AppText>
+              </View>
             </View>
-            <View>
-              <AppText style={{fontSize: 14, fontWeight: '500', color: '#FFFFFF'}}>Ezan Bildirimleri</AppText>
-              <AppText style={{fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 1}}>Tüm bildirimleri aç/kapa</AppText>
-            </View>
+            <Switch value={prayerMode} onValueChange={togglePrayerMode} trackColor={{false: 'rgba(244,241,234,0.12)', true: colors.accentSoft}} thumbColor={prayerMode ? colors.accent : 'rgba(244,241,234,0.45)'} />
           </View>
-          <Switch value={notificationsEnabled} onValueChange={toggleNotifications} trackColor={{false: 'rgba(255,255,255,0.1)', true: `${accent}50`}} thumbColor={notificationsEnabled ? accent : 'rgba(255,255,255,0.3)'} />
-        </View>
+        </GlassCard>
 
-        {notificationsEnabled && (
-          <>
-            <AppText style={{fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: 2, marginTop: 16, marginBottom: 8}}>Vakit Bazında</AppText>
-            {PRAYERS.map(prayer => (
-              <View key={prayer.name} style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)'}}>
-                <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1}}>
-                  <View style={{width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(0, 212, 255, 0.08)', alignItems: 'center', justifyContent: 'center'}}>
-                    <Sunrise size={14} color={prayerNotifications[prayer.name as keyof typeof prayerNotifications] ? accent : 'rgba(255,255,255,0.2)'} />
-                  </View>
-                  <AppText style={{fontSize: 14, fontWeight: '500', color: '#FFFFFF'}}>{prayer.label}</AppText>
-                </View>
-                <Switch value={prayerNotifications[prayer.name as keyof typeof prayerNotifications]} onValueChange={v => setPrayerNotification(prayer.name, v)} trackColor={{false: 'rgba(255,255,255,0.1)', true: `${accent}50`}} thumbColor={prayerNotifications[prayer.name as keyof typeof prayerNotifications] ? accent : 'rgba(255,255,255,0.3)'} />
+        <SectionTitle text="Bildirimler" />
+        <GlassCard>
+          <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: notificationsEnabled ? 18 : 0}}>
+            <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1}}>
+              <RowIcon active={notificationsEnabled}>
+                {notificationsEnabled ? <Bell size={18} color={colors.accent} /> : <BellOff size={18} color={colors.textSubtle} />}
+              </RowIcon>
+              <View style={{flex: 1}}>
+                <AppText style={{fontSize: 16, fontWeight: '700', color: colors.text}}>Vakit bildirimleri</AppText>
+                <AppText style={{fontSize: 13, color: colors.textMuted, marginTop: 2}}>Tüm bildirimleri aç veya kapat.</AppText>
               </View>
-            ))}
+            </View>
+            <Switch value={notificationsEnabled} onValueChange={handleToggleNotifications} trackColor={{false: 'rgba(244,241,234,0.12)', true: colors.accentSoft}} thumbColor={notificationsEnabled ? colors.accent : 'rgba(244,241,234,0.45)'} />
+          </View>
 
-            {/* Timing presets */}
-            <View style={{paddingVertical: 12, marginTop: 4}}>
-              <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10}}>
-                <View style={{width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(0, 212, 255, 0.08)', alignItems: 'center', justifyContent: 'center'}}>
-                  <Clock size={16} color={accent} />
-                </View>
+          {notificationsEnabled && (
+            <>
+              <View style={{height: 1, backgroundColor: colors.border, marginBottom: 14}} />
+
+              <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12}}>
+                <RowIcon>
+                  <Clock size={18} color={colors.accent} />
+                </RowIcon>
                 <View>
-                  <AppText style={{fontSize: 14, fontWeight: '500', color: '#FFFFFF'}}>Bildirim Zamanı</AppText>
-                  <AppText style={{fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 1}}>Vakit girmeden ne kadar önce?</AppText>
+                  <AppText style={{fontSize: 16, fontWeight: '700', color: colors.text}}>Bildirim zamanı</AppText>
+                  <AppText style={{fontSize: 13, color: colors.textMuted, marginTop: 2}}>Vakit girmeden ne kadar önce?</AppText>
                 </View>
               </View>
-              <View style={{flexDirection: 'row', gap: 8}}>
+
+              {/* Vakit seçimi — radio listesi */}
+              <View style={{gap: 6, marginBottom: 20}}>
                 {TIMING_OPTIONS.map(opt => {
                   const isActive = notificationTiming === opt.value;
                   return (
                     <Pressable
                       key={opt.value}
                       onPress={() => setNotificationTiming(opt.value)}
-                      style={{
-                        flex: 1,
-                        paddingVertical: 10,
-                        borderRadius: 12,
+                      style={({pressed}) => ({
+                        flexDirection: 'row',
                         alignItems: 'center',
-                        backgroundColor: isActive ? accent : 'rgba(255,255,255,0.04)',
+                        gap: 12,
+                        paddingVertical: 12,
+                        paddingHorizontal: 14,
+                        borderRadius: radius.sm,
+                        backgroundColor: isActive
+                          ? colors.accentSoft
+                          : pressed
+                            ? colors.surfaceMuted
+                            : 'transparent',
                         borderWidth: 1,
-                        borderColor: isActive ? accent : 'rgba(255,255,255,0.06)',
-                      }}>
-                      <AppText style={{fontSize: 12, fontWeight: '600', color: isActive ? '#000' : 'rgba(255,255,255,0.6)'}}>
-                        {opt.label}
-                      </AppText>
+                        borderColor: isActive ? colors.borderStrong : 'transparent',
+                      })}>
+                      {/* Radio indicator */}
+                      <View
+                        style={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: 10,
+                          borderWidth: 2,
+                          borderColor: isActive ? colors.accent : colors.textSubtle,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                        {isActive && (
+                          <View
+                            style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: 5,
+                              backgroundColor: colors.accent,
+                            }}
+                          />
+                        )}
+                      </View>
+                      {/* Label + description */}
+                      <View style={{flex: 1}}>
+                        <AppText
+                          style={{
+                            fontSize: 15,
+                            fontWeight: '600',
+                            color: isActive ? colors.accent : colors.text,
+                          }}>
+                          {opt.label}
+                        </AppText>
+                        <AppText
+                          style={{
+                            fontSize: 11,
+                            color: colors.textSubtle,
+                            marginTop: 1,
+                          }}>
+                          {opt.value === 0
+                            ? 'Bildirim vakit girdiğinde gönderilir'
+                            : `Vakit girmeden ${opt.value} dakika önce bildirim gelir`}
+                        </AppText>
+                      </View>
                     </Pressable>
                   );
                 })}
               </View>
-            </View>
-          </>
-        )}
-      </GlassCard>
 
-      {/* APP INFO */}
-      <View style={{alignItems: 'center', paddingTop: 8}}>
-        <AppText style={{fontSize: 11, color: 'rgba(255, 255, 255, 0.2)', textAlign: 'center'}}>
-          Diyanet İşleri Başkanlığı metodu
-        </AppText>
-      </View>
-    </ScrollView>
-      <AlertModal
-        visible={alertState.visible}
-        title={alertState.title}
-        message={alertState.message}
-        icon={alertState.icon}
-        onClose={hideAlert}
-      />
+              <AppText style={{fontSize: 12, fontWeight: '700', color: colors.textSubtle, textTransform: 'uppercase', letterSpacing: 1.6, marginBottom: 8}}>Vakit bazında</AppText>
+              {PRAYERS.map(prayer => {
+                const enabled = prayerNotifications[prayer.name as keyof typeof prayerNotifications];
+                return (
+                  <View key={prayer.name} style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 9, borderTopWidth: 1, borderTopColor: colors.border}}>
+                    <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1}}>
+                      <RowIcon active={enabled}>
+                        <Sunrise size={16} color={enabled ? colors.accent : colors.textSubtle} />
+                      </RowIcon>
+                      <AppText style={{fontSize: 15, fontWeight: '600', color: colors.text}}>{prayer.label}</AppText>
+                    </View>
+                    <Switch value={enabled} onValueChange={v => setPrayerNotification(prayer.name, v)} trackColor={{false: 'rgba(244,241,234,0.12)', true: colors.accentSoft}} thumbColor={enabled ? colors.accent : 'rgba(244,241,234,0.45)'} />
+                  </View>
+                );
+              })}
+            </>
+          )}
+        </GlassCard>
+
+        <SectionTitle text="Test" />
+        <GlassCard>
+          <Pressable
+            onPress={async () => {
+              const granted = await requestNotificationPermission();
+              if (!granted) {
+                showAlert(
+                  'Bildirim İzni Gerekli',
+                  'Test bildirimi gönderebilmek için bildirim iznini vermelisiniz.',
+                  '🔔',
+                );
+                return;
+              }
+              await sendTestNotification();
+              showAlert('Bildirim Gönderildi', 'Bir test bildirimi gönderildi. Bildirim çekmecesini kontrol edin.', '✅');
+            }}
+            style={({pressed}) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              backgroundColor: pressed ? colors.accentSoft : 'transparent',
+              borderRadius: radius.md,
+              borderWidth: 1,
+              borderColor: colors.borderStrong,
+              paddingVertical: 13,
+            })}>
+            <Bell size={16} color={colors.accent} />
+            <AppText style={{fontSize: 15, fontWeight: '600', color: colors.accent}}>
+              Test bildirimi gönder
+            </AppText>
+          </Pressable>
+        </GlassCard>
+
+        <View style={{alignItems: 'center', paddingTop: 6, paddingBottom: 12}}>
+          <AppText style={{fontSize: 12, color: colors.textSubtle, textAlign: 'center'}}>
+            Reklamsız · Diyanet İşleri Başkanlığı metodu
+          </AppText>
+        </View>
+      </ScrollView>
+      <AlertModal visible={alertState.visible} title={alertState.title} message={alertState.message} icon={alertState.icon} onClose={hideAlert} />
     </>
   );
 }

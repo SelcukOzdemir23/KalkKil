@@ -1,4 +1,4 @@
-package com.prayertimes.bridge
+package com.kalkkil.bridge
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -6,7 +6,7 @@ import android.content.Context
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
-import com.prayertimes.widget.PrayerWidgetProvider
+import com.kalkkil.widget.PrayerWidgetProvider
 
 class WidgetBridgeModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {

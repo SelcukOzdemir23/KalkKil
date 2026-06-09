@@ -5,6 +5,7 @@ import {GlassView} from './GlassView';
 import {useCountdown} from '../hooks/useCountdown';
 import {PrayerTimeEntry} from '../services/prayerTimes';
 import {formatTime} from '../utils/format';
+import {colors, radius, shadows} from '../theme/tokens';
 
 interface CountdownTimerProps {
   nextPrayer: PrayerTimeEntry | null;
@@ -12,64 +13,123 @@ interface CountdownTimerProps {
   kerahatLabel?: string;
 }
 
+function humanizeCountdown(countdown: string): string {
+  const [hoursRaw, minutesRaw] = countdown.split(':');
+  const hours = Number(hoursRaw);
+  const minutes = Number(minutesRaw);
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return countdown;
+  }
+
+  if (hours <= 0 && minutes <= 0) {
+    return 'Vakit girmek üzere';
+  }
+
+  if (hours <= 0) {
+    return `${minutes} dk kaldı`;
+  }
+
+  return `${hours} sa ${minutes} dk kaldı`;
+}
+
 export function CountdownTimer({nextPrayer, kerahatActive, kerahatLabel}: CountdownTimerProps) {
   const {countdown} = useCountdown(nextPrayer ? nextPrayer.time : null);
 
   if (!nextPrayer) {
     return (
-      <GlassView intensity="medium" style={{borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)', padding: 28, alignItems: 'center'}}>
-          <AppText style={{fontSize: 24, color: 'rgba(255, 255, 255, 0.5)'}}>🌙</AppText>
-          <AppText style={{fontSize: 15, fontWeight: '600', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center', marginTop: 10}}>
-            Bugünün tüm vakitleri geçmiştir
-          </AppText>
+      <GlassView
+        intensity="medium"
+        style={{
+          borderRadius: radius.xl,
+          overflow: 'hidden',
+          borderWidth: 1,
+          borderColor: colors.border,
+          padding: 28,
+          alignItems: 'center',
+          ...shadows.subtle,
+        }}>
+        <AppText style={{fontSize: 26, color: colors.accent}}>☾</AppText>
+        <AppText style={{fontSize: 17, fontWeight: '600', color: colors.text, textAlign: 'center', marginTop: 10}}>
+          Bugünün tüm vakitleri geçmiştir
+        </AppText>
+        <AppText style={{fontSize: 13, color: colors.textMuted, textAlign: 'center', marginTop: 4}}>
+          Yeni günün vakitleri otomatik yenilenecek.
+        </AppText>
       </GlassView>
     );
   }
 
   const isKerahat = !!kerahatActive;
-  const accentColor = isKerahat ? '#FF6B35' : '#00D4FF';
+  const accentColor = isKerahat ? colors.danger : colors.accent;
 
   return (
-    <GlassView intensity="medium" style={{borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: `${accentColor}30`, paddingVertical: 22, paddingHorizontal: 20}}>
-      
-      {/* Neon glow */}
-      <View style={{position: 'absolute', top: -60, right: -60, width: 160, height: 160, borderRadius: 80, backgroundColor: `${accentColor}06`}} />
+    <GlassView
+      intensity="medium"
+      style={{
+        borderRadius: radius.xl,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: isKerahat ? 'rgba(217, 135, 95, 0.30)' : colors.borderStrong,
+        paddingVertical: 24,
+        paddingHorizontal: 22,
+        ...shadows.card,
+      }}>
+      <View
+        style={{
+          position: 'absolute',
+          top: -70,
+          right: -72,
+          width: 172,
+          height: 172,
+          borderRadius: 86,
+          backgroundColor: isKerahat ? colors.dangerSoft : colors.accentSoft,
+        }}
+      />
 
-      {/* Kerahat warning */}
       {isKerahat && (
-        <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255, 107, 53, 0.1)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7, marginBottom: 12}}>
-          <AppText style={{fontSize: 13}}>⚠️</AppText>
-          <AppText style={{fontSize: 12, fontWeight: '500', color: '#FF6B35', flex: 1}}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            backgroundColor: colors.dangerSoft,
+            borderRadius: radius.md,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            marginBottom: 16,
+            borderWidth: 1,
+            borderColor: 'rgba(217, 135, 95, 0.22)',
+          }}>
+          <AppText style={{fontSize: 14}}>⚠️</AppText>
+          <AppText style={{fontSize: 13, fontWeight: '600', color: colors.danger, flex: 1}}>
             Kerâhet vakti — {kerahatLabel}
           </AppText>
         </View>
       )}
 
-      {/* ÜST: SIRADAKİ VAKİT */}
-      <View style={{alignItems: 'center', marginBottom: 16}}>
-        <AppText style={{fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 3, color: `${accentColor}99`}}>
-          {isKerahat ? 'UYARI' : 'SIRADAKİ VAKİT'}
+      <View style={{alignItems: 'center'}}>
+        <AppText style={{fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 2.2, color: isKerahat ? colors.danger : colors.accentMuted}}>
+          {isKerahat ? 'Dikkat' : 'Sıradaki Vakit'}
         </AppText>
-        <AppText style={{fontSize: 32, fontWeight: '700', color: '#FFFFFF', marginTop: 4}}>
+        <AppText style={{fontSize: 42, fontWeight: '700', color: colors.text, marginTop: 6, textAlign: 'center'}}>
           {nextPrayer.nameTr}
         </AppText>
-        <AppText style={{fontSize: 17, fontWeight: '500', color: 'rgba(255, 255, 255, 0.5)', marginTop: 2}}>
+        <AppText style={{fontSize: 20, fontWeight: '600', color: colors.textMuted, marginTop: 2, fontVariant: ['tabular-nums']}}>
           {formatTime(nextPrayer.time)}
         </AppText>
       </View>
 
-      {/* Ayırıcı çizgi */}
-      <View style={{height: 1, backgroundColor: `${accentColor}15`, marginBottom: 14}} />
+      <View style={{height: 1, backgroundColor: isKerahat ? 'rgba(217, 135, 95, 0.16)' : 'rgba(214, 180, 106, 0.16)', marginVertical: 18}} />
 
-      {/* ALT: KALAN SÜRE */}
       <View style={{alignItems: 'center'}}>
-        <AppText style={{fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(255, 255, 255, 0.3)'}}>
-          KALAN SÜRE
-        </AppText>
         <AppText
-          style={{fontSize: 48, fontWeight: '200', letterSpacing: 10, color: accentColor, marginTop: 4, fontVariant: ['tabular-nums']}}
+          style={{fontSize: 28, fontWeight: '700', color: accentColor, fontVariant: ['tabular-nums'], textAlign: 'center'}}
           accessibilityLabel={`Kalan süre: ${countdown}`}
           accessibilityLiveRegion="polite">
+          {humanizeCountdown(countdown)}
+        </AppText>
+        <AppText style={{fontSize: 12, color: colors.textSubtle, marginTop: 5, fontVariant: ['tabular-nums']}}>
           {countdown}
         </AppText>
       </View>

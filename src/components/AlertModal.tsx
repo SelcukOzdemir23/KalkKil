@@ -2,6 +2,7 @@ import React, {useEffect, useRef} from 'react';
 import {Modal, View, Pressable, Animated} from 'react-native';
 import {AppText} from './AppText';
 import {GlassView} from './GlassView';
+import {colors, radius, shadows} from '../theme/tokens';
 
 interface AlertModalProps {
   visible: boolean;
@@ -12,31 +13,15 @@ interface AlertModalProps {
   onClose: () => void;
 }
 
-export function AlertModal({
-  visible,
-  title,
-  message,
-  icon = '📌',
-  buttonText = 'Tamam',
-  onClose,
-}: AlertModalProps) {
+export function AlertModal({visible, title, message, icon = '📌', buttonText = 'Tamam', onClose}: AlertModalProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.85)).current;
 
   useEffect(() => {
     if (visible) {
       Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 8,
-          tension: 100,
-          useNativeDriver: true,
-        }),
+        Animated.timing(fadeAnim, {toValue: 1, duration: 200, useNativeDriver: true}),
+        Animated.spring(scaleAnim, {toValue: 1, friction: 8, tension: 100, useNativeDriver: true}),
       ]).start();
     } else {
       fadeAnim.setValue(0);
@@ -45,112 +30,70 @@ export function AlertModal({
   }, [visible, fadeAnim, scaleAnim]);
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="none"
-      onRequestClose={onClose}>
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: 'rgba(0, 0, 0, 0.6)',
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingHorizontal: 32,
-        }}>
-        <Animated.View
-          style={{
-            width: '100%',
-            opacity: fadeAnim,
-            transform: [{scale: scaleAnim}],
-          }}>
+    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+      <View style={{flex: 1, backgroundColor: colors.blackOverlay, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32}}>
+        <Animated.View style={{width: '100%', opacity: fadeAnim, transform: [{scale: scaleAnim}]}}>
           <GlassView
             intensity="heavy"
             style={{
-              borderRadius: 24,
+              borderRadius: radius.xl,
               overflow: 'hidden',
               borderWidth: 1,
-              borderColor: 'rgba(0, 212, 255, 0.15)',
+              borderColor: colors.borderStrong,
               paddingVertical: 32,
               paddingHorizontal: 24,
               alignItems: 'center',
+              ...shadows.card,
             }}>
-            
-            {/* Icon circle */}
             <View
               style={{
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                position: 'absolute',
+                top: -54,
+                right: -54,
+                width: 140,
+                height: 140,
+                borderRadius: 70,
+                backgroundColor: colors.accentSoft,
+              }}
+            />
+
+            <View
+              style={{
+                width: 58,
+                height: 58,
+                borderRadius: 29,
+                backgroundColor: colors.accentSoft,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 16,
                 borderWidth: 1,
-                borderColor: 'rgba(0, 212, 255, 0.2)',
+                borderColor: colors.borderStrong,
               }}>
-              <AppText style={{fontSize: 24}}>{icon}</AppText>
+              <AppText style={{fontSize: 25}}>{icon}</AppText>
             </View>
 
-            {/* Glow */}
-            <View
-              style={{
-                position: 'absolute',
-                top: -40,
-                right: -40,
-                width: 120,
-                height: 120,
-                borderRadius: 60,
-                backgroundColor: 'rgba(0, 212, 255, 0.04)',
-              }}
-            />
-
-            {/* Title */}
-            <AppText
-              style={{
-                fontSize: 18,
-                fontWeight: '700',
-                color: '#FFFFFF',
-                textAlign: 'center',
-                marginBottom: 8,
-              }}>
+            <AppText style={{fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center', marginBottom: 8}}>
               {title}
             </AppText>
 
-            {/* Message */}
-            <AppText
-              style={{
-                fontSize: 13,
-                color: 'rgba(255, 255, 255, 0.6)',
-                textAlign: 'center',
-                lineHeight: 20,
-                marginBottom: 24,
-              }}>
+            <AppText style={{fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 21, marginBottom: 24}}>
               {message}
             </AppText>
 
-            {/* Button */}
             <Pressable
               onPress={onClose}
               style={({pressed}) => ({
-                backgroundColor: pressed
-                  ? 'rgba(0, 212, 255, 0.2)'
-                  : 'rgba(0, 212, 255, 0.12)',
+                backgroundColor: pressed ? 'rgba(214, 180, 106, 0.18)' : colors.accentSoft,
                 paddingHorizontal: 28,
                 paddingVertical: 12,
-                borderRadius: 14,
+                borderRadius: radius.md,
                 borderWidth: 1,
-                borderColor: 'rgba(0, 212, 255, 0.2)',
+                borderColor: colors.borderStrong,
                 width: '100%',
                 alignItems: 'center',
-                transform: [{scale: pressed ? 0.97 : 1}],
+                transform: [{scale: pressed ? 0.98 : 1}],
               })}>
-              <AppText
-                style={{
-                  fontSize: 14,
-                  fontWeight: '700',
-                  color: '#00D4FF',
-                }}>
+              <AppText style={{fontSize: 15, fontWeight: '700', color: colors.accent}}>
                 {buttonText}
               </AppText>
             </Pressable>

@@ -4,6 +4,7 @@ import {AppText} from './AppText';
 import {GlassView} from './GlassView';
 import {PrayerTimeEntry} from '../services/prayerTimes';
 import {formatTime} from '../utils/format';
+import {colors, radius} from '../theme/tokens';
 
 interface PrayerCardProps {
   entry: PrayerTimeEntry;
@@ -13,80 +14,72 @@ interface PrayerCardProps {
 export function PrayerCard({entry, isNext}: PrayerCardProps) {
   const isKerahat = entry.isKerahat;
   const isPassed = entry.isPassed;
-
-  const accentColor = isKerahat ? '#FF6B35' : '#00D4FF';
-  const dotColor = isPassed ? 'rgba(255, 255, 255, 0.15)' : isKerahat ? '#FF6B35' : '#00D4FF';
+  const accentColor = isKerahat ? colors.danger : colors.accent;
 
   return (
     <GlassView
-      intensity="medium"
+      intensity={isNext ? 'heavy' : 'light'}
       style={{
-        flex: 1,
-        borderRadius: 14,
-        overflow: 'hidden',
+        borderRadius: radius.lg,
         borderWidth: 1,
-        borderColor: isNext ? `${accentColor}50` : 'rgba(255, 255, 255, 0.06)',
-        paddingVertical: 14,
-        paddingHorizontal: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: 72,
+        borderColor: isNext ? (isKerahat ? 'rgba(217, 135, 95, 0.34)' : colors.borderStrong) : colors.border,
+        paddingVertical: 13,
+        paddingHorizontal: 14,
+        marginBottom: 8,
+        opacity: isPassed && !isNext ? 0.58 : 1,
       }}>
-      
-      {/* Neon glow for next prayer */}
-      {isNext && (
-        <View style={{
-          position: 'absolute',
-          top: -30,
-          right: -30,
-          width: 80,
-          height: 80,
-          borderRadius: 40,
-          backgroundColor: `${accentColor}06`,
-        }} />
-      )}
+      <View style={{flexDirection: 'row', alignItems: 'center'}}>
+        <View
+          style={{
+            width: 9,
+            height: 9,
+            borderRadius: 5,
+            backgroundColor: isNext ? accentColor : isPassed ? 'rgba(244, 241, 234, 0.18)' : colors.green,
+            marginRight: 12,
+          }}
+        />
 
-      {/* Status dot */}
-      <View style={{
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-        backgroundColor: dotColor,
-        shadowColor: dotColor,
-        shadowOffset: {width: 0, height: 0},
-        shadowOpacity: isPassed ? 0 : 0.6,
-        shadowRadius: 4,
-        elevation: isPassed ? 0 : 2,
-        marginBottom: 6,
-      }} />
-
-      {/* Prayer name */}
-      <AppText style={{
-        fontSize: 12,
-        fontWeight: '600',
-        color: isPassed ? 'rgba(255, 255, 255, 0.25)' : '#FFFFFF',
-        marginBottom: 4,
-      }}>
-        {entry.nameTr}
-      </AppText>
-
-      {/* Time */}
-      <AppText style={{
-        fontSize: 18,
-        fontWeight: '600',
-        color: isPassed ? 'rgba(255, 255, 255, 0.25)' : accentColor,
-        fontVariant: ['tabular-nums'],
-      }}>
-        {formatTime(entry.time)}
-      </AppText>
-
-      {/* Kerahat warning */}
-      {isKerahat && !isPassed && (
-        <View style={{flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 4}}>
-          <AppText style={{fontSize: 8}}>⚠️</AppText>
-          <AppText style={{fontSize: 8, color: '#FF6B35', fontWeight: '500'}}>Kerâhet</AppText>
+        <View style={{flex: 1}}>
+          <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+            <AppText
+              style={{
+                fontSize: 16,
+                fontWeight: isNext ? '700' : '600',
+                color: isPassed && !isNext ? colors.textSubtle : colors.text,
+              }}>
+              {entry.nameTr}
+            </AppText>
+            {isNext && (
+              <View
+                style={{
+                  borderRadius: radius.pill,
+                  backgroundColor: isKerahat ? colors.dangerSoft : colors.accentSoft,
+                  paddingHorizontal: 8,
+                  paddingVertical: 2,
+                }}>
+                <AppText style={{fontSize: 10, fontWeight: '700', color: accentColor}}>
+                  Sıradaki
+                </AppText>
+              </View>
+            )}
+          </View>
+          {isKerahat && !isPassed && (
+            <AppText style={{fontSize: 11, color: colors.danger, marginTop: 3}}>
+              Kerâhet vakti
+            </AppText>
+          )}
         </View>
-      )}
+
+        <AppText
+          style={{
+            fontSize: 22,
+            fontWeight: '700',
+            color: isNext ? accentColor : isPassed ? colors.textSubtle : colors.textMuted,
+            fontVariant: ['tabular-nums'],
+          }}>
+          {formatTime(entry.time)}
+        </AppText>
+      </View>
     </GlassView>
   );
 }

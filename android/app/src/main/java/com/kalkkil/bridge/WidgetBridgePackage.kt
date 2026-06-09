@@ -1,4 +1,4 @@
-package com.prayertimes.bridge
+package com.kalkkil.bridge
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.NativeModule

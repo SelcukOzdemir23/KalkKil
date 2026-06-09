@@ -1,44 +1,144 @@
-# Ezan Vakti - Prayer Times
+# KalkKıl - Ezan Vakti
 
-Minimalist, ad-free prayer times app built with React Native. Shows daily prayer times based on your location, provides countdown to the next prayer, and includes an Android home screen widget.
+Minimalist, reklamsız namaz vakti uygulaması. Konumunuza göre günlük namaz vakitlerini gösterir, bir sonraki vakte geri sayım yapar ve Android ana ekran widget'ı içerir.
 
-## Features
+## Özellikler
 
-- **Daily Prayer Times**: Displays all 6 prayer times (Imsak, Gunes, Ogle, Ikindi, Aksam, Yatsi) calculated offline using the Diyanet (Turkey) method
-- **Countdown Timer**: Live countdown to the next prayer
-- **Notifications**: Optional local notifications 5 minutes before and at each prayer time
-- **Android Widget**: Home screen widget showing next prayer time and countdown
-- **Dark/Light Theme**: Follows system theme or manual selection
-- **Offline Support**: Prayer times are calculated locally using the `adhan` library - no internet required after initial setup
-- **Turkish Localization**: All UI text in Turkish
+- **Günlük Namaz Vakitleri**: Diyanet yöntemiyle çevrimdışı hesaplanan 6 vakit (İmsak, Güneş, Öğle, İkindi, Akşam, Yatsı)
+- **Geri Sayım**: Bir sonraki vakte canlı geri sayım
+- **Bildirimler**: Her vakit öncesi isteğe bağlı yerel bildirimler
+- **Android Widget**: Ana ekranda bir sonraki vakit ve geri sayım
+- **Koyu/Açık Tema**: Sistem temasını takip eder veya manuel seçim
+- **Çevrimdışı Çalışma**: Tüm vakitler `adhan` kütüphanesi ile yerel olarak hesaplanır
+- **Türkçe Arayüz**: Tüm UI metinleri Türkçe
 
-## Tech Stack
+## Teknik Altyapı
 
-- **React Native** 0.76 with TypeScript
-- **adhan** - Offline prayer time calculation (Diyanet method)
-- **@notifee/react-native** - Local notifications
-- **@react-native-community/geolocation** - GPS location
-- **react-native-mmkv** - Fast local storage
-- **react-native-permissions** - Permission management
-- **@react-navigation** - Bottom tab navigation
+- **React Native** 0.76 + TypeScript
+- **adhan** - Çevrimdışı namaz vakti hesaplama (Diyanet)
+- **@notifee/react-native** - Yerel bildirimler
+- **@react-native-community/geolocation** - GPS konumu
+- **react-native-permissions** - İzin yönetimi
+- **@react-navigation** - Alt sekme navigasyonu
 - **Native Kotlin** - Android widget (AppWidgetProvider)
 
-## Project Structure
+## Proje Yapısı
 
 ```
 src/
-  components/       UI components (CountdownTimer, PrayerCard, PrayerList)
-  context/          AppContext (theme, notifications, location state)
-  hooks/            Custom hooks (usePrayerTimes, useCountdown)
+  components/       UI bileşenleri (CountdownTimer, PrayerCard, PrayerList)
+  context/          AppContext (tema, bildirim, konum durumu)
+  hooks/            Custom hook'lar (usePrayerTimes, useCountdown)
   screens/          HomeScreen, SettingsScreen
   services/         prayerTimes, location, notifications, storage, widget
-  theme/            Light/dark color definitions
-  utils/            Formatting utilities
+  theme/            Açık/koyu renk tanımları
+  utils/            Biçimlendirme araçları
 android/
-  app/src/main/java/com/prayertimes/
+  app/src/main/java/com/kalkkil/
     widget/         PrayerWidgetProvider (Kotlin)
     bridge/         WidgetBridgeModule (React Native <-> Native)
 ```
+
+## Başlarken
+
+### Gereksinimler
+
+- Node.js >= 18
+- Android SDK (API 24+)
+- Xcode 14+ (iOS için)
+- CocoaPods (iOS için)
+
+### Bağımlılıkları Yükleme
+
+```bash
+npm install
+```
+
+### Android'de Çalıştırma
+
+```bash
+npm run android
+```
+
+### iOS'te Çalıştırma
+
+```bash
+cd ios && pod install && cd ..
+npm run ios
+```
+
+### Metro Bundler'ı Başlatma
+
+```bash
+npm start
+```
+
+## Android Widget
+
+Ana ekran widget'ı şunları gösterir:
+- Bir sonraki vakit adı ve saati
+- Canlı geri sayım
+- Tüm günlük vakitler (kompakt formatta)
+
+### Widget Ekleme
+
+1. Ana ekranda boş bir alana uzun basın
+2. "Widget'lar" seçin
+3. "KalkKıl" widget'ını bulun
+4. Ana ekrana sürükleyip bırakın
+
+Widget, uygulama her açıldığında otomatik güncellenir. Ayrıca sistem AppWidgetProvider üzerinden her 30 dakikada bir yenilenir.
+
+### Widget Mimarisi
+
+- **PrayerWidgetProvider.kt** - Widget yaşam döngüsünü yönetir (onUpdate, onEnabled)
+- **WidgetBridgeModule.kt** - React Native native module, namaz vakitlerini SharedPreferences'e yazar ve widget güncellemesini tetikler
+- **widget_prayer_times.xml** - Widget için RemoteViews layout'u
+
+## Bildirimler
+
+Aktif edildiğinde (varsayılan: açık), uygulama yerel bildirimler planlar:
+- Her vaktin 5 dakika öncesi
+- Vakit tam girdiğinde
+
+Bildirimler Ayarlar ekranından açılıp kapatılabilir.
+
+## Namaz Vakti Hesaplama
+
+Vakitler `adhan` kütüphanesi ile **Türkiye (Diyanet)** hesaplama yöntemi kullanılarak hesaplanır:
+- İmsak açısı: 18 derece
+- Yatsı açısı: 17 derece
+- İkindi: Standart (Şafii)
+
+Uygulama, konumunuza göre vakit hesaplamak için konum izni ister. İzin verilmezse hata mesajı gösterilir.
+
+## Bilinen Sınırlamalar
+
+- iOS widget henüz yok (MVP kapsamı dışı)
+- Manuel şehir seçimi henüz yok (sadece GPS)
+- Hicri takvim henüz desteklenmiyor
+- Sadece Türkçe dil desteği
+
+## Production Build
+
+### Android
+
+```bash
+cd android
+./gradlew assembleRelease
+```
+
+### iOS
+
+```bash
+cd ios
+xcodebuild -workspace KalkKil.xcworkspace -scheme KalkKil -configuration Release
+```
+
+## Lisans
+
+MIT
+
 
 ## Getting Started
 

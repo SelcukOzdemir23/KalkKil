@@ -12,21 +12,23 @@ import {SettingsScreen} from './src/screens/SettingsScreen';
 import {initializeStorage} from './src/services/storage';
 import {setupNotificationChannel} from './src/services/notifications';
 import {Sunrise, Settings} from 'lucide-react-native';
+import {colors, radius} from './src/theme/tokens';
 import './global.css';
 
 const Tab = createBottomTabNavigator();
 
 function TabBarIcon({Icon, color, focused}: {Icon: typeof Sunrise; color: string; focused: boolean}) {
   return (
-    <View style={{
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: focused ? 'rgba(0, 212, 255, 0.15)' : 'transparent',
-    }}>
-      <Icon size={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
+    <View
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: radius.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: focused ? colors.accentSoft : 'transparent',
+      }}>
+      <Icon size={20} color={color} strokeWidth={focused ? 2.6 : 1.8} />
     </View>
   );
 }
@@ -36,33 +38,34 @@ function AppTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#00D4FF',
-        tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.3)',
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
           position: 'absolute',
-          bottom: 20,
-          left: 16,
-          right: 16,
-          height: 66,
-          borderRadius: 22,
-          backgroundColor: '#0D111F',
+          bottom: 16,
+          left: 14,
+          right: 14,
+          height: 68,
+          borderRadius: radius.xl,
+          backgroundColor: colors.surfaceSoft,
           borderTopWidth: 0,
           borderWidth: 1,
-          borderColor: 'rgba(0, 212, 255, 0.1)',
-          elevation: 16,
-          shadowColor: '#00D4FF',
-          shadowOffset: {width: 0, height: 4},
-          shadowOpacity: 0.12,
+          borderColor: colors.border,
+          elevation: 24,
+          shadowColor: colors.background,
+          shadowOffset: {width: 0, height: 8},
+          shadowOpacity: 0.28,
           shadowRadius: 24,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '600',
-          marginTop: 0,
-          marginBottom: 4,
+          fontSize: 11,
+          fontWeight: '700',
+          marginTop: 2,
+          marginBottom: 6,
+          letterSpacing: 0.3,
         },
         tabBarIconStyle: {
-          marginTop: 4,
+          marginTop: 2,
         },
       }}>
       <Tab.Screen
@@ -96,21 +99,17 @@ function AppContent() {
 
   return (
     <>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="transparent"
-        translucent
-      />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <NavigationContainer
         theme={{
           dark: true,
           colors: {
-            primary: '#00D4FF',
-            background: '#0A0E1A',
-            card: 'rgba(255, 255, 255, 0.05)',
-            text: '#FFFFFF',
-            border: 'rgba(255, 255, 255, 0.1)',
-            notification: '#00D4FF',
+            primary: colors.accent,
+            background: colors.background,
+            card: colors.surface,
+            text: colors.text,
+            border: colors.border,
+            notification: colors.accent,
           },
         }}>
         <AppTabs />
@@ -128,9 +127,9 @@ function App(): React.JSX.Element {
 
   if (!ready) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0A0E1A'}}>
-        <View style={{width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: 'rgba(0, 212, 255, 0.3)', alignItems: 'center', justifyContent: 'center'}}>
-          <ActivityIndicator size="large" color="#00D4FF" />
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background}}>
+        <View style={{width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center'}}>
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
       </View>
     );

@@ -1,5 +1,6 @@
 import React from 'react';
 import {View, ViewStyle} from 'react-native';
+import {colors} from '../theme/tokens';
 
 interface GlassViewProps {
   children: React.ReactNode;
@@ -8,22 +9,21 @@ interface GlassViewProps {
 }
 
 /**
- * Native olmayan cam efekti bileşeni.
- * @react-native-community/blur yerine semi-transparent background ile çalışır,
- * böylece native modül gerektirmez ve her cihazda crash yapmaz.
+ * Lightweight premium surface component.
+ * Uses solid/semi-solid dark surfaces instead of real blur for stability.
  */
 export function GlassView({children, style, intensity = 'medium'}: GlassViewProps) {
-  const opacityMap = {
-    light: 'rgba(13, 17, 31, 0.7)',
-    medium: 'rgba(13, 17, 31, 0.82)',
-    heavy: 'rgba(13, 17, 31, 0.9)',
+  const backgroundMap = {
+    light: colors.surfaceMuted,
+    medium: colors.surface,
+    heavy: colors.surfaceSoft,
   };
 
   return (
     <View
       style={[
         {
-          backgroundColor: opacityMap[intensity],
+          backgroundColor: backgroundMap[intensity],
         },
         style,
       ]}>

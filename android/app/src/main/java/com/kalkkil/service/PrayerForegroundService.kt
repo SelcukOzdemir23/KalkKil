@@ -35,7 +35,7 @@ class PrayerForegroundService : Service() {
         const val NOTIFICATION_ID = 2
         const val ACTION_START = "com.kalkkil.action.START_FOREGROUND"
         const val UPDATE_INTERVAL_MS = 1_000L   // 1 second — saniye bazlı countdown
-        const val WIDGET_UPDATE_INTERVAL = 30    // her 30 tick'te bir widget güncelle
+        const val WIDGET_UPDATE_INTERVAL = 1     // her saniye widget güncelle — canlı geri sayım
     }
 
     private val handler = Handler(Looper.getMainLooper())
@@ -45,7 +45,7 @@ class PrayerForegroundService : Service() {
         override fun run() {
             tickCount++
             updateNotification()
-            // Widget her 30 saniyede bir güncellenir (her saniye yapmak gereksiz yük)
+            // Widget her saniye güncellenir — countdown canlı aksın
             if (tickCount % WIDGET_UPDATE_INTERVAL == 0) {
                 updateWidget()
             }
@@ -139,40 +139,45 @@ class PrayerForegroundService : Service() {
 
     /**
      * allTimesRaw formatı: "İmsak|04:32|Güneş|06:01|Öğle|12:45|İkindi|16:23|Akşam|19:11|Yatsı|20:41"
-     * (WidgetBridgeModule'daki KEY_ALL_TIMES anahtarına yazılan timestamp değil,
-     *  widget.ts içinde formatlanmış string beklenir — ama mevcut kodda timestamp yazılıyor.
-     *  Bu yüzden SharedPrefs'e ayrı bir anahtar ekledik: KEY_PRAYER_TIMES_DISPLAY)
      *
-     *  Eğer KEY_PRAYER_TIMES_DISPLAY yoksa sade bir fallback döner.
+     * Yatay format — 3 vakit yanyana pipe ile, 2 satırda 6 vakit:
+     *   İmsak 04:32  │  Güneş 06:01  │  Öğle 12:45
+     * › İkindi 16:23  │  Akşam 19:11  │  Yatsı 20:41
      */
     private fun buildBigText(allTimesRaw: String?, nextName: String?): String {
         if (allTimesRaw.isNullOrBlank()) return "Vakitler hesaplanıyor..."
 
-        // Format: "İmsak 04:32 | Güneş 06:01 | ..." pipe ayrılmış
         val parts = allTimesRaw.split("|")
-        // parts çift sayıda olmalı: [ad, saat, ad, saat, ...]
         if (parts.size < 2) return allTimesRaw
 
-        val sb = StringBuilder()
+        // Pair listesi oluştur: [(ad, saat), (ad, saat), ...]
+        val pairs = mutableListOf<Pair<String, String>>()
         var i = 0
-        var lineCount = 0
         while (i + 1 < parts.size) {
-            val name = parts[i].trim()
-            val time = parts[i + 1].trim()
-            val isNext = nextName != null && name.equals(nextName, ignoreCase = true)
-
-            if (lineCount > 0) sb.append("\n")
-
-            if (isNext) {
-                sb.append("› $name  $time")
-            } else {
-                sb.append("  $name  $time")
-            }
-            lineCount++
+            pairs.add(parts[i].trim() to parts[i + 1].trim())
             i += 2
         }
 
-        return if (sb.isNotEmpty()) sb.toString() else "Vakitler hazırlanıyor..."
+        if (pairs.isEmpty()) return "Vakitler hazırlanıyor..."
+
+        // 3'erli grupla — 2 satır (6 vakit için)
+        val sb = StringBuilder()
+        val chunkSize = 3
+
+        pairs.chunked(chunkSize).forEachIndexed { rowIdx, row ->
+            if (rowIdx > 0) sb.append("\n")
+            row.forEachIndexed { colIdx, (name, time) ->
+                if (colIdx > 0) sb.append("  │  ")
+                val isNext = nextName != null && name.equals(nextName, ignoreCase = true)
+                if (isNext) {
+                    sb.append("› $name $time")
+                } else {
+                    sb.append("  $name $time")
+                }
+            }
+        }
+
+        return sb.toString()
     }
 
     /**

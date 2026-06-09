@@ -1,0 +1,26 @@
+package com.kalkkil.receiver
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import com.kalkkil.service.PrayerForegroundService
+
+/**
+ * Restarts the foreground service after device reboot so that
+ * widget updates and persistent notification continue automatically.
+ */
+class BootReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+            val serviceIntent = Intent(context, PrayerForegroundService::class.java).apply {
+                action = PrayerForegroundService.ACTION_START
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent)
+            } else {
+                context.startService(serviceIntent)
+            }
+        }
+    }
+}

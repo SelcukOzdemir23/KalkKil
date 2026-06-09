@@ -3,9 +3,12 @@ package com.kalkkil.bridge
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.os.Build
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.kalkkil.service.PrayerForegroundService
 import com.kalkkil.widget.PrayerWidgetProvider
 
 class WidgetBridgeModule(reactContext: ReactApplicationContext) :
@@ -40,5 +43,25 @@ class WidgetBridgeModule(reactContext: ReactApplicationContext) :
         for (appWidgetId in appWidgetIds) {
             PrayerWidgetProvider.updateWidget(context, appWidgetManager, appWidgetId)
         }
+    }
+
+    @ReactMethod
+    fun startForegroundService() {
+        val context = reactApplicationContext
+        val intent = Intent(context, PrayerForegroundService::class.java).apply {
+            action = PrayerForegroundService.ACTION_START
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
+        }
+    }
+
+    @ReactMethod
+    fun stopForegroundService() {
+        val context = reactApplicationContext
+        val intent = Intent(context, PrayerForegroundService::class.java)
+        context.stopService(intent)
     }
 }

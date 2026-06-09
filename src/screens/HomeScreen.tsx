@@ -11,13 +11,13 @@ import {AlertModal} from '../components/AlertModal';
 import {AppText} from '../components/AppText';
 import {getGreeting} from '../utils/format';
 import {schedulePrayerNotifications, cancelAllNotifications, requestNotificationPermission} from '../services/notifications';
-import {updateWidget} from '../services/widget';
+import {updateWidget, startPrayerForegroundService} from '../services/widget';
 import {getCurrentLocation, requestLocationPermission, checkLocationPermission, reverseGeocode} from '../services/location';
 import {saveLocation, setLocationPermissionGranted, getLocation, getLocationLabel, getPrayerMode} from '../services/storage';
 import {colors, radius} from '../theme/tokens';
 
 export function HomeScreen() {
-  const {notificationsEnabled, kerahatTimes, requestRefresh} = useAppContext();
+  const {notificationsEnabled, kerahatTimes, requestRefresh, notificationTiming, prayerNotifications} = useAppContext();
   const insets = useSafeAreaInsets();
   const {entries, nextPrayer, dailyTimes, isLoading, error} = usePrayerTimes();
   const {countdown} = useCountdown(nextPrayer ? nextPrayer.time : null);
@@ -82,6 +82,9 @@ export function HomeScreen() {
 
         // Bildirim iznini ilk açılışta bir kere iste
         requestNotificationPermission().catch(() => {});
+
+        // Foreground servisi başlat — bildirim çubuğunda sürekli vakit göster
+        startPrayerForegroundService();
       }
 
       // Loading'i her durumda kapat (cache var veya yok)
@@ -147,7 +150,7 @@ export function HomeScreen() {
     return () => {
       cancelled = true;
     };
-  }, [dailyTimes, notificationsEnabled]);
+  }, [dailyTimes, notificationsEnabled, notificationTiming, prayerNotifications]);
 
   const activeKerahat = kerahatTimes.find(k => {
     const now = Date.now();

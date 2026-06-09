@@ -35,3 +35,33 @@ export function updateWidget(
     // Silently fail - widget update is non-critical
   }
 }
+
+/**
+ * Start the foreground service that shows a persistent notification
+ * with prayer times and keeps updating the widget in the background.
+ * Safe to call multiple times — service ignores duplicate starts.
+ */
+export function startPrayerForegroundService(): void {
+  if (Platform.OS !== 'android' || !PrayerWidgetBridge) {
+    return;
+  }
+  try {
+    PrayerWidgetBridge.startForegroundService();
+  } catch {
+    // Silently fail
+  }
+}
+
+/**
+ * Stop the foreground service and remove the persistent notification.
+ */
+export function stopPrayerForegroundService(): void {
+  if (Platform.OS !== 'android' || !PrayerWidgetBridge) {
+    return;
+  }
+  try {
+    PrayerWidgetBridge.stopForegroundService();
+  } catch {
+    // Silently fail
+  }
+}

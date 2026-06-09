@@ -24,25 +24,10 @@ class PrayerWidgetProvider : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.widget_prayer_times)
 
             val nextName = prefs.getString(KEY_NEXT_PRAYER_NAME, "--") ?: "--"
-            val nextTime = prefs.getString(KEY_NEXT_PRAYER_TIME, "--:--") ?: "--:--"
             val countdown = prefs.getString(KEY_COUNTDOWN, "--:--") ?: "--:--"
 
             views.setTextViewText(R.id.widget_next_prayer, nextName)
-            views.setTextViewText(R.id.widget_next_time, nextTime)
             views.setTextViewText(R.id.widget_countdown, countdown)
-
-            // Convert countdown to hours/minutes format for the label
-            val parts = countdown.split(":")
-            val labelText = if (parts.size >= 2) {
-                val h = parts[0].toIntOrNull() ?: 0
-                val m = parts[1].toIntOrNull() ?: 0
-                when {
-                    h > 0 -> "${h} sa ${m} dk kaldı"
-                    m > 0 -> "${m} dk kaldı"
-                    else -> "kaldı"
-                }
-            } else "kaldı"
-            views.setTextViewText(R.id.widget_countdown_label, labelText)
 
             // Open app on click
             val intent = Intent(context, MainActivity::class.java)

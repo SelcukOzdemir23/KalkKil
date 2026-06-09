@@ -7,6 +7,7 @@ const KEYS = {
   LATITUDE: 'location.latitude',
   LONGITUDE: 'location.longitude',
   CITY: 'location.city',
+  DISTRICT: 'location.district',
   USE_MANUAL_CITY: 'location.useManual',
   NOTIFICATIONS_ENABLED: 'settings.notifications',
   NOTIFICATION_TIMING: 'settings.notifTiming',
@@ -83,11 +84,14 @@ export async function removeValue(key: string): Promise<void> {
 
 // ─── App-specific helpers ───
 
-export function saveLocation(lat: number, lng: number, city?: string): void {
+export function saveLocation(lat: number, lng: number, city?: string, district?: string): void {
   cache.set(KEYS.LATITUDE, String(lat));
   cache.set(KEYS.LONGITUDE, String(lng));
   if (city) {
     cache.set(KEYS.CITY, city);
+  }
+  if (district) {
+    cache.set(KEYS.DISTRICT, district);
   }
   // Fire-and-forget persist
   AsyncStorage.setItem(KEYS.LATITUDE, String(lat)).catch(() => {});
@@ -95,9 +99,12 @@ export function saveLocation(lat: number, lng: number, city?: string): void {
   if (city) {
     AsyncStorage.setItem(KEYS.CITY, city).catch(() => {});
   }
+  if (district) {
+    AsyncStorage.setItem(KEYS.DISTRICT, district).catch(() => {});
+  }
 }
 
-export function getLocation(): {latitude: number; longitude: number; city?: string} | null {
+export function getLocation(): {latitude: number; longitude: number; city?: string; district?: string} | null {
   const lat = getNumber(KEYS.LATITUDE);
   const lng = getNumber(KEYS.LONGITUDE);
   if (lat === undefined || lng === undefined) {
@@ -107,7 +114,16 @@ export function getLocation(): {latitude: number; longitude: number; city?: stri
     latitude: lat,
     longitude: lng,
     city: getString(KEYS.CITY),
+    district: getString(KEYS.DISTRICT),
   };
+}
+
+export function getLocationLabel(): string {
+  const loc = getLocation();
+  if (!loc) return 'Konum ayarlanmadı';
+  if (loc.city && loc.district) return `${loc.city}, ${loc.district}`;
+  if (loc.city) return loc.city;
+  return 'Kayıtlı konum';
 }
 
 export function getPrayerMode(): boolean {

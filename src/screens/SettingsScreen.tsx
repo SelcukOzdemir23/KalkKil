@@ -5,9 +5,9 @@ import {AlertModal} from '../components/AlertModal';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAppContext} from '../context/AppContext';
 import {GlassView} from '../components/GlassView';
-import {getCurrentLocation} from '../services/location';
+import {getCurrentLocation, reverseGeocode} from '../services/location';
 import {requestNotificationPermission, sendTestNotification} from '../services/notifications';
-import {saveLocation, setLocationPermissionGranted} from '../services/storage';
+import {saveLocation, setLocationPermissionGranted, getLocationLabel} from '../services/storage';
 import {Navigation, Bell, BellOff, Clock, Sunrise, Moon} from 'lucide-react-native';
 import {colors, radius, shadows} from '../theme/tokens';
 
@@ -87,10 +87,12 @@ export function SettingsScreen() {
     setLocationLoading(true);
     const result = await getCurrentLocation();
     if (result.success) {
-      saveLocation(result.latitude, result.longitude);
+      const geo = await reverseGeocode(result.latitude, result.longitude);
+      saveLocation(result.latitude, result.longitude, geo.success ? geo.city : undefined, geo.success ? geo.district : undefined);
       setLocationPermissionGranted(true);
       requestRefresh();
-      showAlert('Konum Güncellendi', 'Vakitler kayıtlı konuma göre yeniden hesaplanacaktır.', '📍');
+      const label = getLocationLabel();
+      showAlert('Konum Güncellendi', `Konum: ${label}\n\nVakitler kayıtlı konuma göre yeniden hesaplanacaktır.`, '📍');
     } else {
       showAlert('Konum Alınamadı', result.error, '⚠️');
     }

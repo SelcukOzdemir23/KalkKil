@@ -12,7 +12,7 @@ import {AppText} from '../components/AppText';
 import {getGreeting} from '../utils/format';
 import {schedulePrayerNotifications, cancelAllNotifications, requestNotificationPermission} from '../services/notifications';
 import {updateWidget} from '../services/widget';
-import {getCurrentLocation, requestLocationPermission, checkLocationPermission} from '../services/location';
+import {getCurrentLocation, requestLocationPermission, checkLocationPermission, reverseGeocode} from '../services/location';
 import {saveLocation, setLocationPermissionGranted, getLocation, getPrayerMode} from '../services/storage';
 import {colors, radius} from '../theme/tokens';
 
@@ -42,7 +42,10 @@ export function HomeScreen() {
       // Cache'te kayıtlı konum varsa her açılışta hemen yükle
       const cached = getLocation();
       if (cached) {
-        setLocationInfo({type: 'gps', label: cached.city || 'Kayıtlı konum'});
+        const label = cached.city && cached.district
+          ? `${cached.city}, ${cached.district}`
+          : cached.city || 'Kayıtlı konum';
+        setLocationInfo({type: 'gps', label});
       }
 
       // ── SADECE İLK AÇILIŞ: permission + GPS ──
@@ -52,15 +55,18 @@ export function HomeScreen() {
         const hasPerm = await checkLocationPermission();
         if (!hasPerm) {
           // İzin yoksa dialog göster, kullanıcı görsün
-          setLocationLoading(!cached); // Sadece cached yoksa loading göster
+          setLocationLoading(!cached);
           const granted = await requestLocationPermission();
           if (granted && !cached) {
             const result = await getCurrentLocation();
             if (result.success) {
-              saveLocation(result.latitude, result.longitude);
+              // Konum adresini çöz
+              const geo = await reverseGeocode(result.latitude, result.longitude);
+              const label = geo.success ? geo.label : 'GPS konumu';
+              saveLocation(result.latitude, result.longitude, geo.success ? geo.city : undefined, geo.success ? geo.district : undefined);
               setLocationPermissionGranted(true);
               requestRefresh();
-              setLocationInfo({type: 'gps', label: 'GPS konumu'});
+              setLocationInfo({type: 'gps', label});
             }
           }
         } else if (!cached) {
@@ -68,10 +74,12 @@ export function HomeScreen() {
           setLocationLoading(true);
           const result = await getCurrentLocation();
           if (result.success) {
-            saveLocation(result.latitude, result.longitude);
-              setLocationPermissionGranted(true);
+            const geo = await reverseGeocode(result.latitude, result.longitude);
+            const label = geo.success ? geo.label : 'GPS konumu';
+            saveLocation(result.latitude, result.longitude, geo.success ? geo.city : undefined, geo.success ? geo.district : undefined);
+            setLocationPermissionGranted(true);
             requestRefresh();
-            setLocationInfo({type: 'gps', label: 'GPS konumu'});
+            setLocationInfo({type: 'gps', label});
           }
         }
 
@@ -92,7 +100,10 @@ export function HomeScreen() {
       setLocationInfo(null);
       return;
     }
-    setLocationInfo({type: 'gps', label: loc.city || 'Kayıtlı konum'});
+    const label = loc.city && loc.district
+      ? `${loc.city}, ${loc.district}`
+      : loc.city || 'Kayıtlı konum';
+    setLocationInfo({type: 'gps', label});
   }, [entries]);
 
   useEffect(() => {

@@ -1,96 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#101612"
-    android:padding="5dp">
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="4dp">
 
-    <!-- Kadife arka plan katmanı -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#0D1410"
-        android:layout_margin="0dp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
+    <TextView
+        android:id="@+id/widget_next_prayer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="--"
+        android:textSize="20sp"
+        android:textColor="#D6B46A"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif"
         android:gravity="center"
-        android:paddingHorizontal="6dp">
+        android:maxLines="1"
+        android:includeFontPadding="false" />
 
-        <!-- ☾ ikonu -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:text="☾"
-            android:textSize="11sp"
-            android:textColor="#33D6B46A"
-            android:gravity="bottom"
-            android:includeFontPadding="false" />
+    <TextView
+        android:id="@+id/widget_countdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="--:--"
+        android:textSize="14sp"
+        android:textColor="#D6B46A"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif"
+        android:gravity="center"
+        android:maxLines="1"
+        android:includeFontPadding="false"
+        android:layout_marginTop="3dp"
+        android:alpha="0.8" />
 
-        <!-- Sonraki vakit adı -->
-        <TextView
-            android:id="@+id/widget_next_prayer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="--"
-            android:textSize="20sp"
-            android:textColor="#D6B46A"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-light"
-            android:gravity="center"
-            android:maxLines="1"
-            android:includeFontPadding="false" />
-
-        <!-- Vakit saati (muted) -->
-        <TextView
-            android:id="@+id/widget_next_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="--:--"
-            android:textSize="11sp"
-            android:textColor="#9B9A90"
-            android:fontFamily="sans-serif"
-            android:gravity="center"
-            android:includeFontPadding="false" />
-
-        <!-- Ayraç çizgisi -->
-        <View
-            android:layout_width="28dp"
-            android:layout_height="1px"
-            android:background="#30D6B46A"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="4dp" />
-
-        <!-- Kalan süre -->
-        <TextView
-            android:id="@+id/widget_countdown"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="--:--"
-            android:textSize="13sp"
-            android:textColor="#D6B46A"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif"
-            android:gravity="center"
-            android:maxLines="1"
-            android:includeFontPadding="false" />
-
-        <!-- "kaldı" yazısı -->
-        <TextView
-            android:id="@+id/widget_countdown_label"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:text="kaldı"
-            android:textSize="7sp"
-            android:textColor="#60D6B46A"
-            android:gravity="top"
-            android:includeFontPadding="false" />
-
-    </LinearLayout>
-
-</FrameLayout>
+</LinearLayout>

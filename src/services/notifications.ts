@@ -70,14 +70,18 @@ export async function schedulePrayerNotifications(
     const nameTr = PRAYER_VISIBLE_NAMES[prayer.name] || prayer.name;
     const isExactTime = timingMinutes === 0;
 
+    const title = isExactTime
+      ? `☾ ${nameTr} vakti girdi`
+      : `☾ ${nameTr} vaktine ${timingMinutes} dk kaldı`;
+
+    const body = isExactTime
+      ? `${nameTr} — ${formatTime(prayer.time(times))}`
+      : `${nameTr} — ${formatTime(prayer.time(times))} · ${timingMinutes} dk sonra`;
+
     await notifee.createTriggerNotification(
       {
-        title: isExactTime
-          ? `${nameTr} vakti girdi`
-          : `${nameTr} vaktine ${timingMinutes} dakika kaldı`,
-        body: isExactTime
-          ? `${nameTr} vakti - ${formatTime(prayer.time(times))}`
-          : `${nameTr} vakti ${formatTime(prayer.time(times))}'de`,
+        title,
+        body,
         android: {
           channelId: CHANNEL_ID,
           importance: AndroidImportance.HIGH,

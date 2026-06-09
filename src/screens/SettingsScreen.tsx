@@ -154,21 +154,23 @@ export function SettingsScreen() {
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 8,
-              backgroundColor: pressed ? colors.surfaceMuted : 'transparent',
-              borderRadius: radius.md,
+              gap: 10,
+              backgroundColor: pressed ? colors.accentSoft : colors.surfaceSoft,
+              borderRadius: radius.pill,
               borderWidth: 1,
-              borderColor: colors.borderStrong,
-              paddingVertical: 13,
-              opacity: locationLoading ? 0.6 : 1,
+              borderColor: pressed ? colors.accent : colors.borderStrong,
+              paddingVertical: 14,
+              paddingHorizontal: 20,
+              opacity: locationLoading ? 0.7 : 1,
+              transform: [{scale: pressed ? 0.97 : 1}],
             })}>
             {locationLoading ? (
               <ActivityIndicator size="small" color={colors.accent} />
             ) : (
-              <Navigation size={16} color={colors.accent} />
+              <Navigation size={16} color={colors.accent} strokeWidth={2.5} />
             )}
-            <AppText style={{fontSize: 15, fontWeight: '600', color: locationLoading ? colors.textMuted : colors.accent}}>
-              {locationLoading ? 'Konum alınıyor…' : 'Konumu yenile'}
+            <AppText style={{fontSize: 15, fontWeight: '700', color: locationLoading ? colors.textMuted : colors.accent, letterSpacing: 0.3}}>
+              {locationLoading ? 'Konum alınıyor…' : 'Konumu güncelle'}
             </AppText>
           </Pressable>
         </GlassCard>

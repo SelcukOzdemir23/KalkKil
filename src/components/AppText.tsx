@@ -19,7 +19,7 @@ export function AppText({style, ...props}: TextProps) {
     return <RNText {...props} style={style} />;
   }
 
-  const family = FONT_MAP[String(s.fontWeight ?? '400')] || 'EBGaramond-Regular';
+  const family = FONT_MAP[String(s.fontWeight ?? '400')] || 'Alegreya-Regular';
   // fontWeight'ü kaldır, iOS'ta sentetik bold'u önle
   const {fontWeight, ...rest} = s;
 

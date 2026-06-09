@@ -16,6 +16,10 @@ class WidgetBridgeModule(reactContext: ReactApplicationContext) :
 
     override fun getName(): String = "PrayerWidgetBridge"
 
+    /**
+     * Eski metod — geriye dönük uyumluluk için korundu.
+     * allTimes parametresi burada timestamp olarak kullanılıyor.
+     */
     @ReactMethod
     fun updateWidget(
         nextPrayerName: String,
@@ -23,20 +27,53 @@ class WidgetBridgeModule(reactContext: ReactApplicationContext) :
         countdown: String,
         allTimes: String
     ) {
+        saveAndUpdate(nextPrayerName, nextPrayerTime, countdown, allTimes, null)
+    }
+
+    /**
+     * Yeni metod — timestamp + display times (bildirim BigText için) ayrı ayrı gelir.
+     * displayTimes: "İmsak|04:32|Güneş|06:01|Öğle|12:45|İkindi|16:23|Akşam|19:11|Yatsı|20:41"
+     */
+    @ReactMethod
+    fun updateWidgetWithTimes(
+        nextPrayerName: String,
+        nextPrayerTime: String,
+        countdown: String,
+        timestamp: String,
+        displayTimes: String
+    ) {
+        saveAndUpdate(nextPrayerName, nextPrayerTime, countdown, timestamp, displayTimes)
+    }
+
+    private fun saveAndUpdate(
+        nextPrayerName: String,
+        nextPrayerTime: String,
+        countdown: String,
+        timestamp: String,
+        displayTimes: String?
+    ) {
         val context = reactApplicationContext
         val prefs = context.getSharedPreferences(
             PrayerWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE
         )
 
-        prefs.edit()
+        val editor = prefs.edit()
             .putString(PrayerWidgetProvider.KEY_NEXT_PRAYER_NAME, nextPrayerName)
             .putString(PrayerWidgetProvider.KEY_NEXT_PRAYER_TIME, nextPrayerTime)
             .putString(PrayerWidgetProvider.KEY_COUNTDOWN, countdown)
-            .putString(PrayerWidgetProvider.KEY_NEXT_PRAYER_TIMESTAMP, allTimes)
-            .putString(PrayerWidgetProvider.KEY_ALL_TIMES, allTimes)
-            .apply()
+            .putString(PrayerWidgetProvider.KEY_NEXT_PRAYER_TIMESTAMP, timestamp)
 
-        // Trigger widget update
+        // displayTimes varsa KEY_ALL_TIMES'a yaz (bildirim BigText için)
+        if (displayTimes != null) {
+            editor.putString(PrayerWidgetProvider.KEY_ALL_TIMES, displayTimes)
+        } else {
+            // Eski davranış: allTimes timestamp olarak geliyordu, KEY_ALL_TIMES boş bırak
+            editor.putString(PrayerWidgetProvider.KEY_ALL_TIMES, "")
+        }
+
+        editor.apply()
+
+        // Widget güncelle
         val appWidgetManager = AppWidgetManager.getInstance(context)
         val widgetComponent = ComponentName(context, PrayerWidgetProvider::class.java)
         val appWidgetIds = appWidgetManager.getAppWidgetIds(widgetComponent)

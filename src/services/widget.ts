@@ -11,10 +11,20 @@ function stripSeconds(countdown: string): string {
   return countdown;
 }
 
+/**
+ * Tüm vakitleri bildirim BigText için pipe-ayrılmış stringe dönüştür.
+ * Format: "İmsak|04:32|Güneş|06:01|Öğle|12:45|İkindi|16:23|Akşam|19:11|Yatsı|20:41"
+ */
+function buildDisplayTimesString(entries: PrayerTimeEntry[]): string {
+  return entries
+    .map(e => `${e.nameTr}|${formatTime(e.time)}`)
+    .join('|');
+}
+
 export function updateWidget(
   nextPrayer: PrayerTimeEntry | null,
   countdown: string,
-  _entries: PrayerTimeEntry[],
+  entries: PrayerTimeEntry[],
 ): void {
   if (Platform.OS !== 'android' || !PrayerWidgetBridge) {
     return;
@@ -23,6 +33,8 @@ export function updateWidget(
   const nextName = nextPrayer ? nextPrayer.nameTr : '--';
   const nextTime = nextPrayer ? formatTime(nextPrayer.time) : '--:--';
   const countdownNoSec = stripSeconds(countdown);
+  // Bildirim BigText için tüm vakitler
+  const displayTimes = buildDisplayTimesString(entries);
 
   try {
     const payload = `${nextName}|${nextTime}|${countdownNoSec}`;
@@ -30,9 +42,32 @@ export function updateWidget(
       return;
     }
     lastWidgetPayload = payload;
-    PrayerWidgetBridge.updateWidget(nextName, nextTime, countdownNoSec, nextPrayer ? String(nextPrayer.time.getTime()) : '');
+    // allTimes parametresi artık 2 veri taşıyor:
+    //   - timestamp (saniye bazlı countdown için)  → nextPrayer timestamp
+    //   - displayTimes (bigtext için)              → KEY_ALL_TIMES'a yazılıyor
+    // Bridge'i iki ayrı çağrıyla güncellemek yerine,
+    // Kotlin tarafında KEY_ALL_TIMES'ı displayTimes olarak saklayacağız.
+    // Timestamp ayrı KEY_NEXT_PRAYER_TIMESTAMP'a yazılıyor (bridge bunu allTimes param olarak alıyor).
+    // Yeni: displayTimes'ı da bridge'e gönder — 5. parametre olarak.
+    PrayerWidgetBridge.updateWidgetWithTimes(
+      nextName,
+      nextTime,
+      countdownNoSec,
+      nextPrayer ? String(nextPrayer.time.getTime()) : '',
+      displayTimes,
+    );
   } catch {
-    // Silently fail - widget update is non-critical
+    // 5-param metod yoksa eski metodu fallback olarak çağır
+    try {
+      PrayerWidgetBridge.updateWidget(
+        nextName,
+        nextTime,
+        countdownNoSec,
+        nextPrayer ? String(nextPrayer.time.getTime()) : '',
+      );
+    } catch {
+      // Silently fail
+    }
   }
 }
 

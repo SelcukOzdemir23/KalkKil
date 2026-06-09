@@ -13,25 +13,6 @@ interface CountdownTimerProps {
   kerahatLabel?: string;
 }
 
-function humanizeCountdown(countdown: string): string {
-  const [hoursRaw, minutesRaw] = countdown.split(':');
-  const hours = Number(hoursRaw);
-  const minutes = Number(minutesRaw);
-
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-    return countdown;
-  }
-
-  if (hours <= 0 && minutes <= 0) {
-    return 'Vakit girmek üzere';
-  }
-
-  if (hours <= 0) {
-    return `${minutes} dk kaldı`;
-  }
-
-  return `${hours} sa ${minutes} dk kaldı`;
-}
 
 export function CountdownTimer({nextPrayer, kerahatActive, kerahatLabel}: CountdownTimerProps) {
   const {countdown} = useCountdown(nextPrayer ? nextPrayer.time : null);
@@ -127,9 +108,6 @@ export function CountdownTimer({nextPrayer, kerahatActive, kerahatLabel}: Countd
           style={{fontSize: 28, fontWeight: '700', color: accentColor, fontVariant: ['tabular-nums'], textAlign: 'center'}}
           accessibilityLabel={`Kalan süre: ${countdown}`}
           accessibilityLiveRegion="polite">
-          {humanizeCountdown(countdown)}
-        </AppText>
-        <AppText style={{fontSize: 12, color: colors.textSubtle, marginTop: 5, fontVariant: ['tabular-nums']}}>
           {countdown}
         </AppText>
       </View>

@@ -17,7 +17,7 @@ export function PrayerList({entries, nextPrayer}: PrayerListProps) {
 
   return (
     <View>
-      <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10}}>
+      <View style={{marginBottom: 10}}>
         <AppText
           style={{
             fontSize: 12,
@@ -27,9 +27,6 @@ export function PrayerList({entries, nextPrayer}: PrayerListProps) {
             letterSpacing: 1.8,
           }}>
           Günün Vakitleri
-        </AppText>
-        <AppText style={{fontSize: 12, color: colors.textSubtle}}>
-          Diyanet yöntemi
         </AppText>
       </View>
       {entries.map(entry => (

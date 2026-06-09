@@ -189,21 +189,23 @@ export function HomeScreen() {
 
   return (
     <View style={{flex: 1, backgroundColor: colors.background}}>
+      {/* Arka plan dekor — sabit, scroll edilmez */}
+      <View
+        style={{
+          position: 'absolute',
+          top: insets.top - 60,
+          right: -80,
+          width: 200,
+          height: 200,
+          borderRadius: 100,
+          backgroundColor: colors.greenSoft,
+          pointerEvents: 'none',
+        }}
+      />
       <ScrollView
         style={{flex: 1}}
         contentContainerStyle={{paddingTop: insets.top + 16, paddingBottom: insets.bottom + 106, paddingHorizontal: 16}}
         showsVerticalScrollIndicator={false}>
-        <View
-          style={{
-            position: 'absolute',
-            top: -120,
-            right: -100,
-            width: 240,
-            height: 240,
-            borderRadius: 120,
-            backgroundColor: colors.greenSoft,
-          }}
-        />
 
         <View style={{marginBottom: 18}}>
           <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12}}>

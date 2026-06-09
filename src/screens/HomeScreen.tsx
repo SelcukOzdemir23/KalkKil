@@ -13,7 +13,7 @@ import {getGreeting} from '../utils/format';
 import {schedulePrayerNotifications, cancelAllNotifications, requestNotificationPermission} from '../services/notifications';
 import {updateWidget} from '../services/widget';
 import {getCurrentLocation, requestLocationPermission, checkLocationPermission, reverseGeocode} from '../services/location';
-import {saveLocation, setLocationPermissionGranted, getLocation, getPrayerMode} from '../services/storage';
+import {saveLocation, setLocationPermissionGranted, getLocation, getLocationLabel, getPrayerMode} from '../services/storage';
 import {colors, radius} from '../theme/tokens';
 
 export function HomeScreen() {
@@ -42,10 +42,7 @@ export function HomeScreen() {
       // Cache'te kayıtlı konum varsa her açılışta hemen yükle
       const cached = getLocation();
       if (cached) {
-        const label = cached.city && cached.district
-          ? `${cached.city}, ${cached.district}`
-          : cached.city || 'Kayıtlı konum';
-        setLocationInfo({type: 'gps', label});
+        setLocationInfo({type: 'gps', label: getLocationLabel()});
       }
 
       // ── SADECE İLK AÇILIŞ: permission + GPS ──
@@ -100,10 +97,7 @@ export function HomeScreen() {
       setLocationInfo(null);
       return;
     }
-    const label = loc.city && loc.district
-      ? `${loc.city}, ${loc.district}`
-      : loc.city || 'Kayıtlı konum';
-    setLocationInfo({type: 'gps', label});
+    setLocationInfo({type: 'gps', label: getLocationLabel()});
   }, [entries]);
 
   useEffect(() => {

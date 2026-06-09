@@ -240,27 +240,6 @@ export function HomeScreen() {
           </View>
         </View>
 
-        {activeKerahat && !error && (
-          <GlassView
-            intensity="heavy"
-            style={{
-              marginBottom: 12,
-              borderRadius: radius.md,
-              overflow: 'hidden',
-              borderWidth: 1,
-              borderColor: 'rgba(217, 135, 95, 0.24)',
-              paddingHorizontal: 14,
-              paddingVertical: 10,
-            }}>
-            <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-              <AppText style={{fontSize: 13}}>⚠️</AppText>
-              <AppText style={{fontSize: 13, fontWeight: '600', color: colors.danger, flex: 1}}>
-                Kerâhet vakti — {activeKerahat.label.toLowerCase()}
-              </AppText>
-            </View>
-          </GlassView>
-        )}
-
         {error ? (
           <GlassView
             intensity="heavy"

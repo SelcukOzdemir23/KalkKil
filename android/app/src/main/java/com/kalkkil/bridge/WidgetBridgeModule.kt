@@ -32,6 +32,7 @@ class WidgetBridgeModule(reactContext: ReactApplicationContext) :
             .putString(PrayerWidgetProvider.KEY_NEXT_PRAYER_NAME, nextPrayerName)
             .putString(PrayerWidgetProvider.KEY_NEXT_PRAYER_TIME, nextPrayerTime)
             .putString(PrayerWidgetProvider.KEY_COUNTDOWN, countdown)
+            .putString(PrayerWidgetProvider.KEY_NEXT_PRAYER_TIMESTAMP, allTimes)
             .putString(PrayerWidgetProvider.KEY_ALL_TIMES, allTimes)
             .apply()
 

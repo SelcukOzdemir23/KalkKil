@@ -30,7 +30,7 @@ export function updateWidget(
       return;
     }
     lastWidgetPayload = payload;
-    PrayerWidgetBridge.updateWidget(nextName, nextTime, countdownNoSec, '');
+    PrayerWidgetBridge.updateWidget(nextName, nextTime, countdownNoSec, nextPrayer ? String(nextPrayer.time.getTime()) : '');
   } catch {
     // Silently fail - widget update is non-critical
   }

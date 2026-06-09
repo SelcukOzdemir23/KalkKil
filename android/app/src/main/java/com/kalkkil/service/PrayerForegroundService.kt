@@ -80,35 +80,18 @@ class PrayerForegroundService : Service() {
         }
     }
 
+    /**
+     * Build persistent notification — sade ve temiz.
+     * Title: ☾ İkindi (kalın, büyük)
+     * Content: 16:45 (küçük, muted)
+     */
     private fun buildNotification(): Notification {
         val prefs = getSharedPreferences(PrayerWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE)
         val nextName = prefs.getString(PrayerWidgetProvider.KEY_NEXT_PRAYER_NAME, null)
         val nextTime = prefs.getString(PrayerWidgetProvider.KEY_NEXT_PRAYER_TIME, null)
-        val countdown = prefs.getString(PrayerWidgetProvider.KEY_COUNTDOWN, null)
 
-        val title: String
-        val content: String
-
-        if (nextName != null && nextTime != null) {
-            title = "\uD83C\uDF19 $nextName $nextTime"
-            content = if (countdown != null && countdown != "--:--") {
-                // Convert "HH:MM" to readable format
-                val parts = countdown.split(":")
-                if (parts.size >= 2) {
-                    val h = parts[0].toIntOrNull() ?: 0
-                    val m = parts[1].toIntOrNull() ?: 0
-                    if (h > 0) "${h}sa ${m}dk kaldı"
-                    else "${m}dk kaldı"
-                } else {
-                    "$countdown kaldı"
-                }
-            } else {
-                "\u2009—\u2009vakit bekleniyor"
-            }
-        } else {
-            title = "\uD83C\uDF19 KalkKıl"
-            content = "Vakitler hesaplanıyor..."
-        }
+        val title = if (nextName != null) "\uD83C\uDF19 $nextName" else "\uD83C\uDF19 KalkKıl"
+        val content = nextTime ?: "Vakitler hesaplanıyor..."
 
         val openIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -128,19 +111,43 @@ class PrayerForegroundService : Service() {
             .build()
     }
 
+    /**
+     * Calculate dynamic countdown from the stored timestamp.
+     * Returns "HH:MM" format, e.g. "02:15"
+     */
+    private fun calculateDynamicCountdown(prefs: android.content.SharedPreferences): String {
+        val ts = prefs.getString(PrayerWidgetProvider.KEY_NEXT_PRAYER_TIMESTAMP, null)
+        if (ts == null) return "--:--"
+        val diffMs = ts.toLongOrNull()?.minus(System.currentTimeMillis()) ?: return "--:--"
+        if (diffMs <= 0) return "--:--"
+        val totalMin = diffMs / 60_000
+        val h = (totalMin / 60).toInt()
+        val m = (totalMin % 60).toInt()
+        return "${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}"
+    }
+
+    /**
+     * Update both the persistent notification and the widget.
+     * Countdown is calculated dynamically so it stays accurate even when app is killed.
+     */
     private fun updateWidgetAndNotification() {
+        val prefs = getSharedPreferences(PrayerWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE)
+
         // Update notification
         val notification = buildNotification()
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(NOTIFICATION_ID, notification)
 
-        // Update widget
+        // Calculate dynamic countdown
+        val dynamicCountdown = calculateDynamicCountdown(prefs)
+
+        // Update widget with dynamic countdown
         val appWidgetManager = android.appwidget.AppWidgetManager.getInstance(this)
         val widgetComponent = android.content.ComponentName(this, PrayerWidgetProvider::class.java)
         val appWidgetIds = appWidgetManager.getAppWidgetIds(widgetComponent)
 
         for (widgetId in appWidgetIds) {
-            PrayerWidgetProvider.updateWidget(this, appWidgetManager, widgetId)
+            PrayerWidgetProvider.updateWidget(this, appWidgetManager, widgetId, dynamicCountdown)
         }
     }
 

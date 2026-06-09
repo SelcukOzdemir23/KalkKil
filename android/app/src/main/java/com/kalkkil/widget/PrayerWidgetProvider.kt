@@ -16,15 +16,39 @@ class PrayerWidgetProvider : AppWidgetProvider() {
         const val KEY_NEXT_PRAYER_NAME = "next_prayer_name"
         const val KEY_NEXT_PRAYER_TIME = "next_prayer_time"
         const val KEY_COUNTDOWN = "countdown"
-        // Bridge tarafından yazılıyor ama Provider tarafından okunmuyor
+        const val KEY_NEXT_PRAYER_TIMESTAMP = "next_prayer_timestamp"
+        // Eski uyumluluk için — bridge hâlâ yazıyor
         const val KEY_ALL_TIMES = "all_times"
 
+        /**
+         * Update widget from prefs data.
+         * Called from bridge when JS updates.
+         */
         fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val views = RemoteViews(context.packageName, R.layout.widget_prayer_times)
-
             val nextName = prefs.getString(KEY_NEXT_PRAYER_NAME, "--") ?: "--"
             val countdown = prefs.getString(KEY_COUNTDOWN, "--:--") ?: "--:--"
+            updateWidgetViews(context, appWidgetManager, appWidgetId, nextName, countdown)
+        }
+
+        /**
+         * Update widget with dynamic countdown (calculated by foreground service).
+         * Called from PrayerForegroundService every 30 seconds.
+         */
+        fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, dynamicCountdown: String) {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val nextName = prefs.getString(KEY_NEXT_PRAYER_NAME, "--") ?: "--"
+            updateWidgetViews(context, appWidgetManager, appWidgetId, nextName, dynamicCountdown)
+        }
+
+        private fun updateWidgetViews(
+            context: Context,
+            appWidgetManager: AppWidgetManager,
+            appWidgetId: Int,
+            nextName: String,
+            countdown: String
+        ) {
+            val views = RemoteViews(context.packageName, R.layout.widget_prayer_times)
 
             views.setTextViewText(R.id.widget_next_prayer, nextName)
             views.setTextViewText(R.id.widget_countdown, countdown)

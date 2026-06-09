@@ -1,97 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#101612"
-    android:orientation="vertical"
     android:padding="5dp">
 
-    <!-- Vakit listesi - 6 satır, esnek yükseklik -->
+    <!-- Kadife arka plan katmanı -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#0D1410"
+        android:layout_margin="0dp" />
+
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:gravity="center_vertical"
-        android:paddingBottom="1dp">
+        android:gravity="center"
+        android:paddingHorizontal="6dp">
 
-        <LinearLayout android:id="@+id/row_fajr" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
-            <TextView android:id="@+id/prayer_fajr" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="--" android:textSize="7.5sp" android:textColor="#9B9A90" android:fontFamily="sans-serif" android:maxLines="1" android:includeFontPadding="false" />
-            <TextView android:id="@+id/time_fajr" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--:--" android:textSize="7.5sp" android:textColor="#9B9A90" android:fontFamily="sans-serif" android:maxLines="1" android:includeFontPadding="false" />
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/row_sunrise" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
-            <TextView android:id="@+id/prayer_sunrise" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="--" android:textSize="7.5sp" android:textColor="#9B9A90" android:fontFamily="sans-serif" android:maxLines="1" android:includeFontPadding="false" />
-            <TextView android:id="@+id/time_sunrise" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--:--" android:textSize="7.5sp" android:textColor="#9B9A90" android:fontFamily="sans-serif" android:maxLines="1" android:includeFontPadding="false" />
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/row_dhuhr" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
-            <TextView android:id="@+id/prayer_dhuhr" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="--" android:textSize="7.5sp" android:textColor="#9B9A90" android:fontFamily="sans-serif" android:maxLines="1" android:includeFontPadding="false" />
-            <TextView android:id="@+id/time_dhuhr" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--:--" android:textSize="7.5sp" android:textColor="#9B9A90" android:fontFamily="sans-serif" android:maxLines="1" android:includeFontPadding="false" />
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/row_asr" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
-            <TextView android:id="@+id/prayer_asr" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="--" android:textSize="7.5sp" android:textColor="#9B9A90" android:fontFamily="sans-serif" android:maxLines="1" android:includeFontPadding="false" />
-            <TextView android:id="@+id/time_asr" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--:--" android:textSize="7.5sp" android:textColor="#9B9A90" android:fontFamily="sans-serif" android:maxLines="1" android:includeFontPadding="false" />
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/row_maghrib" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
-            <TextView android:id="@+id/prayer_maghrib" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="--" android:textSize="7.5sp" android:textColor="#9B9A90" android:fontFamily="sans-serif" android:maxLines="1" android:includeFontPadding="false" />
-            <TextView android:id="@+id/time_maghrib" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--:--" android:textSize="7.5sp" android:textColor="#9B9A90" android:fontFamily="sans-serif" android:maxLines="1" android:includeFontPadding="false" />
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/row_isha" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
-            <TextView android:id="@+id/prayer_isha" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="--" android:textSize="7.5sp" android:textColor="#9B9A90" android:fontFamily="sans-serif" android:maxLines="1" android:includeFontPadding="false" />
-            <TextView android:id="@+id/time_isha" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--:--" android:textSize="7.5sp" android:textColor="#9B9A90" android:fontFamily="sans-serif" android:maxLines="1" android:includeFontPadding="false" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- Ayraç -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="1px"
-        android:background="#1AD6B46A"
-        android:layout_marginTop="1dp"
-        android:layout_marginBottom="2dp" />
-
-    <!-- Kalan süre + vakit ismi -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-
+        <!-- ☾ ikonu -->
         <TextView
-            android:id="@+id/widget_countdown_label"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:text="☾"
+            android:textSize="11sp"
+            android:textColor="#33D6B46A"
+            android:gravity="bottom"
+            android:includeFontPadding="false" />
+
+        <!-- Sonraki vakit adı -->
+        <TextView
+            android:id="@+id/widget_next_prayer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="--"
-            android:textSize="7sp"
-            android:textColor="#80D6B46A"
+            android:textSize="20sp"
+            android:textColor="#D6B46A"
             android:textStyle="bold"
-            android:fontFamily="sans-serif"
+            android:fontFamily="sans-serif-light"
+            android:gravity="center"
+            android:maxLines="1"
             android:includeFontPadding="false" />
 
+        <!-- Vakit saati (muted) -->
         <TextView
-            android:id="@+id/widget_all_times"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone" />
+            android:id="@+id/widget_next_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--:--"
+            android:textSize="11sp"
+            android:textColor="#9B9A90"
+            android:fontFamily="sans-serif"
+            android:gravity="center"
+            android:includeFontPadding="false" />
 
+        <!-- Ayraç çizgisi -->
+        <View
+            android:layout_width="28dp"
+            android:layout_height="1px"
+            android:background="#30D6B46A"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="4dp" />
+
+        <!-- Kalan süre -->
         <TextView
             android:id="@+id/widget_countdown"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="--:--"
-            android:textSize="10sp"
+            android:textSize="13sp"
             android:textColor="#D6B46A"
             android:textStyle="bold"
             android:fontFamily="sans-serif"
-            android:gravity="end"
+            android:gravity="center"
             android:maxLines="1"
             android:includeFontPadding="false" />
+
+        <!-- "kaldı" yazısı -->
+        <TextView
+            android:id="@+id/widget_countdown_label"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:text="kaldı"
+            android:textSize="7sp"
+            android:textColor="#60D6B46A"
+            android:gravity="top"
+            android:includeFontPadding="false" />
+
     </LinearLayout>
 
-</LinearLayout>
+</FrameLayout>

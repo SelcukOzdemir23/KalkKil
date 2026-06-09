@@ -5,7 +5,6 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.widget.RemoteViews
 import com.kalkkil.MainActivity
 import com.kalkkil.R
@@ -17,49 +16,33 @@ class PrayerWidgetProvider : AppWidgetProvider() {
         const val KEY_NEXT_PRAYER_NAME = "next_prayer_name"
         const val KEY_NEXT_PRAYER_TIME = "next_prayer_time"
         const val KEY_COUNTDOWN = "countdown"
+        // Bridge tarafından yazılıyor ama Provider tarafından okunmuyor
         const val KEY_ALL_TIMES = "all_times"
-
-        private val PRAYER_NAMES = listOf("fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha")
-        private val ACCENT_COLOR = Color.parseColor("#D6B46A")
-        private val MUTED_COLOR = Color.parseColor("#9B9A90")
 
         fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val views = RemoteViews(context.packageName, R.layout.widget_prayer_times)
 
-            val allTimes = prefs.getString(KEY_ALL_TIMES, "") ?: ""
+            val nextName = prefs.getString(KEY_NEXT_PRAYER_NAME, "--") ?: "--"
+            val nextTime = prefs.getString(KEY_NEXT_PRAYER_TIME, "--:--") ?: "--:--"
             val countdown = prefs.getString(KEY_COUNTDOWN, "--:--") ?: "--:--"
-            val nextPrayerName = prefs.getString(KEY_NEXT_PRAYER_NAME, "--") ?: "--"
 
-            // allTimes format: "name|time,next?;name|time,next?;..."
-            // Example: "İmsak|05:34,0;Güneş|07:02,0;Öğle|13:15,0;İkindi|16:45,1;Akşam|19:30,0;Yatsı|21:00,0"
-            val rows = allTimes.split(";")
-
-            for ((index, row) in rows.withIndex()) {
-                if (index >= PRAYER_NAMES.size) break
-                val prayerKey = PRAYER_NAMES[index]
-                val parts = row.split(",")
-                val nameTime = parts[0].split("|")
-                val isNext = parts.size > 1 && parts[1] == "1"
-
-                val prayerName = if (nameTime.size >= 2) nameTime[0] else "--"
-                val prayerTime = if (nameTime.size >= 2) nameTime[1] else "--:--"
-
-                val nameId = context.resources.getIdentifier("prayer_$prayerKey", "id", context.packageName)
-                val timeId = context.resources.getIdentifier("time_$prayerKey", "id", context.packageName)
-
-                if (nameId != 0 && timeId != 0) {
-                    val color = if (isNext) ACCENT_COLOR else MUTED_COLOR
-                    views.setTextColor(nameId, color)
-                    views.setTextColor(timeId, color)
-                    views.setTextViewText(nameId, prayerName)
-                    views.setTextViewText(timeId, prayerTime)
-                }
-            }
-
-            // Highlight next prayer name in countdown area too
-            views.setTextViewText(R.id.widget_countdown_label, nextPrayerName)
+            views.setTextViewText(R.id.widget_next_prayer, nextName)
+            views.setTextViewText(R.id.widget_next_time, nextTime)
             views.setTextViewText(R.id.widget_countdown, countdown)
+
+            // Convert countdown to hours/minutes format for the label
+            val parts = countdown.split(":")
+            val labelText = if (parts.size >= 2) {
+                val h = parts[0].toIntOrNull() ?: 0
+                val m = parts[1].toIntOrNull() ?: 0
+                when {
+                    h > 0 -> "${h} sa ${m} dk kaldı"
+                    m > 0 -> "${m} dk kaldı"
+                    else -> "kaldı"
+                }
+            } else "kaldı"
+            views.setTextViewText(R.id.widget_countdown_label, labelText)
 
             // Open app on click
             val intent = Intent(context, MainActivity::class.java)

@@ -19,6 +19,10 @@ class PrayerWidgetProvider : AppWidgetProvider() {
         const val KEY_NEXT_PRAYER_TIMESTAMP = "next_prayer_timestamp"
         // Eski uyumluluk için — bridge hâlâ yazıyor
         const val KEY_ALL_TIMES = "all_times"
+        // Tüm vakitlerin Unix epoch timestamp'leri (pipe-ayrılmış)
+        // Format: "1715000000000|1715010000000|1715020000000|..."
+        // Sıra: fajr, sunrise, dhuhr, asr, maghrib, isha
+        const val KEY_ALL_TIMESTAMPS = "all_timestamps"
 
         /**
          * Update widget from prefs data.

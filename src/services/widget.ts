@@ -21,6 +21,17 @@ function buildDisplayTimesString(entries: PrayerTimeEntry[]): string {
     .join('|');
 }
 
+/**
+ * Tüm vakitlerin epoch ms timestamp'lerini pipe-ayrılmış stringe dönüştür.
+ * Format: "1715000000000|1715010000000|..."
+ * Foreground service bu sayede bağımsız olarak sıradaki vakti bulabilir.
+ */
+function buildAllTimestampsString(entries: PrayerTimeEntry[]): string {
+  return entries
+    .map(e => String(e.time.getTime()))
+    .join('|');
+}
+
 export function updateWidget(
   nextPrayer: PrayerTimeEntry | null,
   countdown: string,
@@ -42,31 +53,39 @@ export function updateWidget(
       return;
     }
     lastWidgetPayload = payload;
-    // allTimes parametresi artık 2 veri taşıyor:
-    //   - timestamp (saniye bazlı countdown için)  → nextPrayer timestamp
-    //   - displayTimes (bigtext için)              → KEY_ALL_TIMES'a yazılıyor
-    // Bridge'i iki ayrı çağrıyla güncellemek yerine,
-    // Kotlin tarafında KEY_ALL_TIMES'ı displayTimes olarak saklayacağız.
-    // Timestamp ayrı KEY_NEXT_PRAYER_TIMESTAMP'a yazılıyor (bridge bunu allTimes param olarak alıyor).
-    // Yeni: displayTimes'ı da bridge'e gönder — 5. parametre olarak.
+    // Tüm vakitlerin epoch ms timestamp'leri (servis bağımsız hesaplama için)
+    const allTimestamps = buildAllTimestampsString(entries);
+
+    // 6-param metod: nextName, nextTime, countdown, timestamp, displayTimes, allTimestamps
     PrayerWidgetBridge.updateWidgetWithTimes(
       nextName,
       nextTime,
       countdownNoSec,
       nextPrayer ? String(nextPrayer.time.getTime()) : '',
       displayTimes,
+      allTimestamps,
     );
   } catch {
-    // 5-param metod yoksa eski metodu fallback olarak çağır
+    // Fallback: eski metotları dene
     try {
-      PrayerWidgetBridge.updateWidget(
+      PrayerWidgetBridge.updateWidgetWithTimes(
         nextName,
         nextTime,
         countdownNoSec,
         nextPrayer ? String(nextPrayer.time.getTime()) : '',
+        displayTimes,
       );
     } catch {
-      // Silently fail
+      try {
+        PrayerWidgetBridge.updateWidget(
+          nextName,
+          nextTime,
+          countdownNoSec,
+          nextPrayer ? String(nextPrayer.time.getTime()) : '',
+        );
+      } catch {
+        // Silently fail
+      }
     }
   }
 }

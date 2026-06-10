@@ -122,10 +122,48 @@ export function usePrayerTimes(): UsePrayerTimesResult {
         return;
       }
 
+      const updated = getPrayerTimeEntries(dailyTimes, now);
+
+      // Tüm vakitler geçmişse (Yatsı'dan sonra) → sonraki günü otomatik hesapla
+      const allPassed = updated.every(e => e.isPassed);
+      if (allPassed) {
+        const location = getLocation();
+        if (location) {
+          const tomorrow = new Date(now);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          try {
+            const tomorrowTimes = calculatePrayerTimes(
+              location.latitude,
+              location.longitude,
+              tomorrow,
+            );
+            setDailyTimes(tomorrowTimes);
+
+            const kerahatList = calculateKerahatTimes(tomorrowTimes);
+            setKerahatTimes(kerahatList);
+
+            const tomorrowEntries = getPrayerTimeEntries(tomorrowTimes, now);
+            const entriesWithKerahat = tomorrowEntries.map(e => {
+              const k = isTimeInKerahat(e.time, kerahatList);
+              return {...e, isKerahat: k.isKerahat, kerahatLabel: k.label};
+            });
+            setEntries(entriesWithKerahat);
+
+            // Önbelleğe de kaydet (yarınki vakitler hesaplanmış olsun)
+            saveCachedPrayerTimes(
+              getPrayerTimesAsStrings(tomorrowTimes),
+              getDateKey(tomorrow),
+            );
+            return;
+          } catch {
+            // Hata olursa sessizce geç, bir sonraki interval'da tekrar dene
+          }
+        }
+      }
+
       const kerahatList = calculateKerahatTimes(dailyTimes);
       setKerahatTimes(kerahatList);
 
-      const updated = getPrayerTimeEntries(dailyTimes, now);
       const entriesWithKerahat = updated.map(e => {
         const k = isTimeInKerahat(e.time, kerahatList);
         return {...e, isKerahat: k.isKerahat, kerahatLabel: k.label};

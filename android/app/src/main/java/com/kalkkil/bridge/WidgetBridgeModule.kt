@@ -33,6 +33,8 @@ class WidgetBridgeModule(reactContext: ReactApplicationContext) :
     /**
      * Yeni metod — timestamp + display times (bildirim BigText için) ayrı ayrı gelir.
      * displayTimes: "İmsak|04:32|Güneş|06:01|Öğle|12:45|İkindi|16:23|Akşam|19:11|Yatsı|20:41"
+     * allTimestamps: tüm vakitlerin epoch ms timestamp'leri pipe-ayrılmış
+     *   "1715000000000|1715010000000|1715020000000|1715030000000|1715040000000|1715050000000"
      */
     @ReactMethod
     fun updateWidgetWithTimes(
@@ -40,9 +42,10 @@ class WidgetBridgeModule(reactContext: ReactApplicationContext) :
         nextPrayerTime: String,
         countdown: String,
         timestamp: String,
-        displayTimes: String
+        displayTimes: String,
+        allTimestamps: String
     ) {
-        saveAndUpdate(nextPrayerName, nextPrayerTime, countdown, timestamp, displayTimes)
+        saveAndUpdate(nextPrayerName, nextPrayerTime, countdown, timestamp, displayTimes, allTimestamps)
     }
 
     private fun saveAndUpdate(
@@ -50,7 +53,8 @@ class WidgetBridgeModule(reactContext: ReactApplicationContext) :
         nextPrayerTime: String,
         countdown: String,
         timestamp: String,
-        displayTimes: String?
+        displayTimes: String?,
+        allTimestamps: String? = null
     ) {
         val context = reactApplicationContext
         val prefs = context.getSharedPreferences(
@@ -69,6 +73,11 @@ class WidgetBridgeModule(reactContext: ReactApplicationContext) :
         } else {
             // Eski davranış: allTimes timestamp olarak geliyordu, KEY_ALL_TIMES boş bırak
             editor.putString(PrayerWidgetProvider.KEY_ALL_TIMES, "")
+        }
+
+        // allTimestamps varsa KEY_ALL_TIMESTAMPS'a yaz (servis bağımsız hesaplama için)
+        if (allTimestamps != null) {
+            editor.putString(PrayerWidgetProvider.KEY_ALL_TIMESTAMPS, allTimestamps)
         }
 
         editor.apply()

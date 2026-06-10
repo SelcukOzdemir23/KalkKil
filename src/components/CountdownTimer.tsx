@@ -32,10 +32,10 @@ export function CountdownTimer({nextPrayer, kerahatActive, kerahatLabel}: Countd
         }}>
         <AppText style={{fontSize: 26, color: colors.accent}}>☾</AppText>
         <AppText style={{fontSize: 17, fontWeight: '600', color: colors.text, textAlign: 'center', marginTop: 10}}>
-          Bugünün tüm vakitleri geçmiştir
+          Yarına hazırlanıyor...
         </AppText>
         <AppText style={{fontSize: 13, color: colors.textMuted, textAlign: 'center', marginTop: 4}}>
-          Yeni günün vakitleri otomatik yenilenecek.
+          Yeni günün vakitleri hesaplanıyor.
         </AppText>
       </GlassView>
     );

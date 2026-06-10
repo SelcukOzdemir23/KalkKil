@@ -198,7 +198,7 @@ export function HomeScreen() {
           width: 200,
           height: 200,
           borderRadius: 100,
-          backgroundColor: colors.greenSoft,
+          backgroundColor: colors.accentSoft,
           pointerEvents: 'none',
         }}
       />

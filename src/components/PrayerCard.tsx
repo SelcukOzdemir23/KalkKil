@@ -34,7 +34,7 @@ export function PrayerCard({entry, isNext}: PrayerCardProps) {
             width: 9,
             height: 9,
             borderRadius: 5,
-            backgroundColor: isNext ? accentColor : isPassed ? 'rgba(244, 241, 234, 0.18)' : colors.green,
+            backgroundColor: isNext ? accentColor : isPassed ? 'rgba(244, 241, 234, 0.18)' : colors.accentMuted,
             marginRight: 12,
           }}
         />

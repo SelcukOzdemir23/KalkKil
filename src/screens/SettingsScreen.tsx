@@ -5,12 +5,12 @@ import {AlertModal} from '../components/AlertModal';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAppContext} from '../context/AppContext';
 import {GlassView} from '../components/GlassView';
-import {QiblaCompass} from '../components/QiblaCompass';
+import {QiblaScreen} from '../screens/QiblaScreen';
 import {getCurrentLocation, reverseGeocode} from '../services/location';
 import {requestNotificationPermission, sendTestNotification} from '../services/notifications';
 import {saveLocation, setLocationPermissionGranted, getLocationLabel, getLocation} from '../services/storage';
-import {Navigation, Bell, BellOff, Clock, Moon, Sunrise, Sun, Cloud, Sunset, Star, CloudMoon} from 'lucide-react-native';
-import {colors, radius, shadows, spacing} from '../theme/tokens';
+import {Bell, BellOff, Clock, Moon, Sunrise, Sun, Cloud, Sunset, Star, CloudMoon} from 'lucide-react-native';
+import {colors, radius, shadows} from '../theme/tokens';
 
 const TIMING_OPTIONS = [
   {label: 'Tam vaktinde', short: 'Vaktinde', value: 0},
@@ -81,16 +81,16 @@ function SettingsRow({icon, title, subtitle, right, active = true, onPress, noBo
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
-        gap: 12,
+        paddingVertical: 14,
+        gap: 14,
         borderTopWidth: noBorder ? 0 : 1,
         borderTopColor: colors.border,
       }}>
       <RowIcon active={active}>{icon}</RowIcon>
       <View style={{flex: 1}}>
-        <AppText style={{fontSize: 15, fontWeight: '700', color: colors.text}}>{title}</AppText>
+        <AppText style={{fontSize: 16, fontWeight: '700', color: colors.text}}>{title}</AppText>
         {subtitle ? (
-          <AppText style={{fontSize: 12, color: colors.textMuted, marginTop: 1, lineHeight: 17}}>
+          <AppText style={{fontSize: 13, color: colors.textMuted, marginTop: 2, lineHeight: 18}}>
             {subtitle}
           </AppText>
         ) : null}
@@ -117,7 +117,7 @@ function SettingsCard({children}: {children: React.ReactNode}) {
         borderRadius: radius.xl,
         borderWidth: 1,
         borderColor: colors.border,
-        paddingHorizontal: 16,
+        paddingHorizontal: 18,
         marginBottom: 24,
         ...shadows.subtle,
       }}>
@@ -143,14 +143,15 @@ export function SettingsScreen() {
 
   const insets = useSafeAreaInsets();
   const [locationLoading, setLocationLoading] = useState(false);
+  const [qiblaVisible, setQiblaVisible] = useState(false);
   const [alertState, setAlertState] = useState<{visible: boolean; title: string; message: string; icon?: string}>({
     visible: false,
     title: '',
     message: '',
   });
 
-  // Kullanıcının kayıtlı konumu
   const savedLocation = getLocation();
+  const locationLabel = savedLocation ? getLocationLabel() : 'Konum ayarlanmadı';
 
   const showAlert = useCallback((title: string, message: string, icon?: string) => {
     setAlertState({visible: true, title, message, icon});
@@ -173,8 +174,7 @@ export function SettingsScreen() {
       );
       setLocationPermissionGranted(true);
       requestRefresh();
-      const label = getLocationLabel();
-      showAlert('Konum Güncellendi', `Konum: ${label}\n\nVakitler yeniden hesaplanacaktır.`, '📍');
+      showAlert('Konum Güncellendi', `Konum: ${getLocationLabel()}\n\nVakitler yeniden hesaplanacaktır.`, '📍');
     } else {
       showAlert('Konum Alınamadı', result.error, '⚠️');
     }
@@ -220,69 +220,78 @@ export function SettingsScreen() {
         />
 
         {/* Başlık */}
-        <AppText style={{fontSize: 36, fontWeight: '700', color: colors.text, marginBottom: 2}}>
+        <AppText style={{fontSize: 36, fontWeight: '700', color: colors.text, marginBottom: 28}}>
           Ayarlar
-        </AppText>
-        <AppText style={{fontSize: 13, color: colors.textSubtle, marginBottom: 28}}>
-          KalkKıl'ı kişiselleştir
         </AppText>
 
         {/* ── KONUM ── */}
         <SectionLabel text="Konum" />
         <SettingsCard>
-          <SettingsRow
-            noBorder
-            icon={<Navigation size={18} color={colors.accent} />}
-            title={savedLocation ? getLocationLabel() : 'Konum ayarlanmadı'}
-            subtitle={savedLocation ? `${savedLocation.latitude.toFixed(4)}, ${savedLocation.longitude.toFixed(4)}` : 'GPS ile konumunuzu alın'}
-            right={null}
-          />
-          <View style={{paddingVertical: 12}}>
+          {/* Sade: ikonsuz, direkt konum adı */}
+          <View style={{paddingTop: 16, paddingBottom: 4}}>
+            <AppText style={{fontSize: 17, fontWeight: '700', color: colors.text}}>
+              {locationLabel}
+            </AppText>
+            {savedLocation ? (
+              <AppText style={{fontSize: 12, color: colors.textSubtle, marginTop: 2}}>
+                {savedLocation.latitude.toFixed(4)}, {savedLocation.longitude.toFixed(4)}
+              </AppText>
+            ) : null}
+          </View>
+
+          {/* Sade buton — ikon yok, sadece yazı */}
+          <View style={{paddingTop: 10, paddingBottom: 16}}>
             <Pressable
               onPress={handleRefreshLocation}
               disabled={locationLoading}
               style={({pressed}) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
                 backgroundColor: pressed ? colors.accentSoft : colors.surfaceSoft,
-                borderRadius: radius.lg,
+                borderRadius: radius.md,
                 borderWidth: 1,
-                borderColor: pressed ? colors.accent : colors.borderStrong,
-                paddingVertical: 13,
+                borderColor: colors.border,
+                paddingVertical: 14,
+                alignItems: 'center',
                 opacity: locationLoading ? 0.7 : 1,
-                transform: [{scale: pressed ? 0.97 : 1}],
               })}>
               {locationLoading ? (
                 <ActivityIndicator size="small" color={colors.accent} />
               ) : (
-                <Navigation size={15} color={colors.accent} strokeWidth={2.5} />
+                <AppText style={{fontSize: 14, fontWeight: '600', color: colors.accent}}>
+                  GPS ile Güncelle
+                </AppText>
               )}
-              <AppText
-                style={{
-                  fontSize: 14,
-                  fontWeight: '700',
-                  color: locationLoading ? colors.textMuted : colors.accent,
-                  letterSpacing: 0.2,
-                }}>
-                {locationLoading ? 'Konum alınıyor…' : 'Konumu güncelle'}
-              </AppText>
             </Pressable>
           </View>
         </SettingsCard>
 
         {/* ── KIBLE ── */}
         <SectionLabel text="Kıble" />
-        <QiblaCompass
-          latitude={savedLocation?.latitude}
-          longitude={savedLocation?.longitude}
-        />
+        <Pressable
+          onPress={() => setQiblaVisible(true)}
+          style={({pressed}) => ({
+            backgroundColor: pressed ? colors.accentSoft : colors.surface,
+            borderRadius: radius.xl,
+            borderWidth: 1,
+            borderColor: pressed ? colors.borderStrong : colors.border,
+            padding: 24,
+            alignItems: 'center',
+            marginBottom: 24,
+            ...shadows.subtle,
+            transform: [{scale: pressed ? 0.98 : 1}],
+          })}>
+          <AppText style={{fontSize: 40, marginBottom: 10}}>🕋</AppText>
+          <AppText style={{fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: 4}}>
+            Kıble Pusulası
+          </AppText>
+          <AppText style={{fontSize: 13, color: colors.textMuted, textAlign: 'center'}}>
+            Kâbe yönünü bulmak için açın
+          </AppText>
+        </Pressable>
 
         {/* ── BİLDİRİMLER ── */}
         <SectionLabel text="Bildirimler" />
         <SettingsCard>
-          {/* Ana toggle */}
+          {/* Ana toggle — ferah */}
           <SettingsRow
             noBorder
             icon={
@@ -294,7 +303,7 @@ export function SettingsScreen() {
             }
             active={notificationsEnabled}
             title="Vakit bildirimleri"
-            subtitle="Her ezan öncesi veya tam vaktinde hatırlatma."
+            subtitle="Her ezan öncesi veya tam vaktinde hatırlatma"
             right={
               <Switch
                 value={notificationsEnabled}
@@ -305,25 +314,18 @@ export function SettingsScreen() {
             }
           />
 
-          {/* Bildirim ayarları — bildirimler kapalıyken bile görünür ama dimmed */}
-          <View style={{opacity: notificationsEnabled ? 1 : 0.4}}>
-            <View style={{borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 14, paddingBottom: 6}}>
-              <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10}}>
-                <Clock size={14} color={colors.accentMuted} />
-                <AppText
-                  style={{
-                    fontSize: 11,
-                    fontWeight: '700',
-                    color: colors.accentMuted,
-                    textTransform: 'uppercase',
-                    letterSpacing: 1.6,
-                  }}>
+          <View style={{opacity: notificationsEnabled ? 1 : 0.35}}>
+            {/* Zamanlama — ferah */}
+            <View style={{borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 16, paddingBottom: 8}}>
+              <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14}}>
+                <Clock size={15} color={colors.accentMuted} />
+                <AppText style={{fontSize: 12, fontWeight: '700', color: colors.accentMuted, textTransform: 'uppercase', letterSpacing: 1.8}}>
                   Ne kadar önce?
                 </AppText>
               </View>
 
-              {/* Segmented chip seçimi */}
-              <View style={{flexDirection: 'row', gap: 6}}>
+              {/* Timing chip'leri — 2x2 grid, daha geniş */}
+              <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 10}}>
                 {TIMING_OPTIONS.map(opt => {
                   const isActive = notificationTiming === opt.value;
                   return (
@@ -332,8 +334,9 @@ export function SettingsScreen() {
                       onPress={() => setNotificationTiming(opt.value)}
                       style={({pressed}) => ({
                         flex: 1,
+                        minWidth: '45%',
                         alignItems: 'center',
-                        paddingVertical: 9,
+                        paddingVertical: 12,
                         borderRadius: radius.md,
                         backgroundColor: isActive
                           ? colors.accentSoft
@@ -343,12 +346,7 @@ export function SettingsScreen() {
                         borderWidth: 1,
                         borderColor: isActive ? colors.borderStrong : colors.border,
                       })}>
-                      <AppText
-                        style={{
-                          fontSize: 12,
-                          fontWeight: '700',
-                          color: isActive ? colors.accent : colors.textMuted,
-                        }}>
+                      <AppText style={{fontSize: 13, fontWeight: '700', color: isActive ? colors.accent : colors.textMuted}}>
                         {opt.short}
                       </AppText>
                     </Pressable>
@@ -357,13 +355,13 @@ export function SettingsScreen() {
               </View>
             </View>
 
+            {/* Namazdayım modu */}
             <View style={{borderTopWidth: 1, borderTopColor: colors.border}}>
-              {/* Namazdayım modu */}
               <SettingsRow
                 icon={<Moon size={17} color={prayerMode ? colors.accent : colors.textSubtle} />}
                 active={prayerMode}
                 title="Namazdayım Modu"
-                subtitle="Vakit girdiğinde bildirimleri 15 dk susturur."
+                subtitle="Vakit girdiğinde bildirimleri 15 dk susturur"
                 right={
                   <Switch
                     value={prayerMode}
@@ -375,19 +373,12 @@ export function SettingsScreen() {
               />
             </View>
 
-            <View style={{borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, paddingBottom: 4}}>
-              <AppText
-                style={{
-                  fontSize: 11,
-                  fontWeight: '700',
-                  color: colors.textSubtle,
-                  textTransform: 'uppercase',
-                  letterSpacing: 1.6,
-                  marginBottom: 4,
-                }}>
+            {/* Vakit bazında toggle'lar — ferah 3x2 grid */}
+            <View style={{borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 16, paddingBottom: 8}}>
+              <AppText style={{fontSize: 12, fontWeight: '700', color: colors.textSubtle, textTransform: 'uppercase', letterSpacing: 1.8, marginBottom: 6}}>
                 Vakit bazında
               </AppText>
-              <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingTop: 8}}>
+              <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingTop: 10}}>
                 {PRAYERS.map(prayer => {
                   const enabled = prayerNotifications[prayer.name as keyof typeof prayerNotifications];
                   const {Icon} = prayer;
@@ -398,9 +389,9 @@ export function SettingsScreen() {
                       style={({pressed}) => ({
                         flexDirection: 'row',
                         alignItems: 'center',
-                        gap: 6,
-                        paddingHorizontal: 12,
-                        paddingVertical: 8,
+                        gap: 8,
+                        paddingHorizontal: 16,
+                        paddingVertical: 12,
                         borderRadius: radius.md,
                         backgroundColor: enabled
                           ? colors.accentSoft
@@ -410,17 +401,8 @@ export function SettingsScreen() {
                         borderWidth: 1,
                         borderColor: enabled ? colors.borderStrong : colors.border,
                       })}>
-                      <Icon
-                        size={14}
-                        color={enabled ? colors.accent : colors.textSubtle}
-                        strokeWidth={2.2}
-                      />
-                      <AppText
-                        style={{
-                          fontSize: 13,
-                          fontWeight: '700',
-                          color: enabled ? colors.accent : colors.textMuted,
-                        }}>
+                      <Icon size={16} color={enabled ? colors.accent : colors.textSubtle} strokeWidth={2.2} />
+                      <AppText style={{fontSize: 14, fontWeight: '700', color: enabled ? colors.accent : colors.textMuted}}>
                         {prayer.label}
                       </AppText>
                     </Pressable>
@@ -429,16 +411,13 @@ export function SettingsScreen() {
               </View>
             </View>
 
-            <View style={{borderTopWidth: 1, borderTopColor: colors.border, paddingVertical: 12}}>
+            {/* Test butonu */}
+            <View style={{borderTopWidth: 1, borderTopColor: colors.border, paddingVertical: 16}}>
               <Pressable
                 onPress={async () => {
                   const granted = await requestNotificationPermission();
                   if (!granted) {
-                    showAlert(
-                      'Bildirim İzni Gerekli',
-                      'Test bildirimi gönderebilmek için bildirim iznini vermelisiniz.',
-                      '🔔',
-                    );
+                    showAlert('Bildirim İzni Gerekli', 'Test bildirimi gönderebilmek için bildirim iznini vermelisiniz.', '🔔');
                     return;
                   }
                   await sendTestNotification();
@@ -450,12 +429,12 @@ export function SettingsScreen() {
                   justifyContent: 'center',
                   gap: 8,
                   backgroundColor: pressed ? colors.accentSoft : 'transparent',
-                  borderRadius: radius.lg,
+                  borderRadius: radius.md,
                   borderWidth: 1,
                   borderColor: colors.borderStrong,
-                  paddingVertical: 12,
+                  paddingVertical: 14,
                 })}>
-                <Bell size={15} color={colors.accent} />
+                <Bell size={16} color={colors.accent} />
                 <AppText style={{fontSize: 14, fontWeight: '600', color: colors.accent}}>
                   Test bildirimi gönder
                 </AppText>
@@ -469,24 +448,27 @@ export function SettingsScreen() {
         <SettingsCard>
           <SettingsRow
             noBorder
-            icon={<View style={{width: 18, height: 18, borderRadius: 9, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'}}><AppText style={{fontSize: 10, fontWeight: '700', color: colors.background}}>K</AppText></View>}
+            icon={<View style={{width: 20, height: 20, borderRadius: 10, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'}}><AppText style={{fontSize: 11, fontWeight: '700', color: colors.background}}>K</AppText></View>}
             title="Versiyon"
-            right={<AppText style={{fontSize: 13, color: colors.textMuted}}>0.0.1</AppText>}
+            right={<AppText style={{fontSize: 14, color: colors.textMuted}}>0.0.1</AppText>}
           />
           <SettingsRow
-            icon={<View style={{alignItems: 'center', justifyContent: 'center', width: 18}}><AppText style={{fontSize: 14}}>📖</AppText></View>}
+            icon={<View style={{alignItems: 'center', justifyContent: 'center', width: 20}}><AppText style={{fontSize: 15}}>📖</AppText></View>}
             title="Hesaplama yöntemi"
-            right={<AppText style={{fontSize: 13, color: colors.textMuted}}>Diyanet</AppText>}
+            right={<AppText style={{fontSize: 14, color: colors.textMuted}}>Diyanet</AppText>}
           />
         </SettingsCard>
 
         {/* Footer */}
-        <View style={{alignItems: 'center', paddingTop: 4, paddingBottom: 8}}>
+        <View style={{alignItems: 'center', paddingTop: 8, paddingBottom: 8}}>
           <AppText style={{fontSize: 11, color: colors.textSubtle, textAlign: 'center', lineHeight: 16}}>
             Reklamsız · Açık Kaynak
           </AppText>
         </View>
       </ScrollView>
+
+      {/* Kıble full-screen modal */}
+      <QiblaScreen visible={qiblaVisible} onClose={() => setQiblaVisible(false)} />
 
       <AlertModal visible={alertState.visible} title={alertState.title} message={alertState.message} icon={alertState.icon} onClose={hideAlert} />
     </>

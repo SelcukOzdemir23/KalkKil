@@ -1,13 +1,14 @@
-import React, {useCallback, useRef, useState} from 'react';
-import {View, Switch, ScrollView, Pressable, ActivityIndicator, Animated} from 'react-native';
+import React, {useCallback, useState} from 'react';
+import {View, Switch, ScrollView, Pressable, ActivityIndicator} from 'react-native';
 import {AppText} from '../components/AppText';
 import {AlertModal} from '../components/AlertModal';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAppContext} from '../context/AppContext';
 import {GlassView} from '../components/GlassView';
+import {QiblaCompass} from '../components/QiblaCompass';
 import {getCurrentLocation, reverseGeocode} from '../services/location';
 import {requestNotificationPermission, sendTestNotification} from '../services/notifications';
-import {saveLocation, setLocationPermissionGranted, getLocationLabel} from '../services/storage';
+import {saveLocation, setLocationPermissionGranted, getLocationLabel, getLocation} from '../services/storage';
 import {Navigation, Bell, BellOff, Clock, Moon, Sunrise, Sun, Cloud, Sunset, Star, CloudMoon} from 'lucide-react-native';
 import {colors, radius, shadows, spacing} from '../theme/tokens';
 
@@ -47,10 +48,6 @@ function RowIcon({children, active = true}: {children: React.ReactNode; active?:
   );
 }
 
-function Divider() {
-  return <View style={{height: 1, backgroundColor: colors.border, marginVertical: 2}} />;
-}
-
 function SectionLabel({text}: {text: string}) {
   return (
     <AppText
@@ -68,16 +65,7 @@ function SectionLabel({text}: {text: string}) {
   );
 }
 
-/** Tek satır ayar satırı — ikon + başlık/açıklama + sağ eleman */
-function SettingsRow({
-  icon,
-  title,
-  subtitle,
-  right,
-  active = true,
-  onPress,
-  noBorder,
-}: {
+interface SettingsRowProps {
   icon: React.ReactNode;
   title: string;
   subtitle?: string;
@@ -85,7 +73,9 @@ function SettingsRow({
   active?: boolean;
   onPress?: () => void;
   noBorder?: boolean;
-}) {
+}
+
+function SettingsRow({icon, title, subtitle, right, active = true, onPress, noBorder}: SettingsRowProps) {
   const content = (
     <View
       style={{
@@ -111,9 +101,7 @@ function SettingsRow({
 
   if (onPress) {
     return (
-      <Pressable
-        onPress={onPress}
-        style={({pressed}) => ({opacity: pressed ? 0.7 : 1})}>
+      <Pressable onPress={onPress} style={({pressed}) => ({opacity: pressed ? 0.7 : 1})}>
         {content}
       </Pressable>
     );
@@ -121,7 +109,6 @@ function SettingsRow({
   return content;
 }
 
-/** Gruplu kart — birden fazla SettingsRow için */
 function SettingsCard({children}: {children: React.ReactNode}) {
   return (
     <GlassView
@@ -156,25 +143,14 @@ export function SettingsScreen() {
 
   const insets = useSafeAreaInsets();
   const [locationLoading, setLocationLoading] = useState(false);
-  const [alertState, setAlertState] = useState<{
-    visible: boolean;
-    title: string;
-    message: string;
-    icon?: string;
-  }>({visible: false, title: '', message: ''});
+  const [alertState, setAlertState] = useState<{visible: boolean; title: string; message: string; icon?: string}>({
+    visible: false,
+    title: '',
+    message: '',
+  });
 
-  // Bildirim detay expand animasyonu
-  const expandAnim = useRef(new Animated.Value(notificationsEnabled ? 1 : 0)).current;
-  const prevEnabled = useRef(notificationsEnabled);
-
-  if (prevEnabled.current !== notificationsEnabled) {
-    prevEnabled.current = notificationsEnabled;
-    Animated.timing(expandAnim, {
-      toValue: notificationsEnabled ? 1 : 0,
-      duration: 240,
-      useNativeDriver: false,
-    }).start();
-  }
+  // Kullanıcının kayıtlı konumu
+  const savedLocation = getLocation();
 
   const showAlert = useCallback((title: string, message: string, icon?: string) => {
     setAlertState({visible: true, title, message, icon});
@@ -230,7 +206,6 @@ export function SettingsScreen() {
           paddingHorizontal: 16,
         }}
         showsVerticalScrollIndicator={false}>
-
         {/* Arka plan dekor */}
         <View
           style={{
@@ -258,11 +233,10 @@ export function SettingsScreen() {
           <SettingsRow
             noBorder
             icon={<Navigation size={18} color={colors.accent} />}
-            title="Kayıtlı konum"
-            subtitle="Her açılışta GPS aramaz, son kaydedilen konumla çalışır."
+            title={savedLocation ? getLocationLabel() : 'Konum ayarlanmadı'}
+            subtitle={savedLocation ? `${savedLocation.latitude.toFixed(4)}, ${savedLocation.longitude.toFixed(4)}` : 'GPS ile konumunuzu alın'}
             right={null}
           />
-          <Divider />
           <View style={{paddingVertical: 12}}>
             <Pressable
               onPress={handleRefreshLocation}
@@ -298,6 +272,13 @@ export function SettingsScreen() {
           </View>
         </SettingsCard>
 
+        {/* ── KIBLE ── */}
+        <SectionLabel text="Kıble" />
+        <QiblaCompass
+          latitude={savedLocation?.latitude}
+          longitude={savedLocation?.longitude}
+        />
+
         {/* ── BİLDİRİMLER ── */}
         <SectionLabel text="Bildirimler" />
         <SettingsCard>
@@ -324,20 +305,9 @@ export function SettingsScreen() {
             }
           />
 
-          {/* Expand animasyonlu bölüm */}
-          <Animated.View
-            style={{
-              overflow: 'hidden',
-              maxHeight: expandAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 900],
-              }),
-              opacity: expandAnim,
-            }}>
-            <Divider />
-
-            {/* Zamanlama — Namazdayım Modu aynı bölümde */}
-            <View style={{paddingTop: 14, paddingBottom: 6}}>
+          {/* Bildirim ayarları — bildirimler kapalıyken bile görünür ama dimmed */}
+          <View style={{opacity: notificationsEnabled ? 1 : 0.4}}>
+            <View style={{borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 14, paddingBottom: 6}}>
               <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10}}>
                 <Clock size={14} color={colors.accentMuted} />
                 <AppText
@@ -387,28 +357,25 @@ export function SettingsScreen() {
               </View>
             </View>
 
-            <Divider />
+            <View style={{borderTopWidth: 1, borderTopColor: colors.border}}>
+              {/* Namazdayım modu */}
+              <SettingsRow
+                icon={<Moon size={17} color={prayerMode ? colors.accent : colors.textSubtle} />}
+                active={prayerMode}
+                title="Namazdayım Modu"
+                subtitle="Vakit girdiğinde bildirimleri 15 dk susturur."
+                right={
+                  <Switch
+                    value={prayerMode}
+                    onValueChange={togglePrayerMode}
+                    trackColor={{false: 'rgba(244,241,234,0.12)', true: colors.accentSoft}}
+                    thumbColor={prayerMode ? colors.accent : 'rgba(244,241,234,0.45)'}
+                  />
+                }
+              />
+            </View>
 
-            {/* Namazdayım modu — bildirimle ilgili olduğu için buraya taşındı */}
-            <SettingsRow
-              icon={<Moon size={17} color={prayerMode ? colors.accent : colors.textSubtle} />}
-              active={prayerMode}
-              title="Namazdayım Modu"
-              subtitle="Vakit girdiğinde bildirimleri 15 dk susturur."
-              right={
-                <Switch
-                  value={prayerMode}
-                  onValueChange={togglePrayerMode}
-                  trackColor={{false: 'rgba(244,241,234,0.12)', true: colors.accentSoft}}
-                  thumbColor={prayerMode ? colors.accent : 'rgba(244,241,234,0.45)'}
-                />
-              }
-            />
-
-            <Divider />
-
-            {/* Vakit bazında togglelar */}
-            <View style={{paddingTop: 12, paddingBottom: 4}}>
+            <View style={{borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, paddingBottom: 4}}>
               <AppText
                 style={{
                   fontSize: 11,
@@ -422,8 +389,7 @@ export function SettingsScreen() {
               </AppText>
               <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingTop: 8}}>
                 {PRAYERS.map(prayer => {
-                  const enabled =
-                    prayerNotifications[prayer.name as keyof typeof prayerNotifications];
+                  const enabled = prayerNotifications[prayer.name as keyof typeof prayerNotifications];
                   const {Icon} = prayer;
                   return (
                     <Pressable
@@ -463,10 +429,7 @@ export function SettingsScreen() {
               </View>
             </View>
 
-            <Divider />
-
-            {/* Test bildirimi — kart altında, ayrı kart değil */}
-            <View style={{paddingVertical: 12}}>
+            <View style={{borderTopWidth: 1, borderTopColor: colors.border, paddingVertical: 12}}>
               <Pressable
                 onPress={async () => {
                   const granted = await requestNotificationPermission();
@@ -479,11 +442,7 @@ export function SettingsScreen() {
                     return;
                   }
                   await sendTestNotification();
-                  showAlert(
-                    'Bildirim Gönderildi',
-                    'Test bildirimi gönderildi. Bildirim çekmecesini kontrol edin.',
-                    '✅',
-                  );
+                  showAlert('Bildirim Gönderildi', 'Test bildirimi gönderildi. Bildirim çekmecesini kontrol edin.', '✅');
                 }}
                 style={({pressed}) => ({
                   flexDirection: 'row',
@@ -502,24 +461,34 @@ export function SettingsScreen() {
                 </AppText>
               </Pressable>
             </View>
-          </Animated.View>
+          </View>
+        </SettingsCard>
+
+        {/* ── HAKKINDA ── */}
+        <SectionLabel text="Hakkında" />
+        <SettingsCard>
+          <SettingsRow
+            noBorder
+            icon={<View style={{width: 18, height: 18, borderRadius: 9, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center'}}><AppText style={{fontSize: 10, fontWeight: '700', color: colors.background}}>K</AppText></View>}
+            title="Versiyon"
+            right={<AppText style={{fontSize: 13, color: colors.textMuted}}>0.0.1</AppText>}
+          />
+          <SettingsRow
+            icon={<View style={{alignItems: 'center', justifyContent: 'center', width: 18}}><AppText style={{fontSize: 14}}>📖</AppText></View>}
+            title="Hesaplama yöntemi"
+            right={<AppText style={{fontSize: 13, color: colors.textMuted}}>Diyanet</AppText>}
+          />
         </SettingsCard>
 
         {/* Footer */}
         <View style={{alignItems: 'center', paddingTop: 4, paddingBottom: 8}}>
-          <AppText style={{fontSize: 11, color: colors.textSubtle, textAlign: 'center'}}>
-            Reklamsız · Diyanet İşleri Başkanlığı metodu
+          <AppText style={{fontSize: 11, color: colors.textSubtle, textAlign: 'center', lineHeight: 16}}>
+            Reklamsız · Açık Kaynak
           </AppText>
         </View>
       </ScrollView>
 
-      <AlertModal
-        visible={alertState.visible}
-        title={alertState.title}
-        message={alertState.message}
-        icon={alertState.icon}
-        onClose={hideAlert}
-      />
+      <AlertModal visible={alertState.visible} title={alertState.title} message={alertState.message} icon={alertState.icon} onClose={hideAlert} />
     </>
   );
 }

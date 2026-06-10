@@ -1,10 +1,10 @@
 export const colors = {
-  background: '#101612',
-  backgroundAlt: '#0B100D',
-  surface: '#17201A',
-  surfaceSoft: '#1D2A22',
-  surfaceMuted: '#121A15',
-  border: 'rgba(232, 222, 201, 0.10)',
+  background: '#0D111F',
+  backgroundAlt: '#090C16',
+  surface: '#161B2B',
+  surfaceSoft: '#1A2035',
+  surfaceMuted: '#111624',
+  border: 'rgba(155, 154, 144, 0.12)',
   borderStrong: 'rgba(214, 180, 106, 0.26)',
   text: '#F4F1EA',
   textMuted: 'rgba(244, 241, 234, 0.62)',
@@ -17,6 +17,10 @@ export const colors = {
   danger: '#D9875F',
   dangerSoft: 'rgba(217, 135, 95, 0.14)',
   blackOverlay: 'rgba(0, 0, 0, 0.62)',
+  /** Pusula ve kıble için kullanılan renkler */
+  compassNorth: '#E87171',
+  compassSouth: '#7BAE8D',
+  qiblaGold: '#D6B46A',
 } as const;
 
 export const radius = {

@@ -4,7 +4,8 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+    <!-- Stilize "K" harfi - KalkKıl logosunu temsil eder -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9c-1.15-1.78-1.82-3.87-1.82-6c0-2.13,0.67-4.22,1.82-6c4.97,0,9-4.03,9-9H12z"/>
+        android:pathData="M6,3h2.5v7.24L14.1,3H16l-5.66,7.33L16.5,21h-1.88l-5.12-7.41L8.5,14.3V21H6V3z"/>
 </vector>

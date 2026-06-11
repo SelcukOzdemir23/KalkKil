@@ -200,7 +200,7 @@ export function SettingsScreen() {
         style={{flex: 1, backgroundColor: colors.background}}
         contentContainerStyle={{
           paddingTop: insets.top + 20,
-          paddingBottom: insets.bottom + 106,
+          paddingBottom: insets.bottom + 90,
           paddingHorizontal: 16,
         }}
         showsVerticalScrollIndicator={false}>

@@ -22,14 +22,14 @@ function TabBarIcon({Icon, color, focused}: {Icon: typeof Sunrise; color: string
   return (
     <View
       style={{
-        width: 36,
-        height: 36,
-        borderRadius: radius.md,
+        width: 32,
+        height: 32,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: focused ? colors.accentSoft : 'transparent',
       }}>
-      <Icon size={20} color={color} strokeWidth={focused ? 2.6 : 1.8} />
+      <Icon size={18} color={color} strokeWidth={focused ? 2.6 : 1.8} />
     </View>
   );
 }
@@ -43,11 +43,11 @@ function AppTabs() {
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
           position: 'absolute',
-          bottom: 16,
+          bottom: 14,
           left: 14,
           right: 14,
-          height: 68,
-          borderRadius: radius.xl,
+          height: 60,
+          borderRadius: 20,
           backgroundColor: colors.surfaceSoft,
           borderTopWidth: 0,
           borderWidth: 1,
@@ -59,10 +59,10 @@ function AppTabs() {
           shadowRadius: 24,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '700',
           marginTop: 2,
-          marginBottom: 6,
+          marginBottom: 4,
           letterSpacing: 0.3,
         },
         tabBarIconStyle: {

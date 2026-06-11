@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {View, Animated, Pressable, Vibration, Dimensions} from 'react-native';
+import {View, Animated, Vibration, Dimensions} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {WebView} from 'react-native-webview';
 import {magnetometer, SensorTypes, setUpdateIntervalForType} from 'react-native-sensors';
@@ -10,22 +10,12 @@ import {
   magnetometerToHeading,
   smoothCompass,
   formatQiblaDirection,
-  bearingToCardinal,
   KAABA_COORDS,
 } from '../utils/qibla';
 import {getLocation} from '../services/storage';
 
 const SCREEN_W = Dimensions.get('window').width;
-const COMPASS_SIZE = Math.min(SCREEN_W - 64, 280);
-const COMPASS_CENTER = COMPASS_SIZE / 2;
-const COMPASS_R = COMPASS_SIZE / 2 - 20;
-
-const CARDINALS: {deg: number; label: string; color: string}[] = [
-  {deg: 0, label: 'K', color: colors.compassNorth},
-  {deg: 90, label: 'D', color: colors.textMuted},
-  {deg: 180, label: 'G', color: colors.compassSouth},
-  {deg: 270, label: 'B', color: colors.textMuted},
-];
+const COMPASS_SIZE = Math.min(SCREEN_W - 48, 300);
 
 export function QiblaScreen() {
   const insets = useSafeAreaInsets();
@@ -33,11 +23,9 @@ export function QiblaScreen() {
   const [sensorAvailable, setSensorAvailable] = useState(true);
   const [isAligned, setIsAligned] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentHeading, setCurrentHeading] = useState(0);
 
   const headingRef = useRef(0);
-  const prevNeedleRef = useRef(0);
-  const needleRotation = useRef(new Animated.Value(0)).current;
+  const compassRotation = useRef(new Animated.Value(0)).current;
   const alignedAnim = useRef(new Animated.Value(0)).current;
   const lastVibrationRef = useRef(0);
 
@@ -51,7 +39,10 @@ export function QiblaScreen() {
     }
   }, [latitude, longitude]);
 
+  // Magnetometer — pusulayı döndür
   useEffect(() => {
+    if (!sensorAvailable) return;
+
     try {
       setUpdateIntervalForType(SensorTypes.magnetometer, 80);
     } catch {}
@@ -59,26 +50,21 @@ export function QiblaScreen() {
     const subscription = magnetometer.subscribe({
       next: ({x, y}) => {
         const rawHeading = magnetometerToHeading(x, y);
-        const smoothed = smoothCompass(rawHeading, headingRef.current, 0.12);
+        const smoothed = smoothCompass(rawHeading, headingRef.current, 0.15);
         headingRef.current = smoothed;
-        setCurrentHeading(smoothed);
 
-        const targetAngle = ((qiblaBearing - smoothed) % 360 + 360) % 360;
-
-        let from = prevNeedleRef.current;
-        let to = targetAngle;
-        let diff = to - from;
-        if (diff > 180) to -= 360;
-        else if (diff < -180) to += 360;
-        prevNeedleRef.current = targetAngle;
-
-        Animated.spring(needleRotation, {
-          toValue: to,
-          friction: 6,
-          tension: 35,
+        // Pusula dairesini cihaz yönünün tersine döndür
+        // Böylece "K" her zaman manyetik kuzeyi gösterir
+        Animated.spring(compassRotation, {
+          toValue: -smoothed,
+          friction: 8,
+          tension: 40,
           useNativeDriver: true,
         }).start();
 
+        // Kıbleye hizalanma kontrolü
+        // targetAngle: cihazın şu anki yönü ile kıble arasındaki fark
+        const targetAngle = ((qiblaBearing - smoothed) % 360 + 360) % 360;
         const aligned = targetAngle < 5 || targetAngle > 355;
         setIsAligned(aligned);
 
@@ -91,9 +77,9 @@ export function QiblaScreen() {
           }).start();
 
           const now = Date.now();
-          if (now - lastVibrationRef.current > 1000) {
+          if (now - lastVibrationRef.current > 1500) {
             lastVibrationRef.current = now;
-            Vibration.vibrate(100);
+            Vibration.vibrate(80);
           }
         } else {
           Animated.timing(alignedAnim, {
@@ -114,34 +100,36 @@ export function QiblaScreen() {
       setIsAligned(false);
       alignedAnim.setValue(0);
     };
-  }, [qiblaBearing, needleRotation, alignedAnim]);
+  }, [qiblaBearing, compassRotation, alignedAnim, sensorAvailable]);
 
+  // ── Konum yok ──
   if (!latitude || !longitude) {
     return (
       <View style={{flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32}}>
-        <View style={{width: 72, height: 72, borderRadius: 36, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 20, borderWidth: 1, borderColor: colors.borderStrong}}>
-          <AppText style={{fontSize: 36}}>🕋</AppText>
+        <View style={{width: 80, height: 80, borderRadius: 40, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 24, borderWidth: 1, borderColor: colors.borderStrong}}>
+          <AppText style={{fontSize: 40}}>🕋</AppText>
         </View>
-        <AppText style={{fontSize: 18, fontWeight: '700', color: colors.text, textAlign: 'center', marginBottom: 8}}>
-          Kıble bulucu
+        <AppText style={{fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center', marginBottom: 8}}>
+          Kıble Bulucu
         </AppText>
-        <AppText style={{fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 21, marginBottom: 24}}>
-          Kıbleyi göstermek için önce Ayarlar{'\n'}bölümünden bir konum kaydedin.
+        <AppText style={{fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 22}}>
+          Kıbleyi göstermek için{'\n'}Ayarlar'dan bir konum kaydedin.
         </AppText>
       </View>
     );
   }
 
+  // ── Sensör yok ──
   if (!sensorAvailable) {
     return (
       <View style={{flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32}}>
-        <View style={{width: 72, height: 72, borderRadius: 36, backgroundColor: colors.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 20, borderWidth: 1, borderColor: 'rgba(217, 135, 95, 0.26)'}}>
-          <AppText style={{fontSize: 36}}>🧭</AppText>
+        <View style={{width: 80, height: 80, borderRadius: 40, backgroundColor: colors.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 24, borderWidth: 1, borderColor: 'rgba(217, 135, 95, 0.26)'}}>
+          <AppText style={{fontSize: 40}}>🧭</AppText>
         </View>
-        <AppText style={{fontSize: 18, fontWeight: '700', color: colors.text, textAlign: 'center', marginBottom: 8}}>
-          Pusula kullanılamıyor
+        <AppText style={{fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center', marginBottom: 8}}>
+          Pusula Kullanılamıyor
         </AppText>
-        <AppText style={{fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 21}}>
+        <AppText style={{fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 22}}>
           {error || 'Cihazınız pusula desteği sağlamıyor.'}
         </AppText>
       </View>
@@ -187,237 +175,260 @@ export function QiblaScreen() {
           maxZoom: 19,
         }).addTo(map);
         L.circleMarker([userLat, userLng], {
-          radius: 6, fillColor: '#7BAE8D', color: '#F4F1EA', weight: 2, fillOpacity: 1,
+          radius: 7, fillColor: '#7BAE8D', color: '#F4F1EA', weight: 2, fillOpacity: 1,
         }).addTo(map);
         L.marker([kaabaLat, kaabaLng], {
           icon: L.divIcon({
             className: '',
-            html: '<div style="font-size:24px;text-align:center;line-height:1">🕋</div>',
-            iconSize: [24, 24], iconAnchor: [12, 12],
+            html: '<div style="font-size:28px;text-align:center;line-height:1">🕋</div>',
+            iconSize: [28, 28], iconAnchor: [14, 14],
           })
         }).addTo(map);
         L.polyline([[userLat, userLng], [kaabaLat, kaabaLng]], {
-          color: '#D6B46A', weight: 2, opacity: 0.4, dashArray: '8, 8',
+          color: '#D6B46A', weight: 2.5, opacity: 0.5, dashArray: '10, 8',
         }).addTo(map);
       </script>
     </body>
     </html>
   `;
 
+  const R = COMPASS_SIZE / 2;
+
   return (
     <View style={{flex: 1, backgroundColor: colors.background}}>
-      <View style={{flex: 1, paddingTop: insets.top + 16, paddingHorizontal: 16, paddingBottom: insets.bottom + 80}}>
-        {/* Başlık */}
-        <View style={{alignItems: 'center', marginBottom: 20}}>
+      <View
+        style={{
+          flex: 1,
+          paddingTop: insets.top + 8,
+          paddingBottom: insets.bottom + 80,
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+
+        {/* Üst bilgi */}
+        <View style={{alignItems: 'center', paddingTop: 8}}>
           <AppText style={{fontSize: 13, fontWeight: '700', color: colors.accentMuted, textTransform: 'uppercase', letterSpacing: 2}}>
             Kıble Pusulası
           </AppText>
         </View>
 
-        {/* PUSULA DAİRESİ */}
-        <View style={{alignItems: 'center', marginBottom: 20}}>
+        {/* ── PUSULA ── */}
+        <View style={{alignItems: 'center', justifyContent: 'center'}}>
           <View
             style={{
               width: COMPASS_SIZE,
               height: COMPASS_SIZE,
-              borderRadius: COMPASS_CENTER,
-              backgroundColor: colors.surface,
-              borderWidth: 2,
-              borderColor: colors.borderStrong,
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-            {/* Dış halka — 360° çizgileri */}
-            {Array.from({length: 36}).map((_, i) => (
-              <View
-                key={i}
-                style={{
-                  position: 'absolute',
-                  width: 2,
-                  height: i % 3 === 0 ? 12 : 6,
-                  backgroundColor: i % 3 === 0 ? colors.borderStrong : 'rgba(214, 180, 106, 0.15)',
-                  top: 8,
-                  left: COMPASS_CENTER - 1,
-                  transformOrigin: `0 ${COMPASS_CENTER - 8}px`,
-                  transform: [{rotate: `${i * 10}deg`}],
-                }}
-              />
-            ))}
 
-            {/* Kardinal yönler */}
-            {CARDINALS.map(c => {
-              const rad = (c.deg * Math.PI) / 180;
-              const x = COMPASS_CENTER + Math.sin(rad) * (COMPASS_R - 4) - 10;
-              const y = COMPASS_CENTER - Math.cos(rad) * (COMPASS_R - 4) - 10;
-              return (
-                <View
-                  key={c.label}
-                  style={{
-                    position: 'absolute',
-                    left: x,
-                    top: y,
-                    width: 20,
-                    height: 20,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                  <AppText style={{fontSize: 14, fontWeight: '800', color: c.color}}>
-                    {c.label}
-                  </AppText>
-                </View>
-              );
-            })}
-
-            {/* Kıble ibresi — döner */}
+            {/* Dış halka — sabit */}
             <View
               style={{
                 position: 'absolute',
-                width: 8,
-                height: COMPASS_R * 1.4,
+                width: COMPASS_SIZE,
+                height: COMPASS_SIZE,
+                borderRadius: R,
+                borderWidth: 2,
+                borderColor: isAligned ? 'rgba(123, 174, 141, 0.4)' : colors.borderStrong,
+              }}
+            />
+
+            {/* Dönen pusula katmanı */}
+            <Animated.View
+              style={{
+                width: COMPASS_SIZE,
+                height: COMPASS_SIZE,
                 alignItems: 'center',
-                top: COMPASS_CENTER - COMPASS_R * 0.7,
-                left: COMPASS_CENTER - 4,
+                justifyContent: 'center',
+                transform: [{rotate: compassRotation.interpolate({
+                  inputRange: [-360, 0, 360],
+                  outputRange: ['360deg', '0deg', '-360deg'],
+                })}],
               }}>
-              <Animated.View
-                style={{
-                  width: 8,
-                  height: COMPASS_R * 1.4,
-                  borderRadius: 4,
-                  backgroundColor: colors.qiblaGold,
-                  transform: [
-                    {translateY: COMPASS_R * 0.7},
-                    {rotate: needleRotation.interpolate({
-                      inputRange: [-360, 0, 360],
-                      outputRange: ['-360deg', '0deg', '360deg'],
-                    })},
-                    {translateY: -COMPASS_R * 0.7},
-                  ],
-                  shadowColor: colors.qiblaGold,
-                  shadowOffset: {width: 0, height: 0},
-                  shadowOpacity: 0.7,
-                  shadowRadius: 8,
-                  elevation: 5,
-                }}
-              />
-              {/* İbre ucu — kırmızı daire */}
+
+              {/* derece çizgileri */}
+              {Array.from({length: 72}).map((_, i) => {
+                const isMajor = i % 6 === 0;
+                const isMed = i % 3 === 0;
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      position: 'absolute',
+                      width: isMajor ? 2.5 : 1,
+                      height: isMajor ? 16 : isMed ? 10 : 5,
+                      backgroundColor: isMajor
+                        ? colors.accent
+                        : isMed
+                        ? 'rgba(214, 180, 106, 0.35)'
+                        : 'rgba(214, 180, 106, 0.12)',
+                      top: 10,
+                      left: R - 1,
+                      transformOrigin: `0px ${R - 10}px`,
+                      transform: [{rotate: `${i * 5}deg`}],
+                    }}
+                  />
+                );
+              })}
+
+              {/* Kardinal yön harfleri — dönen katmanda */}
+              {([
+                {deg: 0, label: 'K', color: colors.compassNorth, size: 18, weight: '900' as const},
+                {deg: 90, label: 'D', color: colors.textMuted, size: 15, weight: '700' as const},
+                {deg: 180, label: 'G', color: colors.compassSouth, size: 15, weight: '700' as const},
+                {deg: 270, label: 'B', color: colors.textMuted, size: 15, weight: '700' as const},
+              ]).map(c => {
+                const rad = ((c.deg - 90) * Math.PI) / 180;
+                const dist = R - 30;
+                const x = R + Math.cos(rad) * dist - 12;
+                const y = R + Math.sin(rad) * dist - 12;
+                return (
+                  <View
+                    key={c.label}
+                    style={{
+                      position: 'absolute',
+                      left: x,
+                      top: y,
+                      width: 24,
+                      height: 24,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                    <AppText style={{fontSize: c.size, fontWeight: c.weight, color: c.color}}>
+                      {c.label}
+                    </AppText>
+                  </View>
+                );
+              })}
+
+              {/* Kıble çizgisi — merkezden dışa, dönen katmanda */}
               <View
                 style={{
                   position: 'absolute',
-                  top: -8,
-                  width: 18,
-                  height: 18,
-                  borderRadius: 9,
-                  backgroundColor: isAligned ? '#7BAE8D' : colors.compassNorth,
-                  shadowColor: isAligned ? '#7BAE8D' : colors.compassNorth,
+                  width: 3,
+                  height: R - 40,
+                  backgroundColor: colors.qiblaGold,
+                  bottom: R,
+                  left: R - 1.5,
+                  borderRadius: 1.5,
+                  opacity: 0.9,
+                  shadowColor: colors.qiblaGold,
                   shadowOffset: {width: 0, height: 0},
-                  shadowOpacity: 0.8,
+                  shadowOpacity: 0.6,
                   shadowRadius: 6,
-                  elevation: 4,
                 }}
               />
-            </View>
+              {/* Kıble ucu — küçük daire */}
+              <View
+                style={{
+                  position: 'absolute',
+                  width: 10,
+                  height: 10,
+                  borderRadius: 5,
+                  backgroundColor: colors.qiblaGold,
+                  top: 18,
+                  left: R - 5,
+                  shadowColor: colors.qiblaGold,
+                  shadowOffset: {width: 0, height: 0},
+                  shadowOpacity: 0.8,
+                  shadowRadius: 4,
+                }}
+              />
+            </Animated.View>
+
+            {/* Sabit üst gösterge — "şurası ileri" */}
+            <View
+              style={{
+                position: 'absolute',
+                top: 2,
+                width: 0,
+                height: 0,
+                borderLeftWidth: 8,
+                borderRightWidth: 8,
+                borderTopWidth: 14,
+                borderLeftColor: 'transparent',
+                borderRightColor: 'transparent',
+                borderTopColor: isAligned ? '#7BAE8D' : colors.accent,
+              }}
+            />
 
             {/* Merkez nokta */}
             <View
               style={{
-                width: 10,
-                height: 10,
-                borderRadius: 5,
-                backgroundColor: colors.accent,
-                zIndex: 10,
+                width: 12,
+                height: 12,
+                borderRadius: 6,
+                backgroundColor: isAligned ? '#7BAE8D' : colors.accent,
+                shadowColor: isAligned ? '#7BAE8D' : colors.accent,
+                shadowOffset: {width: 0, height: 0},
+                shadowOpacity: 0.6,
+                shadowRadius: 6,
               }}
             />
           </View>
         </View>
 
-        {/* Kıble yön bilgisi */}
-        <View style={{alignItems: 'center', marginBottom: 16}}>
-          <AppText style={{fontSize: 28, fontWeight: '800', color: colors.qiblaGold, fontVariant: ['tabular-nums']}}>
+        {/* Alt bilgi bölgesi */}
+        <View style={{alignItems: 'center', gap: 8, paddingBottom: 8}}>
+          {/* Kıble açısı */}
+          <AppText style={{fontSize: 32, fontWeight: '800', color: colors.qiblaGold, fontVariant: ['tabular-nums']}}>
             {formatQiblaDirection(qiblaBearing)}
           </AppText>
-          <AppText style={{fontSize: 13, color: colors.textMuted, marginTop: 4}}>
-            {isAligned ? 'Kâbe yönündesiniz' : 'Telefonu Kâbe yönüne çevirin'}
-          </AppText>
-        </View>
 
-        {/* Mini harita */}
-        <View style={{width: '100%', height: 120, borderRadius: radius.lg, overflow: 'hidden', borderWidth: 1, borderColor: colors.border}}>
-          <WebView
-            source={{html: mapHtml}}
-            style={{flex: 1, backgroundColor: 'transparent'}}
-            scrollEnabled={false}
-            bounces={false}
-            overScrollMode="never"
-            showsVerticalScrollIndicator={false}
-            showsHorizontalScrollIndicator={false}
-            androidLayerType="hardware"
-          />
-        </View>
-      </View>
+          {/* Durum */}
+          <Animated.View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              backgroundColor: isAligned
+                ? 'rgba(123, 174, 141, 0.15)'
+                : 'rgba(214, 180, 106, 0.08)',
+              borderRadius: radius.pill,
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              borderWidth: 1,
+              borderColor: isAligned
+                ? 'rgba(123, 174, 141, 0.3)'
+                : colors.border,
+            }}>
+            <View
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: isAligned ? '#7BAE8D' : colors.textMuted,
+              }}
+            />
+            <AppText style={{fontSize: 13, fontWeight: '600', color: isAligned ? '#7BAE8D' : colors.textMuted}}>
+              {isAligned ? 'Kıbleye dönük' : 'Döndürmeye devam edin'}
+            </AppText>
+          </Animated.View>
 
-      {/* ALT DURUM KARTI */}
-      <View
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          paddingHorizontal: 24,
-          paddingTop: 16,
-          paddingBottom: insets.bottom + 90,
-          alignItems: 'center',
-        }}>
-        <Animated.View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 12,
-            backgroundColor: isAligned
-              ? 'rgba(123, 174, 141, 0.18)'
-              : 'rgba(214, 180, 106, 0.12)',
-            borderRadius: radius.xl,
-            paddingHorizontal: 20,
-            paddingVertical: 16,
-            borderWidth: 1,
-            borderColor: isAligned
-              ? 'rgba(123, 174, 141, 0.35)'
-              : colors.borderStrong,
-            width: '100%',
-          }}>
+          {/* Mini harita */}
           <View
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: isAligned ? 'rgba(123, 174, 141, 0.2)' : colors.accentSoft,
-              alignItems: 'center',
-              justifyContent: 'center',
+              width: SCREEN_W - 48,
+              height: 100,
+              borderRadius: radius.lg,
+              overflow: 'hidden',
+              borderWidth: 1,
+              borderColor: colors.border,
+              marginTop: 8,
             }}>
-            <AppText style={{fontSize: 22}}>
-              {isAligned ? '✅' : '🕋'}
-            </AppText>
+            <WebView
+              source={{html: mapHtml}}
+              style={{flex: 1, backgroundColor: 'transparent'}}
+              scrollEnabled={false}
+              bounces={false}
+              overScrollMode="never"
+              showsVerticalScrollIndicator={false}
+              showsHorizontalScrollIndicator={false}
+              androidLayerType="hardware"
+            />
           </View>
-          <View style={{flex: 1}}>
-            <AppText
-              style={{
-                fontSize: 17,
-                fontWeight: '700',
-                color: isAligned ? '#7BAE8D' : colors.qiblaGold,
-              }}>
-              {isAligned ? 'Kıbleye dönük!' : 'Kâbe yönünde değil'}
-            </AppText>
-            <AppText
-              style={{
-                fontSize: 12,
-                color: isAligned ? 'rgba(123, 174, 141, 0.8)' : colors.textMuted,
-                marginTop: 2,
-              }}>
-              {isAligned
-                ? 'Namazınızı kılabilirsiniz'
-                : 'Telefonu yavaşça Kâbe yönüne çevirin'}
-            </AppText>
-          </View>
-        </Animated.View>
+        </View>
       </View>
     </View>
   );

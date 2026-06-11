@@ -117,16 +117,12 @@ export function usePrayerTimes(): UsePrayerTimesResult {
     const interval = setInterval(() => {
       const now = new Date();
 
-      if (!isSameDay(now, dailyTimes.fajr)) {
-        requestRefresh();
-        return;
-      }
-
+      // Önce tüm vakitlerin geçip geçmediğini kontrol et (Yatsı sonrası)
       const updated = getPrayerTimeEntries(dailyTimes, now);
-
-      // Tüm vakitler geçmişse (Yatsı'dan sonra) → sonraki günü otomatik hesapla
       const allPassed = updated.every(e => e.isPassed);
+
       if (allPassed) {
+        // Tüm vakitler geçmiş → yarının vakitlerine geç
         const location = getLocation();
         if (location) {
           const tomorrow = new Date(now);
@@ -149,18 +145,51 @@ export function usePrayerTimes(): UsePrayerTimesResult {
             });
             setEntries(entriesWithKerahat);
 
-            // Önbelleğe de kaydet (yarınki vakitler hesaplanmış olsun)
             saveCachedPrayerTimes(
               getPrayerTimesAsStrings(tomorrowTimes),
               getDateKey(tomorrow),
             );
-            return;
           } catch {
-            // Hata olursa sessizce geç, bir sonraki interval'da tekrar dene
+            // Hata olursa sessizce geç
           }
         }
+        return;
       }
 
+      // Gün değiştiyse ama henüz tüm vakitler geçmediyse (yeni günün ilk vakitleri)
+      if (!isSameDay(now, dailyTimes.fajr)) {
+        const location = getLocation();
+        if (location) {
+          try {
+            const todayTimes = calculatePrayerTimes(
+              location.latitude,
+              location.longitude,
+              now,
+            );
+            setDailyTimes(todayTimes);
+
+            const kerahatList = calculateKerahatTimes(todayTimes);
+            setKerahatTimes(kerahatList);
+
+            const todayEntries = getPrayerTimeEntries(todayTimes, now);
+            const entriesWithKerahat = todayEntries.map(e => {
+              const k = isTimeInKerahat(e.time, kerahatList);
+              return {...e, isKerahat: k.isKerahat, kerahatLabel: k.label};
+            });
+            setEntries(entriesWithKerahat);
+
+            saveCachedPrayerTimes(
+              getPrayerTimesAsStrings(todayTimes),
+              getDateKey(now),
+            );
+          } catch {
+            // Hata olursa sessizce geç
+          }
+        }
+        return;
+      }
+
+      // Aynı gün içinde — vakit güncelle
       const kerahatList = calculateKerahatTimes(dailyTimes);
       setKerahatTimes(kerahatList);
 

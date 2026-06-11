@@ -9,9 +9,10 @@ import {ErrorBoundary} from './src/components/ErrorBoundary';
 import {GlassView} from './src/components/GlassView';
 import {HomeScreen} from './src/screens/HomeScreen';
 import {SettingsScreen} from './src/screens/SettingsScreen';
+import {QiblaScreen} from './src/screens/QiblaScreen';
 import {initializeStorage} from './src/services/storage';
 import {setupNotificationChannel} from './src/services/notifications';
-import {Sunrise, Settings} from 'lucide-react-native';
+import {Sunrise, Settings, Compass} from 'lucide-react-native';
 import {colors, radius} from './src/theme/tokens';
 import './global.css';
 
@@ -85,6 +86,16 @@ function AppTabs() {
           tabBarLabel: 'Ayarlar',
           tabBarIcon: ({color, focused}) => (
             <TabBarIcon Icon={Settings} color={color} focused={focused} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Kıble"
+        component={QiblaScreen}
+        options={{
+          tabBarLabel: 'Kıble',
+          tabBarIcon: ({color, focused}) => (
+            <TabBarIcon Icon={Compass} color={color} focused={focused} />
           ),
         }}
       />

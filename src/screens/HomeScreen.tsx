@@ -109,7 +109,8 @@ export function HomeScreen() {
       const timeStr = `${nextPrayer.time.getHours().toString().padStart(2, '0')}:${nextPrayer.time.getMinutes().toString().padStart(2, '0')}`;
 
       if (getPrayerMode()) {
-        if (dailyTimes) schedulePrayerNotifications(dailyTimes, 15);
+        // Namazdayım: sadece sıradaki vakit için bildirimleri 15dk ertele
+        if (dailyTimes) schedulePrayerNotifications(dailyTimes);
         showAlert(
           `${nextPrayer.nameTr} vakti girdi`,
           `Namazdayım modu aktif. Bildirimler 15 dakika susturuldu.\n\n${nextPrayer.nameTr} - ${timeStr}`,

@@ -5,7 +5,6 @@ import {AlertModal} from '../components/AlertModal';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAppContext} from '../context/AppContext';
 import {GlassView} from '../components/GlassView';
-import {QiblaScreen} from '../screens/QiblaScreen';
 import {getCurrentLocation, reverseGeocode} from '../services/location';
 import {requestNotificationPermission, sendTestNotification} from '../services/notifications';
 import {saveLocation, setLocationPermissionGranted, getLocationLabel, getLocation} from '../services/storage';
@@ -143,7 +142,6 @@ export function SettingsScreen() {
 
   const insets = useSafeAreaInsets();
   const [locationLoading, setLocationLoading] = useState(false);
-  const [qiblaVisible, setQiblaVisible] = useState(false);
   const [alertState, setAlertState] = useState<{visible: boolean; title: string; message: string; icon?: string}>({
     visible: false,
     title: '',
@@ -263,30 +261,6 @@ export function SettingsScreen() {
             </Pressable>
           </View>
         </SettingsCard>
-
-        {/* ── KIBLE ── */}
-        <SectionLabel text="Kıble" />
-        <Pressable
-          onPress={() => setQiblaVisible(true)}
-          style={({pressed}) => ({
-            backgroundColor: pressed ? colors.accentSoft : colors.surface,
-            borderRadius: radius.xl,
-            borderWidth: 1,
-            borderColor: pressed ? colors.borderStrong : colors.border,
-            padding: 24,
-            alignItems: 'center',
-            marginBottom: 24,
-            ...shadows.subtle,
-            transform: [{scale: pressed ? 0.98 : 1}],
-          })}>
-          <AppText style={{fontSize: 40, marginBottom: 10}}>🕋</AppText>
-          <AppText style={{fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: 4}}>
-            Kıble Pusulası
-          </AppText>
-          <AppText style={{fontSize: 13, color: colors.textMuted, textAlign: 'center'}}>
-            Kâbe yönünü bulmak için açın
-          </AppText>
-        </Pressable>
 
         {/* ── BİLDİRİMLER ── */}
         <SectionLabel text="Bildirimler" />
@@ -466,9 +440,6 @@ export function SettingsScreen() {
           </AppText>
         </View>
       </ScrollView>
-
-      {/* Kıble full-screen modal */}
-      <QiblaScreen visible={qiblaVisible} onClose={() => setQiblaVisible(false)} />
 
       <AlertModal visible={alertState.visible} title={alertState.title} message={alertState.message} icon={alertState.icon} onClose={hideAlert} />
     </>

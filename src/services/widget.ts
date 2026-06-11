@@ -53,10 +53,8 @@ export function updateWidget(
       return;
     }
     lastWidgetPayload = payload;
-    // Tüm vakitlerin epoch ms timestamp'leri (servis bağımsız hesaplama için)
     const allTimestamps = buildAllTimestampsString(entries);
 
-    // 6-param metod: nextName, nextTime, countdown, timestamp, displayTimes, allTimestamps
     PrayerWidgetBridge.updateWidgetWithTimes(
       nextName,
       nextTime,
@@ -66,26 +64,15 @@ export function updateWidget(
       allTimestamps,
     );
   } catch {
-    // Fallback: eski metotları dene
     try {
-      PrayerWidgetBridge.updateWidgetWithTimes(
+      PrayerWidgetBridge.updateWidget(
         nextName,
         nextTime,
         countdownNoSec,
         nextPrayer ? String(nextPrayer.time.getTime()) : '',
-        displayTimes,
       );
     } catch {
-      try {
-        PrayerWidgetBridge.updateWidget(
-          nextName,
-          nextTime,
-          countdownNoSec,
-          nextPrayer ? String(nextPrayer.time.getTime()) : '',
-        );
-      } catch {
-        // Silently fail
-      }
+      // Silently fail
     }
   }
 }

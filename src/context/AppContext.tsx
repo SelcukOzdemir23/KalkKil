@@ -44,22 +44,20 @@ interface AppContextType {
   togglePrayerMode: () => void;
 }
 
-const defaultPrayerToggles: PrayerNotificationToggles = {
-  fajr: getPrayerNotificationEnabled('fajr'),
-  sunrise: getPrayerNotificationEnabled('sunrise'),
-  dhuhr: getPrayerNotificationEnabled('dhuhr'),
-  asr: getPrayerNotificationEnabled('asr'),
-  maghrib: getPrayerNotificationEnabled('maghrib'),
-  isha: getPrayerNotificationEnabled('isha'),
-};
-
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({children}: {children: ReactNode}) {
   const [prayerMode, setPrayerModeState] = useState(getPrayerMode());
   const [notificationsEnabled, setNotifState] = useState(getNotificationsEnabled());
   const [notificationTiming, setNotifTiming] = useState(getNotificationTiming());
-  const [prayerNotifications, setPrayerNotifs] = useState<PrayerNotificationToggles>(defaultPrayerToggles);
+  const [prayerNotifications, setPrayerNotifs] = useState<PrayerNotificationToggles>(() => ({
+    fajr: getPrayerNotificationEnabled('fajr'),
+    sunrise: getPrayerNotificationEnabled('sunrise'),
+    dhuhr: getPrayerNotificationEnabled('dhuhr'),
+    asr: getPrayerNotificationEnabled('asr'),
+    maghrib: getPrayerNotificationEnabled('maghrib'),
+    isha: getPrayerNotificationEnabled('isha'),
+  }));
   const [hasLocation, setHasLocation] = useState(!!getLocation());
   const [refreshKey, setRefreshKey] = useState(0);
   const [kerahatTimes, setKerahatTimes] = useState<KerahatVakti[]>([]);

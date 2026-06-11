@@ -257,7 +257,7 @@ export function HomeScreen() {
         ) : null}
 
         <View style={{marginBottom: 18}}>
-          <CountdownTimer nextPrayer={nextPrayer} kerahatActive={!!activeKerahat} kerahatLabel={activeKerahat?.label} />
+          <CountdownTimer nextPrayer={nextPrayer} countdown={countdown} kerahatActive={!!activeKerahat} kerahatLabel={activeKerahat?.label} />
         </View>
 
         <PrayerList entries={entries} nextPrayer={nextPrayer} />

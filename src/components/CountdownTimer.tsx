@@ -2,20 +2,19 @@ import React from 'react';
 import {View} from 'react-native';
 import {AppText} from './AppText';
 import {GlassView} from './GlassView';
-import {useCountdown} from '../hooks/useCountdown';
 import {PrayerTimeEntry} from '../services/prayerTimes';
 import {formatTime} from '../utils/format';
 import {colors, radius, shadows} from '../theme/tokens';
 
 interface CountdownTimerProps {
   nextPrayer: PrayerTimeEntry | null;
+  countdown: string;
   kerahatActive?: boolean;
   kerahatLabel?: string;
 }
 
 
-export function CountdownTimer({nextPrayer, kerahatActive, kerahatLabel}: CountdownTimerProps) {
-  const {countdown} = useCountdown(nextPrayer ? nextPrayer.time : null);
+export function CountdownTimer({nextPrayer, countdown, kerahatActive, kerahatLabel}: CountdownTimerProps) {
 
   if (!nextPrayer) {
     return (

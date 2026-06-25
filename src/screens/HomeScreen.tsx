@@ -201,7 +201,7 @@ export function HomeScreen() {
               <AppText style={{fontSize: 13, color: colors.accentMuted, fontWeight: '700', letterSpacing: 0.4}}>
                 {dateStr}
               </AppText>
-              <AppText style={{fontSize: 34, fontWeight: '700', color: colors.text, marginTop: 2}}>
+              <AppText style={{fontSize: 34, fontWeight: '700', color: colors.text, marginTop: 2, letterSpacing: -0.5}}>
                 {getGreeting()}
               </AppText>
             </View>

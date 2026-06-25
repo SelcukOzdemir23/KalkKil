@@ -269,7 +269,7 @@ export function SettingsScreen() {
 
         {/* Başlık */}
         <View style={{marginBottom: 32}}>
-          <AppText style={{fontSize: 32, fontWeight: '800', color: colors.text}}>
+          <AppText style={{fontSize: 32, fontWeight: '800', color: colors.text, letterSpacing: -0.5}}>
             Ayarlar
           </AppText>
           <AppText style={{fontSize: 14, color: colors.textMuted, marginTop: 4}}>

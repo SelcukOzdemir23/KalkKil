@@ -41,16 +41,16 @@ export const spacing = {
 
 export const shadows = {
   card: {
-    shadowColor: '#000',
+    shadowColor: '#0D111F',
     shadowOffset: {width: 0, height: 10},
-    shadowOpacity: 0.24,
+    shadowOpacity: 0.4,
     shadowRadius: 22,
     elevation: 10,
   },
   subtle: {
-    shadowColor: '#000',
+    shadowColor: '#0D111F',
     shadowOffset: {width: 0, height: 6},
-    shadowOpacity: 0.16,
+    shadowOpacity: 0.3,
     shadowRadius: 14,
     elevation: 5,
   },

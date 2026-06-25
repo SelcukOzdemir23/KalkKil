@@ -5,7 +5,7 @@ import {AlertModal} from '../components/AlertModal';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAppContext} from '../context/AppContext';
 import {getCurrentLocation, reverseGeocode} from '../services/location';
-import {requestNotificationPermission} from '../services/notifications';
+import {requestNotificationPermission, sendTestNotification} from '../services/notifications';
 import {saveLocation, setLocationPermissionGranted, getLocationLabel, getLocation} from '../services/storage';
 import {Bell, BellOff, Clock, Moon, MapPin, Navigation, Info, AlertTriangle} from 'lucide-react-native';
 import {colors, radius, shadows} from '../theme/tokens';
@@ -167,6 +167,7 @@ export function SettingsScreen() {
 
   const insets = useSafeAreaInsets();
   const [locationLoading, setLocationLoading] = useState(false);
+  const [testNotifLoading, setTestNotifLoading] = useState(false);
   const [alertState, setAlertState] = useState<{
     visible: boolean;
     title: string;
@@ -208,6 +209,25 @@ export function SettingsScreen() {
     }
     setLocationLoading(false);
   }, [requestRefresh, showAlert]);
+
+  const handleTestNotification = useCallback(async () => {
+    setTestNotifLoading(true);
+    try {
+      await sendTestNotification();
+      showAlert(
+        'Bildirim Gönderildi',
+        'Bildirim çubuğunu kontrol edin. Eğer bildirim görmediyseniz, telefonunuzun bildirim izinlerini kontrol edin.',
+        <Bell size={24} color={colors.accent} />,
+      );
+    } catch {
+      showAlert(
+        'Bildirim Gönderilemedi',
+        'Bir hata oluştu. Bildirim izinlerini kontrol edin.',
+        <AlertTriangle size={24} color={colors.danger} />,
+      );
+    }
+    setTestNotifLoading(false);
+  }, [showAlert]);
 
   const handleToggleNotifications = useCallback(async () => {
     if (!notificationsEnabled) {
@@ -343,6 +363,45 @@ export function SettingsScreen() {
                     ))}
                   </View>
                 </View>
+              </View>
+
+              {/* Test bildirimi */}
+              <View style={{borderTopWidth: 1, borderTopColor: colors.border}}>
+                <Pressable
+                  onPress={handleTestNotification}
+                  disabled={testNotifLoading}
+                  style={({pressed}) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: 16,
+                    paddingHorizontal: 18,
+                    gap: 14,
+                    opacity: testNotifLoading ? 0.5 : pressed ? 0.7 : 1,
+                  })}>
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 12,
+                      backgroundColor: 'rgba(244, 241, 234, 0.05)',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                    {testNotifLoading ? (
+                      <ActivityIndicator size="small" color={colors.accent} />
+                    ) : (
+                      <Bell size={18} color={colors.textMuted} />
+                    )}
+                  </View>
+                  <View style={{flex: 1}}>
+                    <AppText style={{fontSize: 16, fontWeight: '600', color: colors.text}}>
+                      Test bildirimi gönder
+                    </AppText>
+                    <AppText style={{fontSize: 12, color: colors.textMuted, marginTop: 2}}>
+                      Anında bir bildirim alıp test edin
+                    </AppText>
+                  </View>
+                </Pressable>
               </View>
 
               {/* Namazdayım */}

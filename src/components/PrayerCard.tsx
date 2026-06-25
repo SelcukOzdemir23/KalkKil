@@ -1,7 +1,6 @@
 import React from 'react';
 import {View} from 'react-native';
 import {AppText} from './AppText';
-import {GlassView} from './GlassView';
 import {PrayerTimeEntry} from '../services/prayerTimes';
 import {formatTime} from '../utils/format';
 import {colors, radius} from '../theme/tokens';
@@ -17,8 +16,7 @@ export function PrayerCard({entry, isNext}: PrayerCardProps) {
   const accentColor = isKerahat ? colors.danger : colors.accent;
 
   return (
-    <GlassView
-      intensity={isNext ? 'heavy' : 'light'}
+    <View
       style={{
         borderRadius: radius.lg,
         borderWidth: 1,
@@ -27,6 +25,7 @@ export function PrayerCard({entry, isNext}: PrayerCardProps) {
         paddingHorizontal: 14,
         marginBottom: 8,
         opacity: isPassed && !isNext ? 0.58 : 1,
+        backgroundColor: isNext ? colors.surfaceSoft : colors.surfaceMuted,
       }}>
       <View style={{flexDirection: 'row', alignItems: 'center'}}>
         <View
@@ -52,7 +51,7 @@ export function PrayerCard({entry, isNext}: PrayerCardProps) {
             {isNext && (
               <View
                 style={{
-                  borderRadius: radius.pill,
+                  borderRadius: radius.sm,
                   backgroundColor: isKerahat ? colors.dangerSoft : colors.accentSoft,
                   paddingHorizontal: 8,
                   paddingVertical: 2,
@@ -80,6 +79,6 @@ export function PrayerCard({entry, isNext}: PrayerCardProps) {
           {formatTime(entry.time)}
         </AppText>
       </View>
-    </GlassView>
+    </View>
   );
 }

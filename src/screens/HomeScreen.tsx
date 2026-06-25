@@ -1,17 +1,17 @@
 import React, {useEffect, useRef, useState, useCallback} from 'react';
 import {View, ActivityIndicator, ScrollView} from 'react-native';
+import {MapPin} from 'lucide-react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAppContext} from '../context/AppContext';
 import {usePrayerTimes} from '../hooks/usePrayerTimes';
 import {useCountdown} from '../hooks/useCountdown';
 import {CountdownTimer} from '../components/CountdownTimer';
 import {PrayerList} from '../components/PrayerList';
-import {GlassView} from '../components/GlassView';
 import {AlertModal} from '../components/AlertModal';
 import {AppText} from '../components/AppText';
 import {getGreeting} from '../utils/format';
 import {schedulePrayerNotifications, cancelAllNotifications, requestNotificationPermission} from '../services/notifications';
-import {updateWidget, startPrayerForegroundService} from '../services/widget';
+import {updateWidget, startPrayerForegroundService, stopPrayerForegroundService} from '../services/widget';
 import {getCurrentLocation, requestLocationPermission, checkLocationPermission, reverseGeocode} from '../services/location';
 import {saveLocation, setLocationPermissionGranted, getLocation, getLocationLabel, getPrayerMode} from '../services/storage';
 import {colors, radius} from '../theme/tokens';
@@ -25,9 +25,9 @@ export function HomeScreen() {
   const prevNextPrayerName = useRef<string | null>(null);
   const [locationLoading, setLocationLoading] = useState(true);
   const [locationInfo, setLocationInfo] = useState<{type: 'gps'; label: string} | null>(null);
-  const [alertState, setAlertState] = useState<{visible: boolean; title: string; message: string; icon?: string}>({visible: false, title: '', message: ''});
+  const [alertState, setAlertState] = useState<{visible: boolean; title: string; message: string; icon?: React.ReactNode}>({visible: false, title: '', message: ''});
 
-  const showAlert = useCallback((title: string, message: string, icon?: string) => {
+  const showAlert = useCallback((title: string, message: string, icon?: React.ReactNode) => {
     setAlertState({visible: true, title, message, icon});
   }, []);
 
@@ -82,9 +82,6 @@ export function HomeScreen() {
 
         // Bildirim iznini ilk açılışta bir kere iste
         requestNotificationPermission().catch(() => {});
-
-        // Foreground servisi başlat — bildirim çubuğunda sürekli vakit göster
-        startPrayerForegroundService();
       }
 
       // Loading'i her durumda kapat (cache var veya yok)
@@ -92,7 +89,7 @@ export function HomeScreen() {
     };
 
     init();
-  }, []);
+  }, [requestRefresh]);
 
   useEffect(() => {
     const loc = getLocation();
@@ -101,7 +98,7 @@ export function HomeScreen() {
       return;
     }
     setLocationInfo({type: 'gps', label: getLocationLabel()});
-  }, [entries]);
+  }, []);
 
   useEffect(() => {
     if (!nextPrayer) return;
@@ -110,17 +107,17 @@ export function HomeScreen() {
 
       if (getPrayerMode()) {
         // Namazdayım: sadece sıradaki vakit için bildirimleri 15dk ertele
-        if (dailyTimes) schedulePrayerNotifications(dailyTimes);
+        if (dailyTimes) schedulePrayerNotifications(dailyTimes, 15);
         showAlert(
           `${nextPrayer.nameTr} vakti girdi`,
           `Namazdayım modu aktif. Bildirimler 15 dakika susturuldu.\n\n${nextPrayer.nameTr} - ${timeStr}`,
-          '☾',
+          <AppText style={{fontSize: 22}}>☾</AppText>,
         );
       } else {
         showAlert(
           `${nextPrayer.nameTr} vakti girdi`,
           `Saat ${timeStr} itibarıyla ${nextPrayer.nameTr} vakti başladı.`,
-          '🕌',
+          <AppText style={{fontSize: 22}}>🕋</AppText>,
         );
       }
     }
@@ -141,8 +138,10 @@ export function HomeScreen() {
         const granted = await requestNotificationPermission();
         if (!cancelled && granted) {
           await schedulePrayerNotifications(dailyTimes);
+          startPrayerForegroundService();
         }
       } else if (!notificationsEnabled) {
+        stopPrayerForegroundService();
         await cancelAllNotifications();
       }
     };
@@ -190,21 +189,7 @@ export function HomeScreen() {
 
   return (
     <View style={{flex: 1, backgroundColor: colors.background}}>
-      {/* Arka plan dekor — üstte büyük yarım daire */}
-      <View
-        style={{
-          position: 'absolute',
-          top: insets.top - 120,
-          left: '50%',
-          marginLeft: -200,
-          width: 400,
-          height: 400,
-          borderRadius: 200,
-          backgroundColor: colors.accentSoft,
-          pointerEvents: 'none',
-          opacity: 0.6,
-        }}
-      />
+
       <ScrollView
         style={{flex: 1}}
         contentContainerStyle={{paddingTop: insets.top + 16, paddingBottom: insets.bottom + 90, paddingHorizontal: 16}}
@@ -213,7 +198,7 @@ export function HomeScreen() {
         <View style={{marginBottom: 18}}>
           <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12}}>
             <View style={{flex: 1}}>
-              <AppText style={{fontSize: 13, color: colors.accentMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5}}>
+              <AppText style={{fontSize: 13, color: colors.accentMuted, fontWeight: '700', letterSpacing: 0.4}}>
                 {dateStr}
               </AppText>
               <AppText style={{fontSize: 34, fontWeight: '700', color: colors.text, marginTop: 2}}>
@@ -227,14 +212,14 @@ export function HomeScreen() {
                   alignItems: 'center',
                   gap: 6,
                   backgroundColor: colors.surfaceMuted,
-                  borderRadius: radius.pill,
+                  borderRadius: radius.sm,
                   paddingHorizontal: 12,
                   paddingVertical: 7,
                   borderWidth: 1,
                   borderColor: colors.border,
                   maxWidth: 150,
                 }}>
-                <AppText style={{fontSize: 12}}>📍</AppText>
+                <MapPin size={13} color={colors.textMuted} />
                 <AppText style={{fontSize: 12, color: colors.textMuted, fontWeight: '600'}} numberOfLines={1}>
                   {locationInfo.label}
                 </AppText>
@@ -244,8 +229,7 @@ export function HomeScreen() {
         </View>
 
         {error ? (
-          <GlassView
-            intensity="heavy"
+          <View
             style={{
               marginBottom: 12,
               borderRadius: radius.md,
@@ -254,9 +238,10 @@ export function HomeScreen() {
               borderColor: 'rgba(217, 135, 95, 0.24)',
               paddingHorizontal: 14,
               paddingVertical: 12,
+              backgroundColor: colors.surfaceSoft,
             }}>
             <AppText style={{fontSize: 13, fontWeight: '600', color: colors.danger}}>{error}</AppText>
-          </GlassView>
+          </View>
         ) : null}
 
         <View style={{marginBottom: 18}}>

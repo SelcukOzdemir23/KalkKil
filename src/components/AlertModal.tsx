@@ -1,19 +1,19 @@
 import React, {useEffect, useRef} from 'react';
 import {Modal, View, Pressable, Animated} from 'react-native';
 import {AppText} from './AppText';
-import {GlassView} from './GlassView';
+import {AlertTriangle} from 'lucide-react-native';
 import {colors, radius, shadows} from '../theme/tokens';
 
 interface AlertModalProps {
   visible: boolean;
   title: string;
   message: string;
-  icon?: string;
+  icon?: React.ReactNode;
   buttonText?: string;
   onClose: () => void;
 }
 
-export function AlertModal({visible, title, message, icon = '📌', buttonText = 'Tamam', onClose}: AlertModalProps) {
+export function AlertModal({visible, title, message, icon, buttonText = 'Tamam', onClose}: AlertModalProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.85)).current;
 
@@ -33,8 +33,7 @@ export function AlertModal({visible, title, message, icon = '📌', buttonText =
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <View style={{flex: 1, backgroundColor: colors.blackOverlay, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32}}>
         <Animated.View style={{width: '100%', opacity: fadeAnim, transform: [{scale: scaleAnim}]}}>
-          <GlassView
-            intensity="heavy"
+          <View
             style={{
               borderRadius: radius.xl,
               overflow: 'hidden',
@@ -43,6 +42,7 @@ export function AlertModal({visible, title, message, icon = '📌', buttonText =
               paddingVertical: 32,
               paddingHorizontal: 24,
               alignItems: 'center',
+              backgroundColor: colors.surfaceSoft,
               ...shadows.card,
             }}>
             <View
@@ -69,7 +69,7 @@ export function AlertModal({visible, title, message, icon = '📌', buttonText =
                 borderWidth: 1,
                 borderColor: colors.borderStrong,
               }}>
-              <AppText style={{fontSize: 25}}>{icon}</AppText>
+              {icon || <AlertTriangle size={25} color={colors.accent} strokeWidth={2} />}
             </View>
 
             <AppText style={{fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center', marginBottom: 8}}>
@@ -80,7 +80,7 @@ export function AlertModal({visible, title, message, icon = '📌', buttonText =
               {message}
             </AppText>
 
-            <Pressable
+          <Pressable
               onPress={onClose}
               style={({pressed}) => ({
                 backgroundColor: pressed ? 'rgba(214, 180, 106, 0.18)' : colors.accentSoft,
@@ -97,7 +97,7 @@ export function AlertModal({visible, title, message, icon = '📌', buttonText =
                 {buttonText}
               </AppText>
             </Pressable>
-          </GlassView>
+          </View>
         </Animated.View>
       </View>
     </Modal>

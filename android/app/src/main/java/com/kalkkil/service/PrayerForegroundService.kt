@@ -96,14 +96,13 @@ class PrayerForegroundService : Service() {
      */
     private fun buildNotification(): Notification {
         val prefs = getSharedPreferences(PrayerWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE)
-        val nextName = prefs.getString(PrayerWidgetProvider.KEY_NEXT_PRAYER_NAME, null)
-        val nextTime = prefs.getString(PrayerWidgetProvider.KEY_NEXT_PRAYER_TIME, null)
+        val event = PrayerWidgetProvider.findNextEvent(prefs)
         val allTimesRaw = prefs.getString(PrayerWidgetProvider.KEY_ALL_TIMES, null)
 
         val countdown = calculateDynamicCountdown(prefs)
 
-        val title = if (nextName != null && nextTime != null) {
-            "\uD83C\uDF19 $nextName · $nextTime"
+        val title = if (event != null) {
+            "\uD83C\uDF19 ${event.name} · ${event.time}"
         } else {
             "\uD83C\uDF19 KalkKıl"
         }
@@ -115,7 +114,7 @@ class PrayerForegroundService : Service() {
         }
 
         // BigText: tüm vakitler, sıradaki → ile işaretli
-        val bigText = buildBigText(allTimesRaw, nextName)
+        val bigText = buildBigText(allTimesRaw, event?.name)
 
         val openIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -194,8 +193,8 @@ class PrayerForegroundService : Service() {
      * Böylece vakit geçişlerinde JS bridge'i beklemeden otomatik devam eder.
      */
     private fun calculateDynamicCountdown(prefs: android.content.SharedPreferences): String {
-        val nextTs = findNextTimestamp(prefs) ?: return "00:00:00"
-        val diffMs = nextTs - System.currentTimeMillis()
+        val event = PrayerWidgetProvider.findNextEvent(prefs) ?: return "00:00:00"
+        val diffMs = event.timestamp - System.currentTimeMillis()
         if (diffMs <= 0) return "00:00:00"
         val totalSec = diffMs / 1000
         val h = (totalSec / 3600).toInt()
@@ -205,23 +204,10 @@ class PrayerForegroundService : Service() {
     }
 
     /**
-     * Tüm kayıtlı timestamp'lerden şu anki zamandan büyük olan ilkini (sıradaki vakit) bulur.
-     * KEY_ALL_TIMESTAMPS yoksa veya tümü geçmişse null döner.
+     * Geriye dönük uyumluluk için tutuluyor; yeni akış PrayerWidgetProvider.findNextEvent kullanır.
      */
     private fun findNextTimestamp(prefs: android.content.SharedPreferences): Long? {
-        val allTimestamps = prefs.getString(PrayerWidgetProvider.KEY_ALL_TIMESTAMPS, null)
-        if (allTimestamps.isNullOrBlank()) {
-            // Fallback: eski davranış, tek timestamp'i dene
-            val ts = prefs.getString(PrayerWidgetProvider.KEY_NEXT_PRAYER_TIMESTAMP, null)
-            val parsed = ts?.toLongOrNull() ?: return null
-            return if (parsed > System.currentTimeMillis()) parsed else null
-        }
-        val now = System.currentTimeMillis()
-        for (tsStr in allTimestamps.split("|")) {
-            val ts = tsStr.toLongOrNull() ?: continue
-            if (ts > now) return ts
-        }
-        return null // tümü geçmiş
+        return PrayerWidgetProvider.findNextEvent(prefs)?.timestamp
     }
 
     private fun updateNotification() {

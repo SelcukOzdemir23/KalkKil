@@ -1,5 +1,11 @@
 import {NativeModules, Platform} from 'react-native';
-import {formatTime, PrayerTimeEntry} from './prayerTimes';
+import {
+  calculatePrayerTimes,
+  getPrayerTimeEntries,
+  PrayerTimeEntry,
+} from './prayerTimes';
+import {formatTime} from '../utils/format';
+import {getLocation} from './storage';
 
 const {PrayerWidgetBridge} = NativeModules;
 let lastWidgetPayload = '';
@@ -11,25 +17,30 @@ function stripSeconds(countdown: string): string {
   return countdown;
 }
 
-/**
- * Tüm vakitleri bildirim BigText için pipe-ayrılmış stringe dönüştür.
- * Format: "İmsak|04:32|Güneş|06:01|Öğle|12:45|İkindi|16:23|Akşam|19:11|Yatsı|20:41"
- */
-function buildDisplayTimesString(entries: PrayerTimeEntry[]): string {
-  return entries
-    .map(e => `${e.nameTr}|${formatTime(e.time)}`)
-    .join('|');
+function buildNextDayEntries(entries: PrayerTimeEntry[]): PrayerTimeEntry[] {
+  const location = getLocation();
+  if (!location || entries.length === 0) {
+    return [];
+  }
+
+  const baseDate = new Date(entries[0].time);
+  const tomorrow = new Date(baseDate);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  try {
+    const tomorrowTimes = calculatePrayerTimes(location.latitude, location.longitude, tomorrow);
+    return getPrayerTimeEntries(tomorrowTimes, new Date());
+  } catch {
+    return [];
+  }
 }
 
-/**
- * Tüm vakitlerin epoch ms timestamp'lerini pipe-ayrılmış stringe dönüştür.
- * Format: "1715000000000|1715010000000|..."
- * Foreground service bu sayede bağımsız olarak sıradaki vakti bulabilir.
- */
+function buildDisplayTimesString(entries: PrayerTimeEntry[]): string {
+  return entries.map(e => `${e.nameTr}|${formatTime(e.time)}`).join('|');
+}
+
 function buildAllTimestampsString(entries: PrayerTimeEntry[]): string {
-  return entries
-    .map(e => String(e.time.getTime()))
-    .join('|');
+  return entries.map(e => String(e.time.getTime())).join('|');
 }
 
 export function updateWidget(
@@ -41,19 +52,23 @@ export function updateWidget(
     return;
   }
 
+  const tomorrowEntries = buildNextDayEntries(entries);
+  const eventEntries = [...entries, ...tomorrowEntries].sort(
+    (a, b) => a.time.getTime() - b.time.getTime(),
+  );
+
   const nextName = nextPrayer ? nextPrayer.nameTr : '--';
   const nextTime = nextPrayer ? formatTime(nextPrayer.time) : '--:--';
   const countdownNoSec = stripSeconds(countdown);
-  // Bildirim BigText için tüm vakitler
-  const displayTimes = buildDisplayTimesString(entries);
+  const displayTimes = buildDisplayTimesString(eventEntries);
+  const allTimestamps = buildAllTimestampsString(eventEntries);
 
   try {
-    const payload = `${nextName}|${nextTime}|${countdownNoSec}`;
+    const payload = `${nextName}|${nextTime}|${countdownNoSec}|${displayTimes}|${allTimestamps}`;
     if (payload === lastWidgetPayload) {
       return;
     }
     lastWidgetPayload = payload;
-    const allTimestamps = buildAllTimestampsString(entries);
 
     PrayerWidgetBridge.updateWidgetWithTimes(
       nextName,
@@ -77,11 +92,6 @@ export function updateWidget(
   }
 }
 
-/**
- * Start the foreground service that shows a persistent notification
- * with prayer times and keeps updating the widget in the background.
- * Safe to call multiple times — service ignores duplicate starts.
- */
 export function startPrayerForegroundService(): void {
   if (Platform.OS !== 'android' || !PrayerWidgetBridge) {
     return;
@@ -93,9 +103,6 @@ export function startPrayerForegroundService(): void {
   }
 }
 
-/**
- * Stop the foreground service and remove the persistent notification.
- */
 export function stopPrayerForegroundService(): void {
   if (Platform.OS !== 'android' || !PrayerWidgetBridge) {
     return;

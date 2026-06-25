@@ -1,9 +1,10 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useMemo} from 'react';
 import {View, Animated, Vibration, Dimensions} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {WebView} from 'react-native-webview';
 import {magnetometer, SensorTypes, setUpdateIntervalForType} from 'react-native-sensors';
 import {AppText} from '../components/AppText';
+import {Compass} from 'lucide-react-native';
 import {colors, radius} from '../theme/tokens';
 import {
   calculateQiblaBearing,
@@ -103,7 +104,7 @@ export function QiblaScreen() {
   }, [qiblaBearing, compassRotation, alignedAnim, sensorAvailable]);
 
   // ── Konum yok ──
-  if (!latitude || !longitude) {
+  if (latitude === undefined || longitude === undefined) {
     return (
       <View style={{flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32}}>
         <View style={{width: 80, height: 80, borderRadius: 40, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 24, borderWidth: 1, borderColor: colors.borderStrong}}>
@@ -124,7 +125,7 @@ export function QiblaScreen() {
     return (
       <View style={{flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32}}>
         <View style={{width: 80, height: 80, borderRadius: 40, backgroundColor: colors.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 24, borderWidth: 1, borderColor: 'rgba(217, 135, 95, 0.26)'}}>
-          <AppText style={{fontSize: 40}}>🧭</AppText>
+          <Compass size={40} color={colors.danger} />
         </View>
         <AppText style={{fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center', marginBottom: 8}}>
           Pusula Kullanılamıyor
@@ -136,7 +137,7 @@ export function QiblaScreen() {
     );
   }
 
-  const mapHtml = `
+  const mapHtml = useMemo(() => `
     <!DOCTYPE html>
     <html>
     <head>
@@ -190,7 +191,7 @@ export function QiblaScreen() {
       </script>
     </body>
     </html>
-  `;
+  `, [latitude, longitude]);
 
   const R = COMPASS_SIZE / 2;
 
@@ -207,7 +208,7 @@ export function QiblaScreen() {
 
         {/* Üst bilgi */}
         <View style={{alignItems: 'center', paddingTop: 8}}>
-          <AppText style={{fontSize: 13, fontWeight: '700', color: colors.accentMuted, textTransform: 'uppercase', letterSpacing: 2}}>
+          <AppText style={{fontSize: 13, fontWeight: '700', color: colors.accentMuted,            letterSpacing: 0.4}}>
             Kıble Pusulası
           </AppText>
         </View>
@@ -315,8 +316,8 @@ export function QiblaScreen() {
                   opacity: 0.9,
                   shadowColor: colors.qiblaGold,
                   shadowOffset: {width: 0, height: 0},
-                  shadowOpacity: 0.6,
-                  shadowRadius: 6,
+                  shadowOpacity: 0.3,
+                  shadowRadius: 4,
                 }}
               />
               {/* Kıble ucu — küçük daire */}
@@ -331,8 +332,8 @@ export function QiblaScreen() {
                   left: R - 5,
                   shadowColor: colors.qiblaGold,
                   shadowOffset: {width: 0, height: 0},
-                  shadowOpacity: 0.8,
-                  shadowRadius: 4,
+                  shadowOpacity: 0.35,
+                  shadowRadius: 3,
                 }}
               />
             </Animated.View>
@@ -362,8 +363,8 @@ export function QiblaScreen() {
                 backgroundColor: isAligned ? '#7BAE8D' : colors.accent,
                 shadowColor: isAligned ? '#7BAE8D' : colors.accent,
                 shadowOffset: {width: 0, height: 0},
-                shadowOpacity: 0.6,
-                shadowRadius: 6,
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
               }}
             />
           </View>
@@ -385,7 +386,7 @@ export function QiblaScreen() {
               backgroundColor: isAligned
                 ? 'rgba(123, 174, 141, 0.15)'
                 : 'rgba(214, 180, 106, 0.08)',
-              borderRadius: radius.pill,
+              borderRadius: radius.sm,
               paddingHorizontal: 16,
               paddingVertical: 8,
               borderWidth: 1,

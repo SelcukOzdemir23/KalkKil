@@ -23,8 +23,7 @@ export function PrayerList({entries, nextPrayer}: PrayerListProps) {
             fontSize: 12,
             fontWeight: '700',
             color: colors.textSubtle,
-            textTransform: 'uppercase',
-            letterSpacing: 1.8,
+            letterSpacing: 0.4,
           }}>
           Günün Vakitleri
         </AppText>

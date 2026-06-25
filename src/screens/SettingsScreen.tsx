@@ -4,11 +4,10 @@ import {AppText} from '../components/AppText';
 import {AlertModal} from '../components/AlertModal';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAppContext} from '../context/AppContext';
-import {GlassView} from '../components/GlassView';
 import {getCurrentLocation, reverseGeocode} from '../services/location';
 import {requestNotificationPermission} from '../services/notifications';
 import {saveLocation, setLocationPermissionGranted, getLocationLabel, getLocation} from '../services/storage';
-import {Bell, BellOff, Clock, Moon, MapPin, Navigation, Info} from 'lucide-react-native';
+import {Bell, BellOff, Clock, Moon, MapPin, Navigation, Info, AlertTriangle} from 'lucide-react-native';
 import {colors, radius, shadows} from '../theme/tokens';
 
 const TIMING_OPTIONS = [
@@ -29,7 +28,7 @@ function SectionHeader({title, icon}: {title: string; icon?: React.ReactNode}) {
           fontSize: 13,
           fontWeight: '700',
           color: colors.accentMuted,
-          letterSpacing: 1.2,
+          letterSpacing: 0.4,
         }}>
         {title}
       </AppText>
@@ -41,17 +40,17 @@ function SectionHeader({title, icon}: {title: string; icon?: React.ReactNode}) {
 
 function Card({children}: {children: React.ReactNode}) {
   return (
-    <GlassView
-      intensity="medium"
+    <View
       style={{
         borderRadius: radius.xl,
         borderWidth: 1,
         borderColor: colors.border,
         marginBottom: 24,
+        backgroundColor: colors.surface,
         ...shadows.subtle,
       }}>
       {children}
-    </GlassView>
+    </View>
   );
 }
 
@@ -172,13 +171,13 @@ export function SettingsScreen() {
     visible: boolean;
     title: string;
     message: string;
-    icon?: string;
+    icon?: React.ReactNode;
   }>({visible: false, title: '', message: ''});
 
   const savedLocation = getLocation();
   const locationLabel = savedLocation ? getLocationLabel() : 'Konum ayarlanmadı';
 
-  const showAlert = useCallback((title: string, message: string, icon?: string) => {
+  const showAlert = useCallback((title: string, message: string, icon?: React.ReactNode) => {
     setAlertState({visible: true, title, message, icon});
   }, []);
 
@@ -202,10 +201,10 @@ export function SettingsScreen() {
       showAlert(
         'Konum Güncellendi',
         `Konum: ${getLocationLabel()}\n\nVakitler yeniden hesaplanacaktır.`,
-        '📍',
+        <MapPin size={24} color={colors.accent} />,
       );
     } else {
-      showAlert('Konum Alınamadı', result.error, '⚠️');
+      showAlert('Konum Alınamadı', result.error, <AlertTriangle size={24} color={colors.danger} />);
     }
     setLocationLoading(false);
   }, [requestRefresh, showAlert]);
@@ -217,7 +216,7 @@ export function SettingsScreen() {
         showAlert(
           'Bildirim İzni Gerekli',
           'Ezan bildirimlerini alabilmek için bildirim iznini vermelisiniz. İzni daha önce reddettiyseniz telefon ayarlarından tekrar açabilirsiniz.',
-          '🔔',
+          <Bell size={24} color={colors.accent} />,
         );
         return;
       }
@@ -235,20 +234,7 @@ export function SettingsScreen() {
           paddingHorizontal: 20,
         }}
         showsVerticalScrollIndicator={false}>
-        {/* Arka plan dekor */}
-        <View
-          style={{
-            position: 'absolute',
-            top: -140,
-            left: '50%',
-            marginLeft: -180,
-            width: 360,
-            height: 360,
-            borderRadius: 180,
-            backgroundColor: colors.accentSoft,
-            opacity: 0.5,
-          }}
-        />
+
 
         {/* Başlık */}
         <View style={{marginBottom: 32}}>
@@ -341,8 +327,8 @@ export function SettingsScreen() {
                 <View style={{paddingHorizontal: 18, paddingTop: 18, paddingBottom: 8}}>
                   <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14}}>
                     <Clock size={14} color={colors.accentMuted} />
-                    <AppText style={{fontSize: 12, fontWeight: '700', color: colors.accentMuted, letterSpacing: 1.2}}>
-                      NE KADAR ÖNCE?
+                    <AppText style={{fontSize: 12, fontWeight: '700', color: colors.accentMuted, letterSpacing: 0.4}}>
+                      Ne kadar önce?
                     </AppText>
                   </View>
 

@@ -21,7 +21,9 @@ export function AppText({style, ...props}: TextProps) {
 
   const family = FONT_MAP[String(s.fontWeight ?? '400')] || 'Alegreya-Regular';
   // fontWeight'ü kaldır, iOS'ta sentetik bold'u önle
-  const {fontWeight, ...rest} = s;
+  // fontWeight kaldırıldı — iOS'ta sentetik bold'u önlemek için
+  const rest = {...s};
+  delete (rest as any).fontWeight;
 
   return <RNText {...props} style={[rest, {fontFamily: family}]} />;
 }

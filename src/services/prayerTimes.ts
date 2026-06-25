@@ -3,6 +3,7 @@ import {
   CalculationMethod,
   Coordinates,
 } from 'adhan';
+import {formatTime} from '../utils/format';
 
 export interface DailyPrayerTimes {
   fajr: Date;
@@ -91,25 +92,6 @@ export function getCurrentPrayerIndex(entries: PrayerTimeEntry[]): number {
   return -1;
 }
 
-export function formatTime(date: Date): string {
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  return `${hours}:${minutes}`;
-}
-
-export function formatCountdown(diffMs: number): string {
-  if (diffMs <= 0) {
-    return '00:00:00';
-  }
-  const totalSeconds = Math.floor(diffMs / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  return [hours, minutes, seconds]
-    .map(n => n.toString().padStart(2, '0'))
-    .join(':');
-}
-
 export function getPrayerTimesAsStrings(
   times: DailyPrayerTimes,
 ): Record<string, string> {
@@ -121,12 +103,6 @@ export function getPrayerTimesAsStrings(
     maghrib: formatTime(times.maghrib),
     isha: formatTime(times.isha),
   };
-}
-
-export function getDateKey(date: Date = new Date()): string {
-  return `${date.getFullYear()}-${(date.getMonth() + 1)
-    .toString()
-    .padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
 }
 
 /**

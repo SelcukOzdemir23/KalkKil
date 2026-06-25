@@ -1,12 +1,14 @@
 import notifee, {
+  AlarmType,
   AndroidImportance,
   AuthorizationStatus,
   TimestampTrigger,
   TriggerType,
 } from '@notifee/react-native';
 import {Platform} from 'react-native';
-import {DailyPrayerTimes, formatTime} from './prayerTimes';
-import {getNotificationTiming, getPrayerNotificationEnabled} from './storage';
+import {calculatePrayerTimes, DailyPrayerTimes} from './prayerTimes';
+import {formatTime} from '../utils/format';
+import {getLocation, getNotificationTiming, getPrayerNotificationEnabled} from './storage';
 
 const CHANNEL_ID = 'prayer-times-channel';
 
@@ -23,7 +25,10 @@ export async function setupNotificationChannel(): Promise<void> {
 }
 
 export async function cancelAllNotifications(): Promise<void> {
-  await notifee.cancelAllNotifications();
+  // Sadece planlanmış vakit bildirimlerini iptal et.
+  // cancelAllNotifications() kalıcı foreground notification'ı da silebildiği için
+  // widget/bildirim çubuğu deneyimini bozuyordu.
+  await notifee.cancelTriggerNotifications();
 }
 
 const PRAYER_VISIBLE_NAMES: Record<string, string> = {
@@ -44,66 +49,95 @@ const PRAYER_NAMES = [
   {name: 'isha', time: (t: DailyPrayerTimes) => t.isha},
 ];
 
+function getNextDayTimes(times: DailyPrayerTimes): DailyPrayerTimes | null {
+  const location = getLocation();
+  if (!location) {
+    return null;
+  }
+
+  const nextDay = new Date(times.fajr);
+  nextDay.setDate(nextDay.getDate() + 1);
+
+  try {
+    return calculatePrayerTimes(location.latitude, location.longitude, nextDay);
+  } catch {
+    return null;
+  }
+}
+
 export async function schedulePrayerNotifications(
   times: DailyPrayerTimes,
   delayMinutes: number = 0,
 ): Promise<void> {
+  await setupNotificationChannel();
   await cancelAllNotifications();
 
   const timingMinutes = getNotificationTiming();
   const now = Date.now();
   const delayMs = delayMinutes * 60 * 1000;
+  const daysToSchedule = [times];
+  const nextDayTimes = getNextDayTimes(times);
 
-  for (const prayer of PRAYER_NAMES) {
-    const prayerTime = prayer.time(times).getTime();
-    const notifyTime = prayerTime - timingMinutes * 60 * 1000;
-    const finalTime = notifyTime + delayMs;
+  if (nextDayTimes) {
+    daysToSchedule.push(nextDayTimes);
+  }
 
-    if (!getPrayerNotificationEnabled(prayer.name)) {
-      continue;
-    }
+  for (const dayTimes of daysToSchedule) {
+    for (const prayer of PRAYER_NAMES) {
+      if (!getPrayerNotificationEnabled(prayer.name)) {
+        continue;
+      }
 
-    if (finalTime <= now) {
-      continue;
-    }
+      const prayerDate = prayer.time(dayTimes);
+      const prayerTime = prayerDate.getTime();
+      const notifyTime = prayerTime - timingMinutes * 60 * 1000;
+      const finalTime = notifyTime + delayMs;
 
-    const nameTr = PRAYER_VISIBLE_NAMES[prayer.name] || prayer.name;
-    const isExactTime = timingMinutes === 0;
+      if (finalTime <= now) {
+        continue;
+      }
 
-    const title = isExactTime
-      ? `☾ ${nameTr} vakti girdi`
-      : `☾ ${nameTr} vaktine ${timingMinutes} dk kaldı`;
+      const nameTr = PRAYER_VISIBLE_NAMES[prayer.name] || prayer.name;
+      const isExactTime = timingMinutes === 0;
+      const title = isExactTime
+        ? `☾ ${nameTr} vakti girdi`
+        : `☾ ${nameTr} vaktine ${timingMinutes} dk kaldı`;
+      const body = isExactTime
+        ? `${nameTr} — ${formatTime(prayerDate)}`
+        : `${nameTr} — ${formatTime(prayerDate)} · ${timingMinutes} dk sonra`;
 
-    const body = isExactTime
-      ? `${nameTr} — ${formatTime(prayer.time(times))}`
-      : `${nameTr} — ${formatTime(prayer.time(times))} · ${timingMinutes} dk sonra`;
-
-    await notifee.createTriggerNotification(
-      {
-        title,
-        body,
-        android: {
-          channelId: CHANNEL_ID,
-          importance: AndroidImportance.HIGH,
-          pressAction: {id: 'default'},
+      await notifee.createTriggerNotification(
+        {
+          id: `prayer-${prayer.name}-${prayerDate.toISOString().slice(0, 10)}`,
+          title,
+          body,
+          android: {
+            channelId: CHANNEL_ID,
+            importance: AndroidImportance.HIGH,
+            pressAction: {id: 'default'},
+          },
+          ios: {
+            sound: 'default',
+            interruptionLevel: 'timeSensitive',
+          },
         },
-        ios: {
-          sound: 'default',
-          interruptionLevel: 'timeSensitive',
-        },
-      },
-      {
-        type: TriggerType.TIMESTAMP,
-        timestamp: finalTime,
-      } as TimestampTrigger,
-    );
+        {
+          type: TriggerType.TIMESTAMP,
+          timestamp: finalTime,
+          alarmManager: {
+            type: AlarmType.SET_EXACT_AND_ALLOW_WHILE_IDLE,
+          },
+        } as TimestampTrigger,
+      );
+    }
   }
 }
 
 export async function sendTestNotification(): Promise<void> {
+  await setupNotificationChannel();
   await notifee.displayNotification({
-    title: '🔔 KalkKıl Test',
-    body: 'Bildirimler sorunsuz çalışıyor! ✅',
+    title: 'KalkKıl Test',
+    body: 'Bildirimler sorunsuz çalışıyor!',
     android: {
       channelId: CHANNEL_ID,
       importance: AndroidImportance.HIGH,
@@ -119,9 +153,6 @@ export async function sendTestNotification(): Promise<void> {
 export async function requestNotificationPermission(): Promise<boolean> {
   const settings = await notifee.requestPermission();
 
-  // iOS: AUTHORIZED / PROVISIONAL
-  // Android 13+: AUTHORIZED when POST_NOTIFICATIONS is granted
-  // Android <=12: Notifee reports AUTHORIZED because runtime permission is not required
   return (
     settings.authorizationStatus === AuthorizationStatus.AUTHORIZED ||
     settings.authorizationStatus === AuthorizationStatus.PROVISIONAL

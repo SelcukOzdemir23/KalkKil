@@ -4,16 +4,15 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {AppProvider, useAppContext} from './src/context/AppContext';
+import {AppProvider} from './src/context/AppContext';
 import {ErrorBoundary} from './src/components/ErrorBoundary';
-import {GlassView} from './src/components/GlassView';
 import {HomeScreen} from './src/screens/HomeScreen';
 import {SettingsScreen} from './src/screens/SettingsScreen';
 import {QiblaScreen} from './src/screens/QiblaScreen';
 import {initializeStorage} from './src/services/storage';
 import {setupNotificationChannel} from './src/services/notifications';
 import {Sunrise, Settings, Compass} from 'lucide-react-native';
-import {colors, radius} from './src/theme/tokens';
+import {colors} from './src/theme/tokens';
 import './global.css';
 
 const Tab = createBottomTabNavigator();
@@ -105,7 +104,7 @@ function AppTabs() {
 
 function AppContent() {
   useEffect(() => {
-    setupNotificationChannel();
+    setupNotificationChannel().catch(() => {});
   }, []);
 
   return (

@@ -213,6 +213,17 @@ export function SettingsScreen() {
   const handleTestNotification = useCallback(async () => {
     setTestNotifLoading(true);
     try {
+      // Önce izin kontrolü yap
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        showAlert(
+          'Bildirim İzni Yok',
+          'Test bildirimi göndermek için bildirim izni gereklidir. Telefonunuzun ayarlarından uygulamaya bildirim izni verin.',
+          <AlertTriangle size={24} color={colors.danger} />,
+        );
+        setTestNotifLoading(false);
+        return;
+      }
       await sendTestNotification();
       showAlert(
         'Bildirim Gönderildi',
@@ -340,81 +351,81 @@ export function SettingsScreen() {
             onValueChange={handleToggleNotifications}
           />
 
+          {/* Zamanlama — sadece bildirimler açıksa */}
           {notificationsEnabled && (
-            <>
-              {/* Zamanlama */}
-              <View style={{borderTopWidth: 1, borderTopColor: colors.border}}>
-                <View style={{paddingHorizontal: 18, paddingTop: 18, paddingBottom: 8}}>
-                  <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14}}>
-                    <Clock size={14} color={colors.accentMuted} />
-                    <AppText style={{fontSize: 12, fontWeight: '700', color: colors.accentMuted, letterSpacing: 0.4}}>
-                      Ne kadar önce?
-                    </AppText>
-                  </View>
+            <View style={{borderTopWidth: 1, borderTopColor: colors.border}}>
+              <View style={{paddingHorizontal: 18, paddingTop: 18, paddingBottom: 8}}>
+                <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14}}>
+                  <Clock size={14} color={colors.accentMuted} />
+                  <AppText style={{fontSize: 12, fontWeight: '700', color: colors.accentMuted, letterSpacing: 0.4}}>
+                    Ne kadar önce?
+                  </AppText>
+                </View>
 
-                  <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 10}}>
-                    {TIMING_OPTIONS.map(opt => (
-                      <OptionChip
-                        key={opt.value}
-                        label={opt.label}
-                        selected={notificationTiming === opt.value}
-                        onPress={() => setNotificationTiming(opt.value)}
-                      />
-                    ))}
-                  </View>
+                <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 10}}>
+                  {TIMING_OPTIONS.map(opt => (
+                    <OptionChip
+                      key={opt.value}
+                      label={opt.label}
+                      selected={notificationTiming === opt.value}
+                      onPress={() => setNotificationTiming(opt.value)}
+                    />
+                  ))}
                 </View>
               </View>
+            </View>
+          )}
 
-              {/* Test bildirimi */}
-              <View style={{borderTopWidth: 1, borderTopColor: colors.border}}>
-                <Pressable
-                  onPress={handleTestNotification}
-                  disabled={testNotifLoading}
-                  style={({pressed}) => ({
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingVertical: 16,
-                    paddingHorizontal: 18,
-                    gap: 14,
-                    opacity: testNotifLoading ? 0.5 : pressed ? 0.7 : 1,
-                  })}>
-                  <View
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 12,
-                      backgroundColor: 'rgba(244, 241, 234, 0.05)',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}>
-                    {testNotifLoading ? (
-                      <ActivityIndicator size="small" color={colors.accent} />
-                    ) : (
-                      <Bell size={18} color={colors.textMuted} />
-                    )}
-                  </View>
-                  <View style={{flex: 1}}>
-                    <AppText style={{fontSize: 16, fontWeight: '600', color: colors.text}}>
-                      Test bildirimi gönder
-                    </AppText>
-                    <AppText style={{fontSize: 12, color: colors.textMuted, marginTop: 2}}>
-                      Anında bir bildirim alıp test edin
-                    </AppText>
-                  </View>
-                </Pressable>
+          {/* Test bildirimi — her zaman görünür */}
+          <View style={{borderTopWidth: 1, borderTopColor: colors.border}}>
+            <Pressable
+              onPress={handleTestNotification}
+              disabled={testNotifLoading}
+              style={({pressed}) => ({
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingVertical: 16,
+                paddingHorizontal: 18,
+                gap: 14,
+                opacity: testNotifLoading ? 0.5 : pressed ? 0.7 : 1,
+              })}>
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  backgroundColor: 'rgba(244, 241, 234, 0.05)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                {testNotifLoading ? (
+                  <ActivityIndicator size="small" color={colors.accent} />
+                ) : (
+                  <Bell size={18} color={colors.textMuted} />
+                )}
               </View>
+              <View style={{flex: 1}}>
+                <AppText style={{fontSize: 16, fontWeight: '600', color: colors.text}}>
+                  Test bildirimi gönder
+                </AppText>
+                <AppText style={{fontSize: 12, color: colors.textMuted, marginTop: 2}}>
+                  Anında bir bildirim alıp test edin
+                </AppText>
+              </View>
+            </Pressable>
+          </View>
 
-              {/* Namazdayım */}
-              <View style={{borderTopWidth: 1, borderTopColor: colors.border}}>
-                <ToggleRow
-                  icon={<Moon size={18} color={prayerMode ? colors.accent : colors.textSubtle} />}
-                  title="Namazdayım Modu"
-                  subtitle="Vakit girdiğinde bildirimleri 15 dk susturur"
-                  value={prayerMode}
-                  onValueChange={togglePrayerMode}
-                />
-              </View>
-            </>
+          {/* Namazdayım — sadece bildirimler açıksa */}
+          {notificationsEnabled && (
+            <View style={{borderTopWidth: 1, borderTopColor: colors.border}}>
+              <ToggleRow
+                icon={<Moon size={18} color={prayerMode ? colors.accent : colors.textSubtle} />}
+                title="Namazdayım Modu"
+                subtitle="Vakit girdiğinde bildirimleri 15 dk susturur"
+                value={prayerMode}
+                onValueChange={togglePrayerMode}
+              />
+            </View>
           )}
         </Card>
 

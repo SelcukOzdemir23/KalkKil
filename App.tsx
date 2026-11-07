@@ -13,7 +13,6 @@ import {initializeStorage} from './src/services/storage';
 import {setupNotificationChannel} from './src/services/notifications';
 import {Sunrise, Settings, Compass} from 'lucide-react-native';
 import {colors} from './src/theme/tokens';
-import './global.css';
 
 const Tab = createBottomTabNavigator();
 

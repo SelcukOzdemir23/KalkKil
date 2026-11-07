@@ -6,12 +6,30 @@ import notifee, {
   TriggerType,
 } from '@notifee/react-native';
 import {Platform} from 'react-native';
-import {DailyTimes, PRAYER_KEYS, calculateDailyTimes} from '../domain/prayer';
+import {
+  DailyTimes,
+  PRAYER_KEYS,
+  PrayerKey,
+  calculateDailyTimes,
+  planPrayerNotifications,
+} from '../domain/prayer';
 import {PRAYER_LABELS} from '../i18n/tr';
 import {formatTime} from '../utils/format';
-import {getLocation, getNotificationTiming, getPrayerNotificationEnabled} from './storage';
+import {
+  getLocation,
+  getNotificationTiming,
+  getPrayerNotificationEnabled,
+} from './storage';
 
 const CHANNEL_ID = 'prayer-times-channel';
+
+/**
+ * Kaç gün ileriye bildirim kurulur.
+ *
+ * iOS'ta bekleyen bildirim limiti 64; 7 gün × 6 vakit = 42, güvenli aralıkta
+ * kalır. Pencere her planlamada baştan kurulduğu için kimlik çakışması olmaz.
+ */
+export const SCHEDULE_DAYS = 7;
 
 export async function setupNotificationChannel(): Promise<void> {
   if (Platform.OS === 'android') {
@@ -32,22 +50,42 @@ export async function cancelAllNotifications(): Promise<void> {
   await notifee.cancelTriggerNotifications();
 }
 
-const PRAYER_VISIBLE_NAMES = PRAYER_LABELS;
+function readEnabledMap(): Record<PrayerKey, boolean> {
+  const enabled = {} as Record<PrayerKey, boolean>;
+  for (const key of PRAYER_KEYS) {
+    enabled[key] = getPrayerNotificationEnabled(key);
+  }
+  return enabled;
+}
 
-function getNextDayTimes(times: DailyTimes): DailyTimes | null {
+/**
+ * Bugünden başlayarak `count` günün vakitleri.
+ *
+ * Eski davranış sadece bugün + yarını kuruyordu: kullanıcı uygulamayı iki gün
+ * açmazsa bildirimler tamamen susuyordu. Pencere artık 7 gün.
+ */
+function upcomingDays(start: DailyTimes, count: number): DailyTimes[] {
   const location = getLocation();
   if (!location) {
-    return null;
+    return [start];
   }
 
-  const nextDay = new Date(times.fajr);
-  nextDay.setDate(nextDay.getDate() + 1);
+  const days = [start];
+  const base = start.fajr;
 
-  try {
-    return calculateDailyTimes(location.latitude, location.longitude, nextDay);
-  } catch {
-    return null;
+  for (let offset = 1; offset < count; offset++) {
+    const date = new Date(base);
+    date.setDate(date.getDate() + offset);
+    try {
+      days.push(
+        calculateDailyTimes(location.latitude, location.longitude, date),
+      );
+    } catch {
+      break;
+    }
   }
+
+  return days;
 }
 
 export async function schedulePrayerNotifications(
@@ -58,42 +96,29 @@ export async function schedulePrayerNotifications(
   await cancelAllNotifications();
 
   const timingMinutes = getNotificationTiming();
-  const now = Date.now();
-  const delayMs = delayMinutes * 60 * 1000;
-  const daysToSchedule = [times];
-  const nextDayTimes = getNextDayTimes(times);
+  const planned = planPrayerNotifications({
+    days: upcomingDays(times, SCHEDULE_DAYS),
+    enabled: readEnabledMap(),
+    leadMinutes: timingMinutes,
+    now: new Date(),
+    delayMinutes,
+  });
 
-  if (nextDayTimes) {
-    daysToSchedule.push(nextDayTimes);
-  }
+  const isExactTime = timingMinutes === 0;
 
-  for (const dayTimes of daysToSchedule) {
-    for (const key of PRAYER_KEYS) {
-      if (!getPrayerNotificationEnabled(key)) {
-        continue;
-      }
+  for (const item of planned) {
+    const label = PRAYER_LABELS[item.key];
+    const title = isExactTime
+      ? `☾ ${label} vakti girdi`
+      : `☾ ${label} vaktine ${timingMinutes} dk kaldı`;
+    const body = isExactTime
+      ? `${label} — ${formatTime(item.prayerTime)}`
+      : `${label} — ${formatTime(item.prayerTime)} · ${timingMinutes} dk sonra`;
 
-      const prayerDate = dayTimes[key];
-      const prayerTime = prayerDate.getTime();
-      const notifyTime = prayerTime - timingMinutes * 60 * 1000;
-      const finalTime = notifyTime + delayMs;
-
-      if (finalTime <= now) {
-        continue;
-      }
-
-      const nameTr = PRAYER_VISIBLE_NAMES[key] || key;
-      const isExactTime = timingMinutes === 0;
-      const title = isExactTime
-        ? `☾ ${nameTr} vakti girdi`
-        : `☾ ${nameTr} vaktine ${timingMinutes} dk kaldı`;
-      const body = isExactTime
-        ? `${nameTr} — ${formatTime(prayerDate)}`
-        : `${nameTr} — ${formatTime(prayerDate)} · ${timingMinutes} dk sonra`;
-
+    try {
       await notifee.createTriggerNotification(
         {
-          id: `prayer-${key}-${prayerDate.toISOString().slice(0, 10)}`,
+          id: item.id,
           title,
           body,
           android: {
@@ -108,15 +133,18 @@ export async function schedulePrayerNotifications(
         },
         {
           type: TriggerType.TIMESTAMP,
-          timestamp: finalTime,
+          timestamp: item.fireAt.getTime(),
           alarmManager: {
             type: AlarmType.SET_EXACT_AND_ALLOW_WHILE_IDLE,
           },
         } as TimestampTrigger,
       );
+    } catch {
+      // Tek bir bildirim kurulamazsa kalanları engellemesin.
     }
   }
 }
+
 
 export async function sendTestNotification(): Promise<void> {
   await setupNotificationChannel();

@@ -5,6 +5,13 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!--
+      Vakit bildirimleri dakika hassasiyetinde olmalı: geç gelen bir bildirim
+      namaz vaktini kaçırmak demek. Android 12+ tam zamanlı alarm için izin
+      istiyor; uygulama mağaza dışı (APK) dağıtıldığı için USE_EXACT_ALARM
+      kullanılıyor ve izin otomatik veriliyor.
+    -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />

@@ -1,14 +1,13 @@
 /**
  * İki tema, tek yapı.
  *
- * Açık tema: nötr kâğıt + mürekkep metin + tek kızıl vurgu. Kızıl, elyazması
- * almanaklarında başlıkları işaretlemek için kullanılan "rubrik" rengidir;
- * seçim bu gelenekten geliyor, dekoratif olsun diye değil.
+ * Yön: **ölçü aleti**. Uygulamanın işi günü ölçmek; arayüz de bir alet gibi
+ * davranıyor — soğuk taş-yeşil zemin, mürekkep metin, tek çini yeşili vurgu.
  *
- * Uyarı: "sıcak krem + pas/oxblood" kombinasyonu mobil uygulamalarda en sık
- * görülen AI varsayılanı. O yüzden kâğıt tonu bilinçli olarak nötr-taş tarafına
- * çekildi (#F3F1EB), krem/bej değil; vurgu tek ve derin. Paleti değiştirirken
- * bu dengeyi koru.
+ * Neden bu palet: sıcak krem + serif + kiremit kırmızısı, mobil uygulamalarda
+ * en sık görülen varsayılan ve uygulamayı jenerik gösteriyordu. Zemin bilinçli
+ * olarak **soğuk** (yeşile çalan taş), vurgu **çini** (İznik/çini geleneği):
+ * kültürel olarak yerli, ama turuncu-kiremit ailesinden değil.
  *
  * Kural: ekranlarda ham renk kullanılmaz. Yeni bir renk gerekiyorsa buraya
  * eklenir, böylece iki tema birden tutarlı kalır.
@@ -44,55 +43,55 @@ export interface Palette {
 }
 
 export const lightPalette: Palette = {
-  background: '#F3F1EB',
-  surface: '#FCFBF7',
-  surfaceMuted: '#E8E6DF',
+  background: '#E6E8E1',
+  surface: '#EFF1EB',
+  surfaceMuted: '#DBDED5',
 
-  ink: '#15171C',
-  inkMuted: 'rgba(21, 23, 28, 0.64)',
-  inkSubtle: 'rgba(21, 23, 28, 0.48)',
+  ink: '#101C19',
+  inkMuted: 'rgba(16, 28, 25, 0.66)',
+  inkSubtle: 'rgba(16, 28, 25, 0.56)',
 
-  hairline: 'rgba(21, 23, 28, 0.13)',
-  hairlineStrong: 'rgba(21, 23, 28, 0.24)',
+  hairline: 'rgba(16, 28, 25, 0.14)',
+  hairlineStrong: 'rgba(16, 28, 25, 0.30)',
 
-  accent: '#A6382F',
-  accentSoft: 'rgba(166, 56, 47, 0.09)',
-  accentFaint: 'rgba(166, 56, 47, 0.16)',
-  accentMuted: 'rgba(166, 56, 47, 0.60)',
+  accent: '#186A5E',
+  accentSoft: 'rgba(24, 106, 94, 0.10)',
+  accentFaint: 'rgba(24, 106, 94, 0.20)',
+  accentMuted: 'rgba(24, 106, 94, 0.62)',
 
-  success: '#3E6B4F',
-  successSoft: 'rgba(62, 107, 79, 0.11)',
+  success: '#2F6B45',
+  successSoft: 'rgba(47, 107, 69, 0.12)',
 
-  compassNorth: '#B54A3C',
-  compassSouth: '#3E6B4F',
-  needle: '#A6382F',
+  compassNorth: '#186A5E',
+  compassSouth: '#8A8570',
+  needle: '#186A5E',
 
-  overlay: 'rgba(21, 23, 28, 0.52)',
+  overlay: 'rgba(16, 28, 25, 0.55)',
 };
 
 export const darkPalette: Palette = {
-  background: '#131519',
-  surface: '#1A1D23',
-  surfaceMuted: '#0E1014',
+  background: '#0B1211',
+  surface: '#111A18',
+  surfaceMuted: '#070D0C',
 
-  ink: '#EFE9DE',
-  inkMuted: 'rgba(239, 233, 222, 0.62)',
-  inkSubtle: 'rgba(239, 233, 222, 0.38)',
+  ink: '#E3E6DD',
+  inkMuted: 'rgba(227, 230, 221, 0.64)',
+  inkSubtle: 'rgba(227, 230, 221, 0.50)',
 
-  hairline: 'rgba(239, 233, 222, 0.13)',
-  hairlineStrong: 'rgba(239, 233, 222, 0.24)',
+  hairline: 'rgba(227, 230, 221, 0.13)',
+  hairlineStrong: 'rgba(227, 230, 221, 0.26)',
 
-  accent: '#E0705E',
-  accentSoft: 'rgba(224, 112, 94, 0.14)',
-  accentFaint: 'rgba(224, 112, 94, 0.22)',
-  accentMuted: 'rgba(224, 112, 94, 0.66)',
+  accent: '#55B9A7',
+  accentSoft: 'rgba(85, 185, 167, 0.14)',
+  accentFaint: 'rgba(85, 185, 167, 0.22)',
+  accentMuted: 'rgba(85, 185, 167, 0.66)',
 
-  success: '#83AE91',
-  successSoft: 'rgba(131, 174, 145, 0.14)',
+  success: '#7FBF98',
+  successSoft: 'rgba(127, 191, 152, 0.14)',
 
-  compassNorth: '#E0705E',
-  compassSouth: '#83AE91',
-  needle: '#E0705E',
+  compassNorth: '#55B9A7',
+  compassSouth: '#9A957F',
+  needle: '#55B9A7',
 
-  overlay: 'rgba(5, 6, 8, 0.62)',
+  overlay: 'rgba(0, 0, 0, 0.62)',
 };

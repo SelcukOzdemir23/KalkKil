@@ -95,6 +95,10 @@ testlidir. UI testleri tasarım yenilendiğinde eklenecek.
 
 ## 6. Tasarım sistemi: tek tema, güneşe göre açık/karanlık
 
+> **Not:** Bu bölüm 0.1.0'ın "almanak" yönünü anlatıyor. Tipografi, palet ve
+> köşe kuralları **9. bölümle geçersiz kılındı**; burada kalıcı olan tek şey
+> güneşe göre otomatik tema ve tek tema kuralı.
+
 **Karar.** Arayüz "almanak" diline geçti: kâğıt zemin, mürekkep metin, tek
 kızıl vurgu (elyazması geleneğindeki rubrik). Palet `src/theme/palette.ts`,
 ölçekler `src/theme/tokens.ts`. Ekranlar ham renk/ölçü yazmaz; `src/ui/`
@@ -164,6 +168,31 @@ sayısı 1/12'den 10/12'ye çıktı; kalan ikisi aynı ilde komşu ilçe.
 dahil) il merkezi koordinatına bağlı. Aynı koordinatı paylaşan kayıtlarda
 beraberliği il merkezine vermek, rastgele bir ilçe adı göstermekten dürüst:
 kullanıcı "İSTANBUL" görür ve gerekirse "Değiştir" ile kendi ilçesini seçer.
+
+---
+
+## 9. Arayüzün ikinci kez baştan kurulması: ölçü aleti
+
+**Karar.** Kimlik "elyazması almanak"tan **"ölçü aleti"**ne geçti. Üç şey
+değişti: tipografi (serif → Archivo + IBM Plex Mono), palet (krem/kızıl →
+soğuk taş-yeşil/çini) ve gezinme (ikonlu sekmeler → üç sütun metin).
+
+**Neden.** Bir önceki yön dürüsttü ama tanıdıktı: krem zemin, yüksek kontrastlı
+serif başlık, toprak/kiremit vurgu — mobil tasarımda en sık üretilen kombinasyon.
+Uygulamanın konusu zaman ve ölçüm; bunu taşıyan biçim serif değil, sayı
+disiplinidir. Bu yüzden bütün saatler mono (IBM Plex Mono): alt alta gelen
+vakitler aynı genişlikte duruyor, geri sayım akarken metin zıplamıyor.
+
+**Tuzak: `fontVariant`.** İlk denemede sayılar mono yerine Archivo'da çizildi.
+Sebep `fontVariant: ['tabular-nums']`: Android'de bu özellik metni varsayılan
+sistem fontuna düşürüyor. Mono font zaten sabit genişlikte olduğu için özellik
+tamamen kaldırıldı.
+
+**GPS hızı.** Onboarding'de konum "yavaş" hissi veriyordu. Sebep sıralı
+deneme: önce kaba konum (6 sn timeout), olmazsa uydu (15 sn). Ağ tabanlı konum
+kapalıysa ilk adım boşuna bekliyordu. Artık iki istek **paralel** başlıyor ve
+ilk cevap veren kullanılıyor (`firstFulfilled`). İlçe eşleştirmesi için sokak
+hassasiyeti gerekmediğinden kaba cevap yeterli.
 
 ---
 

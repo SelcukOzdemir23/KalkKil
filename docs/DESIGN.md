@@ -6,34 +6,42 @@ dosya güncellenir.
 
 ## Tek cümle
 
-**Elyazması almanak:** nötr kâğıt, mürekkep metin, tek kızıl vurgu; gün ışığıyla
-açık ve karanlık arasında dönen bir arayüz.
+**Ölçü aleti:** soğuk taş-yeşil zemin, mürekkep metin, tek çini yeşili vurgu;
+grotesk başlık, mono sayı.
 
-Neden bu: uygulamanın konusu **zaman** (vakitler, geri sayım, günün bölünmesi).
-Almanak, zamanı kâğıt üzerinde bölen tarihsel biçim. Seçim dekorasyon değil,
-konudan türetilmiş.
+Neden bu: uygulamanın işi **günü ölçmek** — vakitler, geri sayım, günün
+bölünmesi. Arayüz de bir alet gibi davranıyor: ölçekli eksen, mono sayılar,
+keskin köşeler, süs yok.
+
+Önceki yön "elyazması almanak"tı (krem kâğıt + serif + kızıl). Bırakıldı:
+**krem zemin + yüksek kontrastlı serif + toprak/kiremit vurgu**, mobil
+tasarımda en sık üretilen varsayılan; uygulamayı jenerik gösteriyordu.
 
 ## Palet
 
 | Rol | Açık | Koyu | Kullanım |
 |---|---|---|---|
-| `background` | `#F3F1EB` | `#131519` | Ekran zemini |
-| `surface` | `#FCFBF7` | `#1A1D23` | Yükseltilmiş yüzey (nadir) |
-| `ink` | `#15171C` | `#EFE9DE` | Birincil metin |
-| `inkMuted` | `ink %64` | `ink %62` | İkincil metin — **min 4.5:1** |
-| `inkSubtle` | `ink %48` | `ink %38` | Sadece grafik: nokta, çizgi, ikon — min 3:1 |
-| `accent` | `#A6382F` | `#E0705E` | Tek vurgu: sıradaki vakit, kerahat, seçili öğe |
-| `success` | `#3E6B4F` | `#83AE91` | Sadece "kılındı" durumu |
+| `background` | `#E6E8E1` | `#0B1211` | Ekran zemini — soğuk, yeşile çalan taş |
+| `surface` | `#EFF1EB` | `#111A18` | Yükseltilmiş yüzey (nadir) |
+| `ink` | `#101C19` | `#E3E6DD` | Birincil metin |
+| `inkMuted` | `ink %66` | `ink %64` | İkincil metin — **min 4.5:1** |
+| `inkSubtle` | `ink %56` | `ink %50` | Sadece grafik: çentik, çizgi — min 3:1 |
+| `accent` | `#186A5E` | `#55B9A7` | Tek vurgu: sıradaki vakit, kerahat, seçili öğe |
+| `success` | `#2F6B45` | `#7FBF98` | Sadece "kılındı" durumu |
 
 **Kurallar**
 
 - Tek vurgu rengi. İkinci bir vurgu eklemek yerine tipografi veya boşlukla
   hiyerarşi kur.
-- `inkSubtle` metin için kullanılmaz; ölçülen kontrastı küçük metne yetmez.
-- "Sıcak krem + pas kızılı" mobilde en yaygın yapay zekâ varsayılanı. Kâğıt tonu
-  bilinçli olarak nötr-taş tarafında tutuldu; krem/bej'e kaydırma.
-- Kontrast ölçümü: açık `ink` 15.9:1, `inkMuted` 5.2:1, `accent` 5.8:1;
-  koyu `inkMuted` 6.4:1, `accent` 5.8:1.
+- Vurgu **çini yeşili**: İznik çinisi geleneğinden, kültürel olarak yerli ama
+  turuncu/kiremit ailesinden değil. Paleti değiştirirken krem-bej ya da
+  "koyu lacivert + turuncu" tarafına kaydırma; ikisi de aşınmış.
+- `inkSubtle` metin için kullanılmaz; kontrastı küçük metne yetmez.
+- Ölçülen kontrast (açık / koyu): `ink` 14.1 / 15.0, `accent` 5.2 / 8.0,
+  `inkMuted` 5.2 / 6.6, `inkSubtle` 3.8 / 4.4.
+- Köşe yarıçapı **keskin**: 2–8 px. Etkileşimli öğeler `radius.md` (4).
+  Kart ve butonda yuvarlak köşe yok; daire yalnızca pusula gibi gerçekten
+  dairesel öğelerde.
 
 ## Tipografi
 
@@ -41,28 +49,41 @@ konudan türetilmiş.
 
 | Varyant | Aile | Boyut | Kullanım |
 |---|---|---|---|
-| `display` | Alegreya Bold | 40 | Sadece büyük başlık (gerekirse) |
-| `title` | Alegreya SemiBold | 26 | Ekran başlığı, sıradaki vakit |
-| `headline` | Alegreya SemiBold | 18 | Vakit adları, liste başlıkları |
-| `body` | sistem sans | 15 | Gövde |
-| `caption` | sistem sans | 13 | Açıklama |
-| `label` | sistem sans | 12 | Küçük etiketler |
-| `numeric` | sistem sans, tabular | 46 | Geri sayım |
-| `time` | sistem sans, tabular | 17 | Saat değerleri |
+| `display` | Archivo Bold | 44 | Nadir büyük başlık |
+| `title` | Archivo SemiBold | 25 | Ekran başlığı, sıradaki vakit |
+| `headline` | Archivo SemiBold | 17 | Vakit adları, liste başlıkları |
+| `body` | Archivo Regular | 15 | Gövde |
+| `caption` | Archivo Regular | 13 | Açıklama |
+| `label` | IBM Plex Mono Medium | 10.5 | Küçük etiketler; **büyük harfe çevrilir** |
+| `numeric` | IBM Plex Mono Medium | 48 | Geri sayım |
+| `measure` | IBM Plex Mono Medium | 34 | Derece gibi tek ölçüm |
+| `time` | IBM Plex Mono Medium | 15 | Saat değerleri |
 
-- **Serif sadece başlıklarda.** Gövde ve tüm sayılar sans.
-- Zaman ve sayı değerleri `tabular-nums`: geri sayım akarken metin zıplamaz.
-- Alegreya'nın varsayılan rakamları eski tip (inişli-çıkışlı). Sayısal okuma
-gerektiren yerlerde sans kullan.
-- Başlıklarda `letterSpacing` negatif (-0.2 … -1.2), gövdede nötr.
+- **İki aile, iki iş.** Archivo (grotesk) başlık ve gövde; IBM Plex Mono her
+  sayı ve etiket. Serif yok.
+- Sayılar mono olduğu için alt alta gelen saatler aynı genişlikte durur ve geri
+  sayım akarken metin zıplamaz.
+- **`fontVariant: ['tabular-nums']` kullanılmaz.** Android'de bu özellik metni
+  varsayılan sistem fontuna düşürüyor; sayılar mono yerine Archivo'da çiziliyor.
+  Mono font zaten sabit genişlikte, ek ayar gerekmiyor.
+- `label` `textTransform: 'uppercase'` taşır: küçük plastik etiket görünümü.
+  Cümle uzunluğundaki metin için kullanılmaz.
+- Başlıklarda `letterSpacing` negatif (-0.25 … -1.9), gövdede nötr.
 
 ## Boşluk, yarıçap, çizgi
 
 - Boşluk ölçeği: 4 / 8 / 12 / 16 / 24 / 32 / 44. Ara değer uydurulmaz.
-- Yarıçap: 4 / 8 / 12 / 18 / 26 / tam. Kural: **etkileşimli öğeler 12**,
-  **kart 18**, **nokta/rozet tam**. Karışık kullanım yok.
+- Yarıçap: 2 / 3 / 4 / 6 / 8 / tam. Kural: **etkileşimli öğeler 4**, rozet ve
+  gerçekten dairesel öğeler tam. Karışık kullanım yok.
 - Gölge yok. Ayrım **saç teli çizgiyle** (1px, `hairline`) ve boşlukla yapılır.
 - Kart üstüne kart yok. Liste satırları çizgiyle ayrılır.
+- Düğüm ve işaretler **kare**; yuvarlak nokta kullanılmaz (pusula çemberi hariç).
+
+## Gezinme
+
+Alt gezinme ikonsuz: üç sütun metin. Seçili sekme vurgu renginde ve üstünde
+2px vurgu çizgisi var. Üç ikon, birbirinden ayrılması zor süslerdi; yerine geçen
+etiketler aletin diğer etiketleriyle aynı dili konuşuyor (mono, büyük harf).
 
 ## Bileşenler
 
@@ -74,8 +95,11 @@ gerektiren yerlerde sans kullan.
   orantılı** bir eksen olarak gösterir. Yatay şerit denendi ve bırakıldı: altı
   etiket sığmadığı için kaydırılıyordu, bu bilgi taşımayan bir hileydi. Dikey
   eksende sıkışma yok, ayrıca aralıkların gerçek uzunluğu görünüyor.
-  Katmanlar: saat çentikleri → kerahat şeritleri → geçen gün → kalan süre
-  (vurgu rengi) → vakit düğümleri.
+  Katmanlar: saat çentikleri (çift saatler mono numaralı) → kerahat şeritleri →
+  geçen gün → kalan süre (vurgu rengi) → vakit düğümleri.
+
+  Numarasız çentikler süs gibi duruyordu; saat numarası eklenince eksen gerçek
+  bir cetvel oldu ve "aradaki boşluk ne kadar" sorusu okunabilir hale geldi.
 - İkonlar `lucide-react-native`, tek aile, `strokeWidth` 1.7–2.4.
 
 ## İlk açılış
@@ -94,7 +118,6 @@ bilgi taşımıyordu.
   ayrı bir düğme değil.
 
 ## Hareket
-
 - Sadece `transform` ve `opacity`.
 - Giriş: 180–220 ms. Modal 180 ms ölçek + opaklık.
 - Sürekli/sonsuz animasyon yok. Hareket bilgi taşımıyorsa eklenmez.

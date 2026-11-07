@@ -137,3 +137,19 @@ export async function requestNotificationPermission(): Promise<boolean> {
     settings.authorizationStatus === AuthorizationStatus.PROVISIONAL
   );
 }
+
+/**
+ * İzin **istemez**, yalnızca durumu okur.
+ *
+ * Ana ekranın her açılışında izin istemek, izni bir kez reddetmiş kullanıcıya
+ * her seferinde sistem diyaloğu göstermek demek. İzin onboarding'de (veya
+ * Ayarlar'daki eylemle) bir kez istenir; burada yalnızca sonucu okunur.
+ */
+export async function checkNotificationPermission(): Promise<boolean> {
+  const settings = await notifee.getNotificationSettings();
+
+  return (
+    settings.authorizationStatus === AuthorizationStatus.AUTHORIZED ||
+    settings.authorizationStatus === AuthorizationStatus.PROVISIONAL
+  );
+}

@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState, useCallback} from 'react';
 import {View, ScrollView, ActivityIndicator} from 'react-native';
-import {Bell, MapPin, Moon} from 'lucide-react-native';
+import {Bell, Moon} from 'lucide-react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
@@ -15,11 +15,10 @@ import {findActiveKerahat, isSameDay} from '../domain/prayer';
 import {KERAHAT_LABELS, PRAYER_LABELS} from '../i18n/tr';
 import {useTheme} from '../theme/ThemeProvider';
 import {Text} from '../ui/Text';
-import {getGreeting} from '../utils/format';
 import {
   schedulePrayerNotifications,
   cancelAllNotifications,
-  requestNotificationPermission,
+  checkNotificationPermission,
 } from '../services/notifications';
 import {syncWidget} from '../services/widget';
 import {getLocation, getLocationLabel, getPrayerMode} from '../services/storage';
@@ -114,7 +113,8 @@ export function HomeScreen() {
 
     const updateNotifications = async () => {
       if (dailyTimes && notificationsEnabled) {
-        const granted = await requestNotificationPermission();
+        // Burada izin **istenmez**; yalnızca durum okunur.
+        const granted = await checkNotificationPermission();
         if (!cancelled && granted) {
           await schedulePrayerNotifications(dailyTimes);
         }
@@ -171,45 +171,34 @@ export function HomeScreen() {
         style={{flex: 1}}
         contentContainerStyle={{
           paddingTop: insets.top + spacing.lg,
-          paddingBottom: insets.bottom + 110,
+          paddingBottom: spacing.xxl,
           paddingHorizontal: 22,
         }}
         showsVerticalScrollIndicator={false}>
         <View
           style={{
             flexDirection: 'row',
-            alignItems: 'flex-start',
+            alignItems: 'baseline',
             justifyContent: 'space-between',
             gap: spacing.md,
           }}>
-          {/* Almanak sayfası gibi: selamlama küçük, tarih başlık.
-              "İyi günler" tek başına başlık olunca jenerik bir mobil klişe
-              oluyordu; burada tarih taşıyıcı, selamlama üst satır. */}
-          <View style={{flex: 1}}>
-            <Text variant="label" tone="accent">
-              {getGreeting()}
-            </Text>
-            <Text variant="title" style={{marginTop: spacing.xs}}>
-              {dateStr}
-            </Text>
-          </View>
-
-          {locationInfo && (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 5,
-                marginTop: spacing.xs,
-                maxWidth: 150,
-              }}>
-              <MapPin size={12} color={palette.inkSubtle} />
-              <Text variant="label" tone="muted" numberOfLines={1}>
-                {locationInfo}
-              </Text>
-            </View>
-          )}
+          {/* Ölçü aletinin üst hattı: solda yer, sağda tarih. Selamlama yok —
+              "İyi günler" her açlışta aynı, bilgi taşımıyor. */}
+          <Text variant="label" tone="muted" numberOfLines={1} style={{flexShrink: 1}}>
+            {locationInfo ?? 'Konum seçilmedi'}
+          </Text>
+          <Text variant="label" tone="muted">
+            {dateStr}
+          </Text>
         </View>
+
+        <View
+          style={{
+            height: 1,
+            marginTop: spacing.md,
+            backgroundColor: palette.hairlineStrong,
+          }}
+        />
 
         {error ? (
           <Text variant="caption" tone="accent" style={{marginTop: spacing.lg}}>
@@ -217,7 +206,7 @@ export function HomeScreen() {
           </Text>
         ) : null}
 
-        <View style={{marginTop: 40}}>
+        <View style={{marginTop: spacing.xxl}}>
           <NextPrayerHero nextPrayer={nextPrayer} countdown={countdown} />
         </View>
 
@@ -255,14 +244,6 @@ export function HomeScreen() {
             </Text>
           </View>
         )}
-
-
-        <Text
-          variant="label"
-          tone="muted"
-          style={{marginTop: spacing.xxl, textAlign: 'center'}}>
-          Vakitler cihazınızda hesaplanır · Diyanet yöntemi
-        </Text>
       </ScrollView>
 
       <AlertModal

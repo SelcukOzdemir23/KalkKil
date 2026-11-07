@@ -15,11 +15,11 @@ interface DayTimelineProps {
 /** İki vakit arasındaki en küçük dikey mesafe (etiket sığsın). */
 const MIN_ROW = 46;
 /** Orantılı yerleşimin çizim yüksekliği; gerçek yükseklik dolunca hesaplanır. */
-const SPAN_HEIGHT = 430;
+const SPAN_HEIGHT = 440;
 const PAD_TOP = 6;
 const PAD_BOTTOM = 6;
-const SPINE_X = 20;
-const LABEL_LEFT = 44;
+const SPINE_X = 34;
+const LABEL_LEFT = 56;
 const ROW_HEIGHT = 46;
 
 /**
@@ -95,31 +95,53 @@ export function DayTimeline({entries, kerahatWindows, now}: DayTimelineProps) {
                 key={`${window.reason}-${top}`}
                 style={{
                   position: 'absolute',
-                  left: SPINE_X - 2,
+                  left: SPINE_X - 1.5,
                   top,
-                  width: 5,
+                  width: 3,
                   height: bottom - top,
-                  borderRadius: 3,
                   backgroundColor: palette.accentFaint,
                 }}
               />
             );
           })}
 
-          {/* Saat çentikleri — uzun aralıkların zaman olduğu okunsun */}
-          {hourTicks.map(tick => (
-            <View
-              key={`h-${tick}`}
-              style={{
-                position: 'absolute',
-                left: SPINE_X - 2,
-                top: at(((tick - first) / span) * SPAN_HEIGHT),
-                width: 5,
-                height: 1,
-                backgroundColor: palette.hairlineStrong,
-              }}
-            />
-          ))}
+          {/* Saat çentikleri ve okunabilir saat numaraları. Numarasız çentik
+              süs gibi duruyordu; numarayla birlikte eksen gerçek bir cetvel
+              oluyor. Kalabalık olmasın diye yalnızca çift saatler yazılır. */}
+          {hourTicks.map(tick => {
+            const y = at(((tick - first) / span) * SPAN_HEIGHT);
+            const hour = new Date(tick).getHours();
+            return (
+              <View key={`h-${tick}`} pointerEvents="none">
+                <View
+                  style={{
+                    position: 'absolute',
+                    left: SPINE_X - 7,
+                    top: y,
+                    width: 6,
+                    height: 1,
+                    backgroundColor: palette.hairlineStrong,
+                  }}
+                />
+                {hour % 2 === 0 && (
+                  <Text
+                    variant="label"
+                    tone="muted"
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      width: SPINE_X - 12,
+                      top: y - 7,
+                      textAlign: 'right',
+                      fontSize: 9,
+                      letterSpacing: 0.5,
+                    }}>
+                    {String(hour).padStart(2, '0')}
+                  </Text>
+                )}
+              </View>
+            );
+          })}
 
           {/* Geçen gün */}
           <View
@@ -137,11 +159,10 @@ export function DayTimeline({entries, kerahatWindows, now}: DayTimelineProps) {
           <View
             style={{
               position: 'absolute',
-              left: SPINE_X - 0.5,
+              left: SPINE_X - 1,
               top: nowY,
-              width: 2,
+              width: 3,
               height: Math.max(nextY - nowY, 0),
-              borderRadius: 1,
               backgroundColor: palette.accent,
             }}
           />
@@ -165,11 +186,10 @@ export function DayTimeline({entries, kerahatWindows, now}: DayTimelineProps) {
           <View
             style={{
               position: 'absolute',
-              left: SPINE_X - 10,
+              left: SPINE_X - 13,
               top: nowY - 1,
-              width: 8,
+              width: 9,
               height: 2,
-              borderRadius: 1,
               backgroundColor: palette.accent,
             }}
           />
@@ -179,7 +199,8 @@ export function DayTimeline({entries, kerahatWindows, now}: DayTimelineProps) {
           {entries.map((entry, index) => {
             const y = at(ys[index]);
             const isNext = index === nextIndex;
-            const size = isNext ? 9 : 6;
+            // Düğümler kare: pusula/kadran diline, yuvarlak kart diline değil.
+            const size = isNext ? 9 : 5;
 
             return (
               <View key={entry.key} pointerEvents="none">
@@ -190,12 +211,7 @@ export function DayTimeline({entries, kerahatWindows, now}: DayTimelineProps) {
                     top: y - size / 2,
                     width: size,
                     height: size,
-                    borderRadius: size,
-                    backgroundColor: isNext
-                      ? palette.accent
-                      : entry.isPassed
-                      ? palette.background
-                      : palette.background,
+                    backgroundColor: isNext ? palette.accent : palette.background,
                     borderWidth: isNext ? 0 : 1,
                     borderColor: entry.isPassed
                       ? palette.inkSubtle

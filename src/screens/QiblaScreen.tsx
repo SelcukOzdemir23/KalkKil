@@ -193,10 +193,10 @@ export function QiblaScreen() {
 
             {/* Kardinal harfler */}
             {[
-              {deg: 0, label: 'K', tone: 'accent' as const, size: 20},
-              {deg: 90, label: 'D', tone: 'muted' as const, size: 16},
-              {deg: 180, label: 'G', tone: 'muted' as const, size: 16},
-              {deg: 270, label: 'B', tone: 'muted' as const, size: 16},
+              {deg: 0, label: 'K', tone: 'accent' as const, size: 15},
+              {deg: 90, label: 'D', tone: 'muted' as const, size: 12},
+              {deg: 180, label: 'G', tone: 'muted' as const, size: 12},
+              {deg: 270, label: 'B', tone: 'muted' as const, size: 12},
             ].map(cardinal => {
               const rad = ((cardinal.deg - 90) * Math.PI) / 180;
               const dist = R - 42;
@@ -214,9 +214,9 @@ export function QiblaScreen() {
                     transform: [{rotate: upright}],
                   }}>
                   <Text
-                    variant="headline"
+                    variant="label"
                     tone={cardinal.tone}
-                    style={{fontSize: cardinal.size}}>
+                    style={{fontSize: cardinal.size, letterSpacing: 0}}>
                     {cardinal.label}
                   </Text>
                 </Animated.View>
@@ -231,14 +231,15 @@ export function QiblaScreen() {
                 height: COMPASS_SIZE,
                 transform: [{rotate: `${qiblaBearing}deg`}],
               }}>
+              {/* İğne kadranın kenarına kadar uzanır: "hangi çentiğe bakıyorum"
+                  sorusu ancak o zaman cevaplanıyor. Uçta küçük bir nokta. */}
               <View
                 style={{
                   position: 'absolute',
-                  left: R - 1,
-                  top: 30,
-                  width: 2,
-                  height: R - 30,
-                  borderRadius: 1,
+                  left: R - 1.25,
+                  top: 14,
+                  width: 2.5,
+                  height: R - 14,
                   backgroundColor: needleColor,
                 }}
               />
@@ -246,10 +247,9 @@ export function QiblaScreen() {
                 style={{
                   position: 'absolute',
                   left: R - 4,
-                  top: 26,
+                  top: 10,
                   width: 8,
                   height: 8,
-                  borderRadius: 4,
                   backgroundColor: needleColor,
                 }}
               />
@@ -271,8 +271,8 @@ export function QiblaScreen() {
         </View>
 
         <View style={{alignItems: 'center', marginTop: spacing.xxl}}>
-          <Text variant="numeric">{Math.round(qiblaBearing)}°</Text>
-          <Text variant="body" tone="muted" style={{marginTop: spacing.xs}}>
+          <Text variant="measure">{Math.round(qiblaBearing)}°</Text>
+          <Text variant="label" tone="accent" style={{marginTop: spacing.md}}>
             {bearingToCardinalName(qiblaBearing)}
           </Text>
           <Text

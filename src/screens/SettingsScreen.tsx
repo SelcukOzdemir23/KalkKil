@@ -163,7 +163,7 @@ export function SettingsScreen() {
     requestRefresh,
   } = useAppContext();
 
-  const {palette, spacing} = useTheme();
+  const {palette, spacing, radius} = useTheme();
   const insets = useSafeAreaInsets();
   const [locationLoading, setLocationLoading] = useState(false);
   const [testNotifLoading, setTestNotifLoading] = useState(false);
@@ -271,7 +271,7 @@ export function SettingsScreen() {
               style={({pressed}) => ({
                 paddingVertical: spacing.sm,
                 paddingHorizontal: spacing.md,
-                borderRadius: 12,
+                borderRadius: radius.md,
                 borderWidth: 1,
                 borderColor: palette.hairlineStrong,
                 opacity: locationLoading ? 0.5 : pressed ? 0.6 : 1,
@@ -280,7 +280,7 @@ export function SettingsScreen() {
                 <ActivityIndicator size="small" color={palette.accent} />
               ) : (
                 <Text variant="label" tone="accent">
-                  GPS
+                  Yenile
                 </Text>
               )}
             </Pressable>

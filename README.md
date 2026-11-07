@@ -8,6 +8,7 @@ Android · React Native · Kotlin widget · MIT
   <img src="docs/screenshots/home-light.png" width="230" alt="Ana ekran" />
   <img src="docs/screenshots/home-dark.png" width="230" alt="Akşam" />
   <img src="docs/screenshots/onboarding.png" width="230" alt="İlk açılış" />
+  <img src="docs/screenshots/qibla-light.png" width="230" alt="Kıble" />
 </p>
 
 **Üç kural:** reklam yok · konum cihazdan çıkmaz · vakitler Diyanet ile aynı dakikada.
@@ -18,7 +19,8 @@ Android · React Native · Kotlin widget · MIT
 - **İlçe bazlı konum** — 1076 ilçe; GPS sadece önerir. Arama “kadikoy” ile de
   bulur.
 - **Gün Çizgisi** — Günü dikey, zamanla orantılı eksen olarak gösterir: vakitler
-  düğüm, saatler çentik, kerahat aralıkları şerit. Kalan süre hem sayı hem uzunluk.
+  düğüm, saatler numaralı çentik, kerahat aralıkları şerit. Kalan süre hem sayı
+  hem uzunluk.
 - **Widget** — `Chronometer` ile canlı geri sayım; arka planda servis yok,
   uygulama açılmasa da 7 gün doğru kalır.
 - **Bildirimler** — Vakit bazında, 5/15/30 dk önce veya tam vaktinde.
@@ -53,6 +55,10 @@ cd android && ./gradlew assembleDebug
 - [docs/DECISIONS.md](docs/DECISIONS.md) — kararlar ve ölçümler
 - [docs/RELEASE.md](docs/RELEASE.md) — imzalı APK, GitHub Releases
 - [CHANGELOG.md](CHANGELOG.md)
+
+Yazı tipleri: [Archivo](https://github.com/Omnibus-Type/Archivo) ve
+[IBM Plex Mono](https://github.com/IBM/plex) — SIL OFL 1.1, lisans metinleri
+[`assets/fonts/licenses/`](assets/fonts/licenses/).
 
 MIT — [LICENSE](LICENSE)
 

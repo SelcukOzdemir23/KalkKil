@@ -238,6 +238,10 @@ export function OnboardingScreen({onFinish}: OnboardingScreenProps) {
                 </View>
               );
             })}
+
+            <Text variant="label" tone="muted" style={{marginTop: spacing.lg}}>
+              Reklamsız · Konum cihazınızda kalır
+            </Text>
           </View>
         )}
 

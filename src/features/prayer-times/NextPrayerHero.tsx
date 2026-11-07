@@ -17,7 +17,7 @@ interface NextPrayerHeroProps {
  * Ekranda tek bir baskın sayı var; diğer her şey onun etrafında sakin duruyor.
  */
 export function NextPrayerHero({nextPrayer, countdown}: NextPrayerHeroProps) {
-  const {spacing} = useTheme();
+  const {spacing, palette} = useTheme();
 
   if (!nextPrayer) {
     return (
@@ -32,7 +32,7 @@ export function NextPrayerHero({nextPrayer, countdown}: NextPrayerHeroProps) {
 
   return (
     <View>
-      <Text variant="caption" tone="muted">
+      <Text variant="label" tone="accent">
         Sıradaki vakit
       </Text>
 
@@ -41,7 +41,7 @@ export function NextPrayerHero({nextPrayer, countdown}: NextPrayerHeroProps) {
           flexDirection: 'row',
           alignItems: 'baseline',
           justifyContent: 'space-between',
-          marginTop: spacing.xs,
+          marginTop: spacing.sm,
         }}>
         <Text variant="title">{PRAYER_LABELS[nextPrayer.key]}</Text>
         <Text variant="time" tone="muted">
@@ -51,13 +51,20 @@ export function NextPrayerHero({nextPrayer, countdown}: NextPrayerHeroProps) {
 
       <View
         style={{
+          height: 1,
+          marginTop: spacing.md,
+          backgroundColor: palette.hairline,
+        }}
+      />
+
+      <View
+        style={{
           flexDirection: 'row',
           alignItems: 'baseline',
-          gap: spacing.sm,
-          marginTop: spacing.lg,
+          marginTop: spacing.md,
         }}>
         <Text variant="numeric">{countdown}</Text>
-        <Text variant="caption" tone="muted">
+        <Text variant="label" tone="muted" style={{marginLeft: spacing.sm}}>
           kaldı
         </Text>
       </View>

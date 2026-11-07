@@ -41,7 +41,7 @@ export function Button({
         ...style,
         paddingVertical: spacing.lg - 2,
         paddingHorizontal: spacing.xl,
-        borderRadius: radius.md,
+        borderRadius: radius.sm,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: isPrimary
@@ -59,7 +59,7 @@ export function Button({
           color={isPrimary ? palette.background : palette.accent}
         />
       ) : (
-        <Text variant="body" tone={isPrimary ? 'inverse' : 'accent'}>
+        <Text variant="label" tone={isPrimary ? 'inverse' : 'accent'}>
           {label}
         </Text>
       )}

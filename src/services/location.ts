@@ -65,6 +65,28 @@ function getPosition(options: {
   });
 }
 
+/**
+ * Birden çok konum isteğinden **ilk başarılı** olanı döndürür.
+ *
+ * Sırayla denemek yanlış: ağ tabanlı konum kapalıysa (uçak modu, ağ konumu
+ * izni yok) ilk deneme zaman aşımına kadar boş bekliyor. Paralel yarışta
+ * hangi yöntem önce cevap verirse o kullanılır; ikisi de başarısız olursa
+ * hata döner.
+ */
+function firstFulfilled<T>(attempts: Array<Promise<T>>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    let pending = attempts.length;
+    for (const attempt of attempts) {
+      attempt.then(resolve, () => {
+        pending -= 1;
+        if (pending === 0) {
+          reject(new Error('konum alınamadı'));
+        }
+      });
+    }
+  });
+}
+
 export async function getCurrentLocation(): Promise<LocationResult> {
   const hasPermission = await checkLocationPermission();
   if (!hasPermission) {
@@ -75,23 +97,19 @@ export async function getCurrentLocation(): Promise<LocationResult> {
   }
 
   try {
-    // Önce yüksek hassasiyet dene (15sn)
-    const result = await getPosition({
-      enableHighAccuracy: true,
-      timeout: 15000,
-    });
+    // Kaba (ağ/istasyon) ve hassas (GPS) istekler aynı anda başlar. İlçe
+    // eşleştirmesi için sokak hassasiyeti gerekmiyor — ilçeler kilometrelerle
+    // ayrılı, 100 m'lik sapma sonucu değiştirmiyor. Bu yüzden ilk cevap iyi.
+    const result = await firstFulfilled([
+      getPosition({enableHighAccuracy: false, timeout: 6000}),
+      getPosition({enableHighAccuracy: true, timeout: 15000}),
+    ]);
     return {success: true, ...result};
   } catch {
-    // Yüksek hassasiyet başarısız → düşük hassasiyet dene (30sn)
-    try {
-      const result = await getPosition({
-        enableHighAccuracy: false,
-        timeout: 30000,
-      });
-      return {success: true, ...result};
-    } catch {
-      return {success: false, error: 'Konum alınamadı. GPS sinyali zayıf veya kapalı olabilir.'};
-    }
+    return {
+      success: false,
+      error: 'Konum alınamadı. GPS sinyali zayıf veya kapalı olabilir.',
+    };
   }
 }
 

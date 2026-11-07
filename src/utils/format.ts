@@ -32,7 +32,7 @@ export function getGreeting(): string {
     return 'Günaydın';
   }
   if (hour < 18) {
-    return 'İyi Günler';
+    return 'İyi günler';
   }
-  return 'İyi Akşamlar';
+  return 'İyi akşamlar';
 }

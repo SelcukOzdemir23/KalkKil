@@ -111,8 +111,8 @@ function ToggleRow({
       <Switch
         value={value}
         onValueChange={onValueChange}
-        trackColor={{false: 'rgba(244,241,234,0.1)', true: palette.accentSoft}}
-        thumbColor={value ? palette.accent : 'rgba(244,241,234,0.4)'}
+        trackColor={{false: palette.hairline, true: palette.accentSoft}}
+        thumbColor={value ? palette.accent : palette.inkSubtle}
       />
     </View>
   );
@@ -308,7 +308,7 @@ export function SettingsScreen() {
                 </AppText>
                 {savedLocation && (
                   <AppText style={{fontSize: 11, color: palette.inkSubtle, marginTop: 1}}>
-                    {savedLocation.latitude.toFixed(4)}, {savedLocation.longitude.toFixed(4)}
+                    Vakitler bu konuma göre hesaplanıyor
                   </AppText>
                 )}
               </View>
@@ -429,7 +429,7 @@ export function SettingsScreen() {
             <View style={{borderTopWidth: 1, borderTopColor: palette.hairline}}>
               <ToggleRow
                 icon={<Moon size={18} color={prayerMode ? palette.accent : palette.inkSubtle} />}
-                title="Namazdayım Modu"
+                title="Namazdayım modu"
                 subtitle="Vakit girdiğinde bildirimleri 15 dk susturur"
                 value={prayerMode}
                 onValueChange={togglePrayerMode}

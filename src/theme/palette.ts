@@ -1,9 +1,14 @@
 /**
  * İki tema, tek yapı.
  *
- * Açık tema varsayılan: kâğıt + mürekkep + tek kızıl vurgu (almanak elyazması
- * geleneğindeki "rubrik"). Karanlık tema, akşam ezanından sonra kendiliğinden
- * devreye girer (güneş batınca kâğıt yerini mürekkebe bırakır).
+ * Açık tema: nötr kâğıt + mürekkep metin + tek kızıl vurgu. Kızıl, elyazması
+ * almanaklarında başlıkları işaretlemek için kullanılan "rubrik" rengidir;
+ * seçim bu gelenekten geliyor, dekoratif olsun diye değil.
+ *
+ * Uyarı: "sıcak krem + pas/oxblood" kombinasyonu mobil uygulamalarda en sık
+ * görülen AI varsayılanı. O yüzden kâğıt tonu bilinçli olarak nötr-taş tarafına
+ * çekildi (#F3F1EB), krem/bej değil; vurgu tek ve derin. Paleti değiştirirken
+ * bu dengeyi koru.
  *
  * Kural: ekranlarda ham renk kullanılmaz. Yeni bir renk gerekiyorsa buraya
  * eklenir, böylece iki tema birden tutarlı kalır.
@@ -37,9 +42,9 @@ export interface Palette {
 }
 
 export const lightPalette: Palette = {
-  background: '#F5F0E6',
-  surface: '#FFFCF5',
-  surfaceMuted: '#ECE5D6',
+  background: '#F3F1EB',
+  surface: '#FCFBF7',
+  surfaceMuted: '#E8E6DF',
 
   ink: '#15171C',
   inkMuted: 'rgba(21, 23, 28, 0.58)',

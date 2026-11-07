@@ -1,72 +1,104 @@
-# KalkKıl — Ezan Vakti
+# KalkKıl
 
-Minimalist, reklamsız namaz vakti uygulaması. Konumunuza göre günlük namaz vakitlerini gösterir, bir sonraki vakte canlı geri sayım yapar, bildirim gönderir ve Android ana ekran widget'ı içerir.
+Reklamsız, çevrimdışı, Türkiye'ye göre doğru namaz vakti uygulaması.
+
+<p>
+  <img src="docs/screenshots/home-light.png" width="240" alt="Ana ekran, gündüz" />
+  <img src="docs/screenshots/home-dark.png" width="240" alt="Ana ekran, akşam" />
+  <img src="docs/screenshots/qibla-light.png" width="240" alt="Kıble" />
+</p>
+
+## Neden
+
+Piyasadaki namaz uygulamaları reklamla ve veri toplamayla ayakta kalıyor.
+KalkKıl'ın üç kuralı var:
+
+1. **Reklam yok.** Reklam, veri toplamak demek. Yok.
+2. **Vakitler cihazda hesaplanır.** Konum hiçbir sunucuya gönderilmez,
+   uygulama uçak modunda da çalışır.
+3. **Diyanet ile aynı dakika.** Yöntem, Diyanet'in yayınladığı saatlerle
+   test edilerek doğrulanır (aşağıda).
 
 ## Özellikler
 
-- **Namaz Vakitleri:** Diyanet yöntemiyle çevrimdışı hesaplanan 6 vakit (İmsak, Güneş, Öğle, İkindi, Akşam, Yatsı)
-- **Canlı Geri Sayım:** Bir sonraki vakte kalan süre (saniye hassasiyetinde)
-- **Bildirimler:** Her vakit öncesi isteğe bağlı hatırlatma (vakit seçimi ve zamanlama ayarlanabilir)
-- **Android Widget:** Ana ekranda bir sonraki vakit ve canlı geri sayım
-- **Kalıcı Bildirim:** Uygulama kapalıyken bile bildirim çubuğunda vakit takibi
-- **Kıble Pusulası:** Manyetik sensör ile Kâbe yönünü gösteren pusula
-- **Çevrimdışı Çalışma:** Tüm vakitler `adhan` kütüphanesi ile yerel olarak hesaplanır
-- **Türkçe Arayüz:** Tamamen Türkçe
+- **Vakitler** — Diyanet yöntemiyle hesaplanır; imsak, güneş, öğle, ikindi,
+  akşam, yatsı.
+- **Gün Şeridi** — Günü yatay bir zaman çizgisi olarak gösterir: vakitler
+  çentik, "şimdi" işaretçi, kerahat aralıkları bant.
+- **Kerahat vakitleri** — Hanefi'ye göre üç kerahat penceresi; gün şeridinde
+  görünür, sıradaki vakit kartında uyarı olarak çıkar.
+- **Bildirimler** — Her vakit için ayrı aç/kapa; vaktinde veya 5/15/30 dk
+  önce. Tam zamanlı alarm, 7 günlük yuvarlanan plan.
+- **Widget** — Ana ekranda sıradaki vakit ve canlı geri sayım. Sayaç
+  `Chronometer` ile native akar; arka planda servis çalışmaz, uygulama
+  açılmasa da 7 gün doğru kalır.
+- **Kıble** — Manyetometre ile pusula, hizalama titreşimi.
+- **Gün ışığına göre tema** — Gün doğumu–gün batımı arası açık, dışı karanlık.
 
-## Başlarken
+## Doğruluk
 
-### Gereksinimler
+Vakitler `adhan` kütüphanesinin Diyanet parametreleriyle hesaplanır (temkin
+payları dahil: güneş −7, öğle +5, ikindi +4, akşam +7 dk). Doğruluk, Diyanet'in
+kendi yayınladığı saatlerle test edilir:
 
-- Node.js >= 18
-- Android SDK (API 24+) veya Xcode 14+ (iOS)
-- CocoaPods (iOS için)
+| Konum | Karşılaştırma | Sapma |
+|---|---|---|
+| İstanbul (3 gün) | Diyanet tablosu — ilçenin kendi koordinatı | 0 – 1 dk |
+| Kars / Akyaka | Diyanet tablosu — ilçenin kendi koordinatı | 0 – 1 dk |
+| Kars / Akyaka | Aynı hesap, il merkezi koordinatıyla | ±2 dk |
 
-### Kurulum
+Yöntem doğru; hata koordinatta. Bu yüzden Diyanet'in yıllık tablosunu gömmek
+yerine ilçe koordinatı kullanılır. Test: `__tests__/domain/diyanet.test.ts`
 
-```bash
-npm install
-```
-
-### Android'de Çalıştırma
-
-```bash
-npm run android
-```
-
-### iOS'te Çalıştırma
-
-```bash
-cd ios && pod install && cd ..
-npm run ios
-```
-
-### Production Build
-
-```bash
-# Android
-cd android && ./gradlew assembleRelease
-
-# iOS
-cd ios && xcodebuild -workspace KalkKil.xcworkspace -scheme KalkKil -configuration Release
-```
-
-## Proje Yapısı
+## Mimari
 
 ```
 src/
-  components/      UI bileşenleri
-  context/         Uygulama durumu (AppContext)
-  hooks/           Custom hook'lar
-  screens/         Ekranlar (HomeScreen, SettingsScreen)
-  services/        Servis katmanı (prayerTimes, location, notifications, storage)
-  theme/           Renk ve stil tanımları
-  utils/           Yardımcı fonksiyonlar
-android/
-  app/src/main/java/com/kalkkil/
-    widget/        Android widget (AppWidgetProvider)
-    service/       Foreground servis
-    bridge/        React Native ↔ Native köprüsü
+  domain/        React yok, saf TypeScript — vakit, kerahat, bildirim ve widget planı
+  services/      Platform adaptörleri: bildirim, konum, depolama, widget köprüsü
+  theme/         Palet, tipografi, güneşe göre tema seçimi
+  ui/            Text, Divider, EmptyState — ekranlar stil objesi yazmıyor
+  features/      DayStrip, NextPrayerHero, PrayerRows
+  screens/       Home, Qibla, Settings
+  i18n/          Arayüz metinleri (v1 tek dil)
+  hooks/         usePrayerTimes, useCountdown
+android/         Kotlin widget, boot receiver, RN köprüsü
 ```
+
+Domain katmanı React'ten bağımsız olduğu için "sessizce yanlış olabilecek" her
+şey (vakit hesabı, kerahat, bildirim saatleri, önbellek serileştirme) test
+edilebilir durumda. Ekranları değiştirmek bu katmana dokunmaz.
+
+## Kurulum
+
+```bash
+npm install
+npm run android
+```
+
+Gereksinimler: Node 18+, JDK 17 (RN 0.76 ve Gradle 8.10 JDK 21+ ile derlemez),
+Android SDK 36.
+
+## Doğrulama
+
+```bash
+npm run typecheck
+npm run lint -- --quiet
+npm test                                    # 47 test
+cd android && ./gradlew assembleDebug
+```
+
+CI (`.github/workflows/ci.yml`) her push/PR'de typecheck + lint + test çalıştırır.
+Android derlemesi yerelde yapılır.
+
+## Yayın
+
+Play Store'a yüklenmez; imzalı APK GitHub Releases üzerinden dağıtılır.
+Keystore üretimi, secret'lar ve etiket akışı: [docs/RELEASE.md](docs/RELEASE.md).
+
+## Kararlar
+
+Neden böyle yapıldığını (ölçümlerle) tutan kayıt: [docs/DECISIONS.md](docs/DECISIONS.md).
 
 ## Lisans
 

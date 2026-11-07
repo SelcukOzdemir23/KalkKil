@@ -47,9 +47,10 @@ export function PrayerRows({entries}: PrayerRowsProps) {
                 }}
               />
 
+              {/* Vakit adları hep aynı ailede (serif); hiyerarşi renkle kurulur. */}
               <Text
-                variant={isNext ? 'headline' : 'body'}
-                tone={entry.isPassed && !isNext ? 'subtle' : 'primary'}>
+                variant="headline"
+                tone={isNext ? 'primary' : entry.isPassed ? 'subtle' : 'muted'}>
                 {PRAYER_LABELS[entry.key]}
               </Text>
 

@@ -55,8 +55,8 @@ export const typography: Record<TextVariant, TextStyle> = {
   },
   title: {
     fontFamily: serif,
-    fontSize: 24,
-    lineHeight: 30,
+    fontSize: 26,
+    lineHeight: 32,
     letterSpacing: -0.4,
   },
   headline: {

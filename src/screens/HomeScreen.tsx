@@ -1,15 +1,18 @@
 import React, {useEffect, useRef, useState, useCallback} from 'react';
 import {View, ScrollView, ActivityIndicator} from 'react-native';
-import {MapPin} from 'lucide-react-native';
+import {Bell, MapPin, Moon} from 'lucide-react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
+import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import {useAppContext} from '../context/AppContext';
 import {usePrayerTimes} from '../hooks/usePrayerTimes';
 import {useCountdown} from '../hooks/useCountdown';
 import {AlertModal} from '../components/AlertModal';
+import {EmptyState} from '../ui/EmptyState';
 import {DayStrip} from '../features/prayer-times/DayStrip';
 import {NextPrayerHero} from '../features/prayer-times/NextPrayerHero';
 import {PrayerRows} from '../features/prayer-times/PrayerRows';
-import {findActiveKerahat} from '../domain/prayer';
+import {findActiveKerahat, isSameDay} from '../domain/prayer';
 import {KERAHAT_LABELS, PRAYER_LABELS} from '../i18n/tr';
 import {useTheme} from '../theme/ThemeProvider';
 import {Text} from '../ui/Text';
@@ -43,6 +46,8 @@ export function HomeScreen() {
     prayerNotifications,
   } = useAppContext();
   const insets = useSafeAreaInsets();
+  // Sekme adları App.tsx'te tanımlı; boş durumdan Ayarlar'a yönlendirmek için.
+  const navigation = useNavigation<BottomTabNavigationProp<Record<string, undefined>>>();
   const {palette, spacing} = useTheme();
   const {entries, nextPrayer, dailyTimes, isLoading, error} = usePrayerTimes();
   const {countdown} = useCountdown(nextPrayer ? nextPrayer.time : null);
@@ -146,18 +151,18 @@ export function HomeScreen() {
         showAlert(
           `${prayerLabel} vakti girdi`,
           `Namazdayım modu aktif. Bildirimler 15 dakika susturuldu.\n\n${prayerLabel} - ${timeStr}`,
-          <Text style={{fontSize: 22}}>☾</Text>,
+          <Moon size={22} color={palette.accent} />,
         );
       } else {
         showAlert(
           `${prayerLabel} vakti girdi`,
           `Saat ${timeStr} itibarıyla ${prayerLabel} vakti başladı.`,
-          <Text style={{fontSize: 22}}>🕋</Text>,
+          <Bell size={22} color={palette.accent} />,
         );
       }
     }
     prevNextPrayerName.current = nextPrayer.key;
-  }, [nextPrayer, showAlert, dailyTimes]);
+  }, [nextPrayer, showAlert, dailyTimes, palette.accent]);
 
   // Widget tek seferde 7 günlük plan alır ve geri sayımı kendi çizer.
   // Bu yüzden saniye başı değil, gün/konum değişince senkronlanır.
@@ -194,6 +199,17 @@ export function HomeScreen() {
     day: 'numeric',
     month: 'long',
   });
+
+  if (!isLoading && entries.length === 0) {
+    return (
+      <EmptyState
+        title="Konum gerekli"
+        body="Vakitler seçtiğiniz yere göre hesaplanır. Konum seçtiğinizde bugünün vakitleri burada görünecek."
+        actionLabel="Ayarlara git"
+        onAction={() => navigation.navigate('Ayarlar')}
+      />
+    );
+  }
 
   if (locationLoading || isLoading) {
     return (
@@ -296,8 +312,20 @@ export function HomeScreen() {
         )}
 
         <View style={{marginTop: 36}}>
+          {!isSameDay(now, dailyTimes ? dailyTimes.fajr : now) && (
+            <Text variant="label" tone="accent" style={{marginBottom: spacing.sm}}>
+              Yarın
+            </Text>
+          )}
           <PrayerRows entries={entries} />
         </View>
+
+        <Text
+          variant="label"
+          tone="subtle"
+          style={{marginTop: spacing.xxl, textAlign: 'center'}}>
+          Vakitler cihazınızda hesaplanır · Diyanet yöntemi
+        </Text>
       </ScrollView>
 
       <AlertModal

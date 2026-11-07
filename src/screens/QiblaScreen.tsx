@@ -108,7 +108,7 @@ export function QiblaScreen() {
     return (
       <View style={{flex: 1, backgroundColor: palette.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32}}>
         <View style={{width: 80, height: 80, borderRadius: 40, backgroundColor: palette.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 24, borderWidth: 1, borderColor: palette.hairlineStrong}}>
-          <AppText style={{fontSize: 40}}>🕋</AppText>
+          <Compass size={40} color={palette.accent} />
         </View>
         <AppText style={{fontSize: 20, fontWeight: '700', color: palette.ink, textAlign: 'center', marginBottom: 8}}>
           Kıble Bulucu

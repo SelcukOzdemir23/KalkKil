@@ -75,8 +75,8 @@ export async function schedulePrayerNotifications(
   for (const item of planned) {
     const label = PRAYER_LABELS[item.key];
     const title = isExactTime
-      ? `☾ ${label} vakti girdi`
-      : `☾ ${label} vaktine ${timingMinutes} dk kaldı`;
+      ? `${label} vakti girdi`
+      : `${label} vaktine ${timingMinutes} dk kaldı`;
     const body = isExactTime
       ? `${label} — ${formatTime(item.prayerTime)}`
       : `${label} — ${formatTime(item.prayerTime)} · ${timingMinutes} dk sonra`;

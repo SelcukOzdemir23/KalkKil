@@ -99,6 +99,24 @@ bu iki ekran için duruyor. İkisi yeniden tasarlandığında `AppText` silinece
 
 ---
 
+## 7. Arayüz metinleri ve palet disiplini
+
+**Palet.** Açık tema "sıcak krem + pas kızılı" ailesine kayma riski taşıyor;
+bu, mobil uygulamalarda en sık görülen yapay zekâ varsayılanı. Kızıl, elyazması
+almanaklarındaki rubrik geleneğinden geliyor ve gerekçelendirilebilir, ama
+zemin bilinçli olarak **nötr-taş** tarafında (#F3F1EB) tutuldu. Paleti
+değiştirirken bu dengeyi koru.
+
+**Metin kuralları.** Türkçe cümle düzeni kullanılır ("İyi günler", "Namazdayım
+modu"); her kelimeyi büyütmek yok. Ekranlarda ham koordinat, sürüm numarası
+gibi geliştirici bilgisi gösterilmez. Emoji yerine `lucide-react-native` ikonu
+kullanılır; simge ailesi tek.
+
+**Boş ve hata durumları.** Boş ekran bırakılmaz: `ui/EmptyState` ne olduğunu ve
+ne yapılacağını söyler.
+
+---
+
 ## 5. Dağıtım: APK, mağazasız
 
 Uygulama Play Store'a yüklenmeyecek; imzalı APK GitHub Releases üzerinden

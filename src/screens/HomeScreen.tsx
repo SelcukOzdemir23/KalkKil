@@ -11,7 +11,7 @@ import {AlertModal} from '../components/AlertModal';
 import {AppText} from '../components/AppText';
 import {getGreeting} from '../utils/format';
 import {schedulePrayerNotifications, cancelAllNotifications, requestNotificationPermission} from '../services/notifications';
-import {updateWidget, startPrayerForegroundService, stopPrayerForegroundService} from '../services/widget';
+import {syncWidget} from '../services/widget';
 import {getCurrentLocation, requestLocationPermission, checkLocationPermission, reverseGeocode} from '../services/location';
 import {saveLocation, setLocationPermissionGranted, getLocation, getLocationLabel, getPrayerMode} from '../services/storage';
 import {colors, radius} from '../theme/tokens';
@@ -127,11 +127,13 @@ export function HomeScreen() {
     prevNextPrayerName.current = nextPrayer.key;
   }, [nextPrayer, showAlert, dailyTimes]);
 
+  // Widget tek seferde 7 günlük plan alır ve geri sayımı kendi çizer.
+  // Bu yüzden saniye başı değil, gün/konum değişince senkronlanır.
   useEffect(() => {
-    if (entries.length > 0) {
-      updateWidget(nextPrayer, countdown, entries);
+    if (dailyTimes) {
+      syncWidget(dailyTimes);
     }
-  }, [nextPrayer, countdown, entries]);
+  }, [dailyTimes]);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,10 +143,8 @@ export function HomeScreen() {
         const granted = await requestNotificationPermission();
         if (!cancelled && granted) {
           await schedulePrayerNotifications(dailyTimes);
-          startPrayerForegroundService();
         }
       } else if (!notificationsEnabled) {
-        stopPrayerForegroundService();
         await cancelAllNotifications();
       }
     };

@@ -10,16 +10,12 @@ import {
   DailyTimes,
   PRAYER_KEYS,
   PrayerKey,
-  calculateDailyTimes,
   planPrayerNotifications,
 } from '../domain/prayer';
 import {PRAYER_LABELS} from '../i18n/tr';
 import {formatTime} from '../utils/format';
-import {
-  getLocation,
-  getNotificationTiming,
-  getPrayerNotificationEnabled,
-} from './storage';
+import {getNotificationTiming, getPrayerNotificationEnabled} from './storage';
+import {getUpcomingDays} from './upcoming-days';
 
 const CHANNEL_ID = 'prayer-times-channel';
 
@@ -58,36 +54,6 @@ function readEnabledMap(): Record<PrayerKey, boolean> {
   return enabled;
 }
 
-/**
- * Bugünden başlayarak `count` günün vakitleri.
- *
- * Eski davranış sadece bugün + yarını kuruyordu: kullanıcı uygulamayı iki gün
- * açmazsa bildirimler tamamen susuyordu. Pencere artık 7 gün.
- */
-function upcomingDays(start: DailyTimes, count: number): DailyTimes[] {
-  const location = getLocation();
-  if (!location) {
-    return [start];
-  }
-
-  const days = [start];
-  const base = start.fajr;
-
-  for (let offset = 1; offset < count; offset++) {
-    const date = new Date(base);
-    date.setDate(date.getDate() + offset);
-    try {
-      days.push(
-        calculateDailyTimes(location.latitude, location.longitude, date),
-      );
-    } catch {
-      break;
-    }
-  }
-
-  return days;
-}
-
 export async function schedulePrayerNotifications(
   times: DailyTimes,
   delayMinutes: number = 0,
@@ -97,7 +63,7 @@ export async function schedulePrayerNotifications(
 
   const timingMinutes = getNotificationTiming();
   const planned = planPrayerNotifications({
-    days: upcomingDays(times, SCHEDULE_DAYS),
+    days: getUpcomingDays(times, SCHEDULE_DAYS),
     enabled: readEnabledMap(),
     leadMinutes: timingMinutes,
     now: new Date(),

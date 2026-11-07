@@ -48,6 +48,11 @@ Kalıcı bildirim ve foreground service kaldırılır.
 **Sonuç.** Pil tüketimi düşer, kalıcı bildirim gitmiş olur, widget uygulama hiç
 açılmasa da doğru kalır.
 
+**Uygulandı.** `PrayerForegroundService` silindi; `FOREGROUND_SERVICE*` izinleri
+kaldırıldı. Widget 7 günlük planı JS'ten tek seferde alır (`syncSchedule`),
+sayacı `Chronometer` çizer, vakit geçişinde `AlarmManager` alarmı widget'ı çevirir.
+`BootReceiver` reboot sonrası Chronometer base'ini yeniden hesaplar.
+
 ---
 
 ## 3. Tek stil yolu: `src/theme/tokens.ts` + `StyleSheet`

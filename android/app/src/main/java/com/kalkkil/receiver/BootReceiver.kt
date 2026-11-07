@@ -3,24 +3,18 @@ package com.kalkkil.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import com.kalkkil.service.PrayerForegroundService
+import com.kalkkil.widget.PrayerWidgetProvider
 
 /**
- * Restarts the foreground service after device reboot so that
- * widget updates and persistent notification continue automatically.
+ * Cihaz acildiginda widget'i ve sonraki vakit alarmini yeniden kurar.
+ *
+ * Chronometer'in base degeri SystemClock.elapsedRealtime() tabanli oldugu icin
+ * reboot sonrasi yeniden hesaplanmasi zorunludur.
  */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            val serviceIntent = Intent(context, PrayerForegroundService::class.java).apply {
-                action = PrayerForegroundService.ACTION_START
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent)
-            } else {
-                context.startService(serviceIntent)
-            }
+            PrayerWidgetProvider.refreshAll(context)
         }
     }
 }

@@ -13,8 +13,6 @@
     -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
@@ -38,13 +36,7 @@
         </intent-filter>
       </activity>
 
-      <!-- Foreground Service: persistent notification + background widget updates -->
-      <service
-        android:name=".service.PrayerForegroundService"
-        android:foregroundServiceType="dataSync"
-        android:exported="false" />
-
-      <!-- Boot Receiver: restart service after device reboot -->
+      <!-- Boot Receiver: cihaz acilinca widget'i ve vakit alarmini yeniden kurar -->
       <receiver
         android:name=".receiver.BootReceiver"
         android:exported="false">

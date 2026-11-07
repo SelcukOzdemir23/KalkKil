@@ -3,6 +3,7 @@
 Reklamsız, çevrimdışı, Türkiye'ye göre doğru namaz vakti uygulaması.
 
 <p>
+  <img src="docs/screenshots/onboarding-district.png" width="240" alt="İlçe seçimi" />
   <img src="docs/screenshots/home-light.png" width="240" alt="Ana ekran, gündüz" />
   <img src="docs/screenshots/home-dark.png" width="240" alt="Ana ekran, akşam" />
   <img src="docs/screenshots/qibla-light.png" width="240" alt="Kıble" />
@@ -24,6 +25,11 @@ KalkKıl'ın üç kuralı var:
 
 - **Vakitler** — Diyanet yöntemiyle hesaplanır; imsak, güneş, öğle, ikindi,
   akşam, yatsı.
+- **İlçe bazlı konum** — 1076 ilçe (81 il merkezi dahil). GPS yalnızca öneri
+  sunar; vakit her zaman seçilen ilçenin Diyanet referans noktasından
+  hesaplanır. Arama Türkçe karakter yazmadan çalışır ("kadikoy" → KADIKÖY).
+- **Onboarding** — Karşılama, ilçe seçimi, bildirim izni. Konum burada seçilir;
+  ana ekran bir daha GPS izni istemez.
 - **Gün Çizgisi** — Günü dikey ve **zamanla orantılı** bir eksen olarak
   gösterir: vakitler düğüm, saatler çentik, kerahat aralıkları ince şerit.
   "Şimdi" ile sıradaki vakit arasındaki eksen parçası vurgu renginde — kalan
@@ -52,17 +58,31 @@ kendi yayınladığı saatlerle test edilir:
 | Kars / Akyaka | Aynı hesap, il merkezi koordinatıyla | ±2 dk |
 
 Yöntem doğru; hata koordinatta. Bu yüzden Diyanet'in yıllık tablosunu gömmek
-yerine ilçe koordinatı kullanılır. Test: `__tests__/domain/diyanet.test.ts`
+yerine ilçe koordinatı kullanılır.
+
+İlçe koordinatları açık kaynaklarda yok (yalnızca il merkezleri var). Bu yüzden
+her ilçenin koordinatı, Diyanet'in o ilçe için yayınladığı saatlerden **en küçük
+kareler ile geri çözüldü** (`tools/build-districts.mjs`):
+
+- 868 ilçe çözüldü; eğitim penceresinde 867'si ±1 dk, en kötüsü 2 dk.
+- Aşırı-uyum kontrolü: pencerenin ilk yarısıyla eğitip ikinci yarısında test
+  edildi — medyan 1 dk, en kötü 2 dk, hiçbiri 2 dk'yı geçmiyor.
+- Diyanet'in yayınlamadığı 208 ilçe il merkezine bağlandı ve `approximate`
+  olarak işaretlendi.
+
+Testler: `__tests__/domain/districts.test.ts` (gönderilen koordinatlar +
+Diyanet tablosu, ±2 dk) ve `__tests__/domain/diyanet.test.ts` (yöntem).
 
 ## Mimari
 
 ```
 src/
   domain/        React yok, saf TypeScript — vakit, kerahat, bildirim ve widget planı
+  data/          Üretilen ilçe listesi (tools/build-districts.mjs)
   services/      Platform adaptörleri: bildirim, konum, depolama, widget köprüsü
   theme/         Palet, tipografi, güneşe göre tema seçimi
   ui/            Text, Divider, EmptyState — ekranlar stil objesi yazmıyor
-  features/      DayTimeline, NextPrayerHero
+  features/      onboarding, DayTimeline, NextPrayerHero
   screens/       Home, Qibla, Settings
   i18n/          Arayüz metinleri (v1 tek dil)
   hooks/         usePrayerTimes, useCountdown

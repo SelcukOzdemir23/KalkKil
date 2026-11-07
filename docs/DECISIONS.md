@@ -31,6 +31,23 @@ Diyanet verisi yeniden dağıtılmış olmaz.
 vakitler ±1 dk içinde olmalı. Hesap parametrelerine dokunan her değişiklik bu
 testi geçmek zorunda.
 
+**Koordinatlar nereden geldi.** Açık kaynaklarda ilçe koordinatı yok
+(`turkiyeapi.dev` yalnızca il merkezini veriyor). Bu yüzden her ilçenin
+koordinatı Diyanet'in o ilçe için yayınladığı saatlerden en küçük kareler ile
+geri çözüldü: öğle vakti boylamı neredeyse tek başına belirliyor (4 dk/derece),
+enlem ise 30 günlük pencerede farklı vakitlerden kestiriliyor.
+
+- 868 ilçe çözüldü. Eğitim penceresinde 867'si ±1 dk, en kötüsü 2 dk.
+- Aşırı-uyum kontrolü (ilk yarı ile eğit, ikinci yarıda test): medyan 1 dk,
+  en kötü 2 dk.
+- Kalan 208 ilçe (ör. İstanbul'da Kadıköy) Diyanet tarafından yayınlanmıyor;
+  il merkezi koordinatına bağlandılar ve `approximate` ile işaretlendiler.
+  Uydurma koordinat üretmektense dürüst olan bu.
+
+Bilinen sınır: çözüm tek mevsimlik pencereye dayanıyor. Yazın sapma büyüyebilir;
+yeni bir pencere toplandığında `tools/build-districts.mjs` tekrar çalıştırılıp
+testler güncellenmeli.
+
 ---
 
 ## 2. Widget canlı sayacı `Chronometer` ile, kalıcı bildirim olmadan

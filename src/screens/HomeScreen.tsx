@@ -22,25 +22,12 @@ import {
   requestNotificationPermission,
 } from '../services/notifications';
 import {syncWidget} from '../services/widget';
-import {
-  getCurrentLocation,
-  requestLocationPermission,
-  checkLocationPermission,
-  reverseGeocode,
-} from '../services/location';
-import {
-  saveLocation,
-  setLocationPermissionGranted,
-  getLocation,
-  getLocationLabel,
-  getPrayerMode,
-} from '../services/storage';
+import {getLocation, getLocationLabel, getPrayerMode} from '../services/storage';
 
 export function HomeScreen() {
   const {
     notificationsEnabled,
     kerahatWindows,
-    requestRefresh,
     notificationTiming,
     prayerNotifications,
   } = useAppContext();
@@ -50,7 +37,6 @@ export function HomeScreen() {
   const {palette, spacing} = useTheme();
   const {entries, nextPrayer, dailyTimes, isLoading, error} = usePrayerTimes();
   const {countdown} = useCountdown(nextPrayer ? nextPrayer.time : null);
-  const initDone = useRef(false);
   const prevNextPrayerName = useRef<string | null>(null);
   const [locationLoading, setLocationLoading] = useState(true);
   const [locationInfo, setLocationInfo] = useState<string | null>(null);
@@ -72,64 +58,15 @@ export function HomeScreen() {
     setAlertState(prev => ({...prev, visible: false}));
   }, []);
 
-  // ── İlk açılış: konum izni + GPS + bildirim izni ──
-  // Sonraki açılışlarda: sadece cache'teki konumu yükle, asla otomatik GPS yok
+  // Konum onboarding'de seçilir; burada yalnızca okunur.
   useEffect(() => {
-    const init = async () => {
-      const cached = getLocation();
-      if (cached) {
-        setLocationInfo(getLocationLabel());
-      }
-
-      if (!initDone.current) {
-        initDone.current = true;
-
-        const hasPerm = await checkLocationPermission();
-        if (!hasPerm) {
-          setLocationLoading(!cached);
-          const granted = await requestLocationPermission();
-          if (granted && !cached) {
-            const result = await getCurrentLocation();
-            if (result.success) {
-              const geo = await reverseGeocode(result.latitude, result.longitude);
-              const label = geo.success ? geo.label : 'GPS konumu';
-              saveLocation(
-                result.latitude,
-                result.longitude,
-                geo.success ? geo.city : undefined,
-                geo.success ? geo.district : undefined,
-              );
-              setLocationPermissionGranted(true);
-              requestRefresh();
-              setLocationInfo(label);
-            }
-          }
-        } else if (!cached) {
-          setLocationLoading(true);
-          const result = await getCurrentLocation();
-          if (result.success) {
-            const geo = await reverseGeocode(result.latitude, result.longitude);
-            const label = geo.success ? geo.label : 'GPS konumu';
-            saveLocation(
-              result.latitude,
-              result.longitude,
-              geo.success ? geo.city : undefined,
-              geo.success ? geo.district : undefined,
-            );
-            setLocationPermissionGranted(true);
-            requestRefresh();
-            setLocationInfo(label);
-          }
-        }
-
-        requestNotificationPermission().catch(() => {});
-      }
-
-      setLocationLoading(false);
-    };
-
-    init();
-  }, [requestRefresh]);
+    const cached = getLocation();
+    if (cached) {
+      setLocationInfo(getLocationLabel());
+    }
+    requestNotificationPermission().catch(() => {});
+    setLocationLoading(false);
+  }, []);
 
   // Vakit değişince kullanıcıyı uygulama içinde de uyar.
   useEffect(() => {

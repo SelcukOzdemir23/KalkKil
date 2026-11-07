@@ -1,4 +1,5 @@
 import Geolocation from '@react-native-community/geolocation';
+import {District, nearestDistrict} from '../data/districts';
 import {Platform} from 'react-native';
 import {
   check,
@@ -16,10 +17,6 @@ Geolocation.setRNConfiguration({
 
 export type LocationResult =
   | {success: true; latitude: number; longitude: number}
-  | {success: false; error: string};
-
-export type ReverseGeocodeResult =
-  | {success: true; city: string; district: string; label: string}
   | {success: false; error: string};
 
 function getLocationPermission(): Permission {
@@ -98,46 +95,28 @@ export async function getCurrentLocation(): Promise<LocationResult> {
   }
 }
 
+
+export type DistrictDetection =
+  | {success: true; district: District}
+  | {success: false; error: string};
+
 /**
- * GPS koordinatlarını OpenStreetMap Nominatim API ile
- * şehir ve ilçe bilgisine çevirir.
- * Örn: (40.98, 29.02) → "İstanbul, Kadıköy"
+ * GPS'ten en yakın ilçeyi bulur.
+ *
+ * Koordinat hiçbir sunucuya gönderilmez: eşleştirme cihazdaki ilçe listesiyle
+ * yapılır. GPS yalnızca öneri üretir — vakitler her zaman seçilen ilçenin
+ * Diyanet referans noktasından hesaplanır.
  */
-export async function reverseGeocode(
-  latitude: number,
-  longitude: number,
-): Promise<ReverseGeocodeResult> {
-  try {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=12&accept-language=tr-TR`;
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'KalkKil/1.0 (prayer times app)',
-      },
-    });
-
-    if (!response.ok) {
-      return {success: false, error: 'Konum bilgisi alınamadı'};
-    }
-
-    const data = await response.json();
-    const address = data?.address;
-
-    if (!address) {
-      return {success: false, error: 'Adres bilgisi bulunamadı'};
-    }
-
-    // İlçe: district, county, town, village sırasıyla dene
-    const district = address.district || address.county || address.town || address.village || '';
-    // Şehir: city, province, state sırasıyla dene
-    const city = address.city || address.province || address.state || '';
-
-    if (!city) {
-      return {success: false, error: 'Şehir bilgisi bulunamadı'};
-    }
-
-    const label = district ? `${city}, ${district}` : city;
-    return {success: true, city, district, label};
-  } catch {
-    return {success: false, error: 'Konum adresi çözümlenemedi'};
+export async function detectDistrict(): Promise<DistrictDetection> {
+  const position = await getCurrentLocation();
+  if (!position.success) {
+    return position;
   }
+
+  const district = nearestDistrict(position.latitude, position.longitude);
+  if (!district) {
+    return {success: false, error: 'Yakınınızda bir ilçe bulunamadı'};
+  }
+
+  return {success: true, district};
 }

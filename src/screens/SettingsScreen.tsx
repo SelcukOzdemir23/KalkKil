@@ -14,7 +14,7 @@ import {Chip} from '../ui/Chip';
 import {Divider} from '../ui/Divider';
 import {Text} from '../ui/Text';
 import {useTheme} from '../theme/ThemeProvider';
-import {getCurrentLocation, reverseGeocode} from '../services/location';
+import {detectDistrict} from '../services/location';
 import {
   requestNotificationPermission,
   sendTestNotification,
@@ -186,20 +186,19 @@ export function SettingsScreen() {
 
   const handleRefreshLocation = useCallback(async () => {
     setLocationLoading(true);
-    const result = await getCurrentLocation();
+    const result = await detectDistrict();
     if (result.success) {
-      const geo = await reverseGeocode(result.latitude, result.longitude);
       saveLocation(
-        result.latitude,
-        result.longitude,
-        geo.success ? geo.city : undefined,
-        geo.success ? geo.district : undefined,
+        result.district.latitude,
+        result.district.longitude,
+        result.district.province,
+        result.district.name,
       );
       setLocationPermissionGranted(true);
       requestRefresh();
       showAlert(
         'Konum güncellendi',
-        `Vakitler ${getLocationLabel()} için yeniden hesaplandı.`,
+        `Vakitler ${result.district.province}, ${result.district.name} için yeniden hesaplandı.`,
       );
     } else {
       showAlert('Konum alınamadı', result.error);

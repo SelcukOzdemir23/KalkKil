@@ -19,6 +19,7 @@ const KEYS = {
   PRAYER_MODE: 'settings.prayerMode',
   CACHED_PRAYER_TIMES: 'cache.prayerTimes',
   LOCATION_PERMISSION: 'permissions.location',
+  ONBOARDING_DONE: 'app.onboardingDone',
 } as const;
 
 /**
@@ -227,3 +228,11 @@ export function setLocationPermissionGranted(granted: boolean): void {
   setValue(KEYS.LOCATION_PERMISSION, granted);
 }
 
+
+export function getOnboardingCompleted(): boolean {
+  return getBoolean(KEYS.ONBOARDING_DONE) ?? false;
+}
+
+export function setOnboardingCompleted(): void {
+  setValue(KEYS.ONBOARDING_DONE, true);
+}

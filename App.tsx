@@ -9,10 +9,11 @@ import {ErrorBoundary} from './src/components/ErrorBoundary';
 import {HomeScreen} from './src/screens/HomeScreen';
 import {SettingsScreen} from './src/screens/SettingsScreen';
 import {QiblaScreen} from './src/screens/QiblaScreen';
-import {initializeStorage} from './src/services/storage';
+import {getOnboardingCompleted, initializeStorage} from './src/services/storage';
 import {setupNotificationChannel} from './src/services/notifications';
 import {Sunrise, Settings, Compass} from 'lucide-react-native';
 import {ThemeRoot, useTheme, lightPalette} from './src/theme';
+import {OnboardingScreen} from './src/features/onboarding/OnboardingScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -112,13 +113,7 @@ function AppContent() {
   }, []);
 
   return (
-    <>
-      <StatusBar
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor="transparent"
-        translucent
-      />
-      <NavigationContainer
+    <NavigationContainer
         theme={{
           dark: isDark,
           colors: {
@@ -130,8 +125,31 @@ function AppContent() {
             notification: palette.accent,
           },
         }}>
-        <AppTabs />
-      </NavigationContainer>
+      <AppTabs />
+    </NavigationContainer>
+  );
+}
+
+/**
+ * İlk açılışta onboarding, sonrasında sekmeler.
+ * Konum onboarding'de seçilir; ana ekran GPS izni istemez.
+ */
+function AppShell() {
+  const {isDark} = useTheme();
+  const [onboarded, setOnboarded] = useState(getOnboardingCompleted);
+
+  return (
+    <>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor="transparent"
+        translucent
+      />
+      {onboarded ? (
+        <AppContent />
+      ) : (
+        <OnboardingScreen onFinish={() => setOnboarded(true)} />
+      )}
     </>
   );
 }
@@ -153,7 +171,7 @@ function App(): React.JSX.Element {
         <SafeAreaProvider>
           <AppProvider>
             <ThemeRoot>
-              <AppContent />
+              <AppShell />
             </ThemeRoot>
           </AppProvider>
         </SafeAreaProvider>

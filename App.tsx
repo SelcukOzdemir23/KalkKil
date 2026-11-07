@@ -12,59 +12,62 @@ import {QiblaScreen} from './src/screens/QiblaScreen';
 import {initializeStorage} from './src/services/storage';
 import {setupNotificationChannel} from './src/services/notifications';
 import {Sunrise, Settings, Compass} from 'lucide-react-native';
-import {colors} from './src/theme/tokens';
+import {ThemeRoot, useTheme, lightPalette} from './src/theme';
 
 const Tab = createBottomTabNavigator();
 
-function TabBarIcon({Icon, color, focused}: {Icon: typeof Sunrise; color: string; focused: boolean}) {
+function TabBarIcon({
+  Icon,
+  color,
+  focused,
+}: {
+  Icon: typeof Sunrise;
+  color: string;
+  focused: boolean;
+}) {
+  const {palette, radius} = useTheme();
+
   return (
     <View
       style={{
-        width: 32,
-        height: 32,
-        borderRadius: 10,
+        width: 30,
+        height: 30,
+        borderRadius: radius.sm,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: focused ? colors.accentSoft : 'transparent',
+        backgroundColor: focused ? palette.accentSoft : 'transparent',
       }}>
-      <Icon size={18} color={color} strokeWidth={focused ? 2.6 : 1.8} />
+      <Icon size={18} color={color} strokeWidth={focused ? 2.4 : 1.7} />
     </View>
   );
 }
 
 function AppTabs() {
+  const {palette} = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: palette.accent,
+        tabBarInactiveTintColor: palette.inkSubtle,
         tabBarStyle: {
+          // Kart değil, ince çizgiyle ayrılmış düz bir şerit.
           position: 'absolute',
-          bottom: 14,
-          left: 14,
-          right: 14,
-          height: 60,
-          borderRadius: 20,
-          backgroundColor: colors.surfaceSoft,
-          borderTopWidth: 0,
-          borderWidth: 1,
-          borderColor: colors.border,
-          elevation: 24,
-          shadowColor: colors.background,
-          shadowOffset: {width: 0, height: 8},
-          shadowOpacity: 0.28,
-          shadowRadius: 24,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 62,
+          backgroundColor: palette.background,
+          borderTopWidth: 1,
+          borderTopColor: palette.hairline,
+          elevation: 0,
+          paddingTop: 6,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '700',
-          marginTop: 2,
-          marginBottom: 4,
-          letterSpacing: 0.3,
-        },
-        tabBarIconStyle: {
-          marginTop: 2,
+          fontSize: 11,
+          letterSpacing: 0.1,
+          marginBottom: 6,
         },
       }}>
       <Tab.Screen
@@ -102,23 +105,29 @@ function AppTabs() {
 }
 
 function AppContent() {
+  const {palette, isDark} = useTheme();
+
   useEffect(() => {
     setupNotificationChannel().catch(() => {});
   }, []);
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor="transparent"
+        translucent
+      />
       <NavigationContainer
         theme={{
-          dark: true,
+          dark: isDark,
           colors: {
-            primary: colors.accent,
-            background: colors.background,
-            card: colors.surface,
-            text: colors.text,
-            border: colors.border,
-            notification: colors.accent,
+            primary: palette.accent,
+            background: palette.background,
+            card: palette.surface,
+            text: palette.ink,
+            border: palette.hairline,
+            notification: palette.accent,
           },
         }}>
         <AppTabs />
@@ -135,13 +144,7 @@ function App(): React.JSX.Element {
   }, []);
 
   if (!ready) {
-    return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background}}>
-        <View style={{width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center'}}>
-          <ActivityIndicator size="large" color={colors.accent} />
-        </View>
-      </View>
-    );
+    return <BootSplash />;
   }
 
   return (
@@ -149,11 +152,28 @@ function App(): React.JSX.Element {
       <GestureHandlerRootView style={{flex: 1}}>
         <SafeAreaProvider>
           <AppProvider>
-            <AppContent />
+            <ThemeRoot>
+              <AppContent />
+            </ThemeRoot>
           </AppProvider>
         </SafeAreaProvider>
       </GestureHandlerRootView>
     </ErrorBoundary>
+  );
+}
+
+function BootSplash() {
+  // Depolama hazır değilken tema bilinmiyor; açılış her zaman kâğıt tonunda.
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: lightPalette.background,
+      }}>
+      <ActivityIndicator color={lightPalette.accent} />
+    </View>
   );
 }
 

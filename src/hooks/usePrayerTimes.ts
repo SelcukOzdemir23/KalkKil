@@ -41,7 +41,8 @@ export function usePrayerTimes(): UsePrayerTimesResult {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [localRefresh, setLocalRefresh] = useState(0);
-  const {refreshKey: contextRefreshKey, setKerahatWindows} = useAppContext();
+  const {refreshKey: contextRefreshKey, setKerahatWindows, setSunTimes} =
+    useAppContext();
 
   const refresh = useCallback(() => {
     setLocalRefresh(k => k + 1);
@@ -75,10 +76,11 @@ export function usePrayerTimes(): UsePrayerTimesResult {
     (times: DailyTimes, nextEntries: PrayerEntry[]) => {
       setDailyTimes(times);
       setKerahatWindows(computeKerahatWindows(times));
+      setSunTimes({sunrise: times.sunrise, sunset: times.sunset});
       setEntries(nextEntries);
       setError(null);
     },
-    [setKerahatWindows],
+    [setKerahatWindows, setSunTimes],
   );
 
   const loadPrayerTimes = useCallback(() => {

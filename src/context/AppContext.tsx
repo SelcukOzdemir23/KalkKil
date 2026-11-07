@@ -17,6 +17,7 @@ import {
   getLocation,
 } from '../services/storage';
 import {KerahatWindow} from '../domain/prayer';
+import {SunTimes} from '../theme/sun';
 
 interface PrayerNotificationToggles {
   fajr: boolean;
@@ -40,6 +41,9 @@ interface AppContextType {
   refreshKey: number;
   kerahatWindows: KerahatWindow[];
   setKerahatWindows: (windows: KerahatWindow[]) => void;
+  /** Tema seçimi için gün doğumu/batımı; vakitler hesaplanınca dolar. */
+  sunTimes: SunTimes | null;
+  setSunTimes: (times: SunTimes | null) => void;
   prayerMode: boolean;
   togglePrayerMode: () => void;
 }
@@ -61,6 +65,7 @@ export function AppProvider({children}: {children: ReactNode}) {
   const [hasLocation, setHasLocation] = useState(!!getLocation());
   const [refreshKey, setRefreshKey] = useState(0);
   const [kerahatWindows, setKerahatWindows] = useState<KerahatWindow[]>([]);
+  const [sunTimes, setSunTimes] = useState<SunTimes | null>(null);
 
   const requestRefresh = useCallback(() => {
     setRefreshKey(k => k + 1);
@@ -107,6 +112,8 @@ export function AppProvider({children}: {children: ReactNode}) {
         refreshKey,
         kerahatWindows,
         setKerahatWindows,
+        sunTimes,
+        setSunTimes,
         prayerMode,
         togglePrayerMode,
       }}>

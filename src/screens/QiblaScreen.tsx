@@ -5,7 +5,8 @@ import {WebView} from 'react-native-webview';
 import {magnetometer, SensorTypes, setUpdateIntervalForType} from 'react-native-sensors';
 import {AppText} from '../components/AppText';
 import {Compass} from 'lucide-react-native';
-import {colors, radius} from '../theme/tokens';
+import {radius} from '../theme/tokens';
+import {useTheme} from '../theme/ThemeProvider';
 import {
   calculateQiblaBearing,
   magnetometerToHeading,
@@ -19,6 +20,7 @@ const SCREEN_W = Dimensions.get('window').width;
 const COMPASS_SIZE = Math.min(SCREEN_W - 48, 300);
 
 export function QiblaScreen() {
+  const {palette} = useTheme();
   const insets = useSafeAreaInsets();
   const [qiblaBearing, setQiblaBearing] = useState(0);
   const [sensorAvailable, setSensorAvailable] = useState(true);
@@ -106,14 +108,14 @@ export function QiblaScreen() {
   // ── Konum yok ──
   if (latitude === undefined || longitude === undefined) {
     return (
-      <View style={{flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32}}>
-        <View style={{width: 80, height: 80, borderRadius: 40, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 24, borderWidth: 1, borderColor: colors.borderStrong}}>
+      <View style={{flex: 1, backgroundColor: palette.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32}}>
+        <View style={{width: 80, height: 80, borderRadius: 40, backgroundColor: palette.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 24, borderWidth: 1, borderColor: palette.hairlineStrong}}>
           <AppText style={{fontSize: 40}}>🕋</AppText>
         </View>
-        <AppText style={{fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center', marginBottom: 8}}>
+        <AppText style={{fontSize: 20, fontWeight: '700', color: palette.ink, textAlign: 'center', marginBottom: 8}}>
           Kıble Bulucu
         </AppText>
-        <AppText style={{fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 22}}>
+        <AppText style={{fontSize: 14, color: palette.inkMuted, textAlign: 'center', lineHeight: 22}}>
           Kıbleyi göstermek için{'\n'}Ayarlar'dan bir konum kaydedin.
         </AppText>
       </View>
@@ -123,14 +125,14 @@ export function QiblaScreen() {
   // ── Sensör yok ──
   if (!sensorAvailable) {
     return (
-      <View style={{flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32}}>
-        <View style={{width: 80, height: 80, borderRadius: 40, backgroundColor: colors.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 24, borderWidth: 1, borderColor: 'rgba(217, 135, 95, 0.26)'}}>
-          <Compass size={40} color={colors.danger} />
+      <View style={{flex: 1, backgroundColor: palette.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32}}>
+        <View style={{width: 80, height: 80, borderRadius: 40, backgroundColor: palette.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 24, borderWidth: 1, borderColor: 'rgba(217, 135, 95, 0.26)'}}>
+          <Compass size={40} color={palette.accent} />
         </View>
-        <AppText style={{fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center', marginBottom: 8}}>
+        <AppText style={{fontSize: 20, fontWeight: '700', color: palette.ink, textAlign: 'center', marginBottom: 8}}>
           Pusula Kullanılamıyor
         </AppText>
-        <AppText style={{fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 22}}>
+        <AppText style={{fontSize: 14, color: palette.inkMuted, textAlign: 'center', lineHeight: 22}}>
           {error || 'Cihazınız pusula desteği sağlamıyor.'}
         </AppText>
       </View>
@@ -197,7 +199,7 @@ export function QiblaScreen() {
   const R = COMPASS_SIZE / 2;
 
   return (
-    <View style={{flex: 1, backgroundColor: colors.background}}>
+    <View style={{flex: 1, backgroundColor: palette.background}}>
       <View
         style={{
           flex: 1,
@@ -209,7 +211,7 @@ export function QiblaScreen() {
 
         {/* Üst bilgi */}
         <View style={{alignItems: 'center', paddingTop: 8}}>
-          <AppText style={{fontSize: 13, fontWeight: '700', color: colors.accentMuted,            letterSpacing: 0.4}}>
+          <AppText style={{fontSize: 13, fontWeight: '700', color: palette.accentMuted,            letterSpacing: 0.4}}>
             Kıble Pusulası
           </AppText>
         </View>
@@ -232,7 +234,7 @@ export function QiblaScreen() {
                 height: COMPASS_SIZE,
                 borderRadius: R,
                 borderWidth: 2,
-                borderColor: isAligned ? 'rgba(123, 174, 141, 0.4)' : colors.borderStrong,
+                borderColor: isAligned ? 'rgba(123, 174, 141, 0.4)' : palette.hairlineStrong,
               }}
             />
 
@@ -261,7 +263,7 @@ export function QiblaScreen() {
                       width: isMajor ? 2.5 : 1,
                       height: isMajor ? 16 : isMed ? 10 : 5,
                       backgroundColor: isMajor
-                        ? colors.accent
+                        ? palette.accent
                         : isMed
                         ? 'rgba(214, 180, 106, 0.35)'
                         : 'rgba(214, 180, 106, 0.12)',
@@ -276,10 +278,10 @@ export function QiblaScreen() {
 
               {/* Kardinal yön harfleri — dönen katmanda */}
               {([
-                {deg: 0, label: 'K', color: colors.compassNorth, size: 18, weight: '900' as const},
-                {deg: 90, label: 'D', color: colors.textMuted, size: 15, weight: '700' as const},
-                {deg: 180, label: 'G', color: colors.compassSouth, size: 15, weight: '700' as const},
-                {deg: 270, label: 'B', color: colors.textMuted, size: 15, weight: '700' as const},
+                {deg: 0, label: 'K', color: palette.compassNorth, size: 18, weight: '900' as const},
+                {deg: 90, label: 'D', color: palette.inkMuted, size: 15, weight: '700' as const},
+                {deg: 180, label: 'G', color: palette.compassSouth, size: 15, weight: '700' as const},
+                {deg: 270, label: 'B', color: palette.inkMuted, size: 15, weight: '700' as const},
               ]).map(c => {
                 const rad = ((c.deg - 90) * Math.PI) / 180;
                 const dist = R - 30;
@@ -310,12 +312,12 @@ export function QiblaScreen() {
                   position: 'absolute',
                   width: 3,
                   height: R - 40,
-                  backgroundColor: colors.qiblaGold,
+                  backgroundColor: palette.needle,
                   bottom: R,
                   left: R - 1.5,
                   borderRadius: 1.5,
                   opacity: 0.9,
-                  shadowColor: colors.qiblaGold,
+                  shadowColor: palette.needle,
                   shadowOffset: {width: 0, height: 0},
                   shadowOpacity: 0.3,
                   shadowRadius: 4,
@@ -328,10 +330,10 @@ export function QiblaScreen() {
                   width: 10,
                   height: 10,
                   borderRadius: 5,
-                  backgroundColor: colors.qiblaGold,
+                  backgroundColor: palette.needle,
                   top: 18,
                   left: R - 5,
-                  shadowColor: colors.qiblaGold,
+                  shadowColor: palette.needle,
                   shadowOffset: {width: 0, height: 0},
                   shadowOpacity: 0.35,
                   shadowRadius: 3,
@@ -351,7 +353,7 @@ export function QiblaScreen() {
                 borderTopWidth: 14,
                 borderLeftColor: 'transparent',
                 borderRightColor: 'transparent',
-                borderTopColor: isAligned ? '#7BAE8D' : colors.accent,
+                borderTopColor: isAligned ? '#7BAE8D' : palette.accent,
               }}
             />
 
@@ -361,8 +363,8 @@ export function QiblaScreen() {
                 width: 12,
                 height: 12,
                 borderRadius: 6,
-                backgroundColor: isAligned ? '#7BAE8D' : colors.accent,
-                shadowColor: isAligned ? '#7BAE8D' : colors.accent,
+                backgroundColor: isAligned ? '#7BAE8D' : palette.accent,
+                shadowColor: isAligned ? '#7BAE8D' : palette.accent,
                 shadowOffset: {width: 0, height: 0},
                 shadowOpacity: 0.3,
                 shadowRadius: 4,
@@ -374,7 +376,7 @@ export function QiblaScreen() {
         {/* Alt bilgi bölgesi */}
         <View style={{alignItems: 'center', gap: 8, paddingBottom: 8}}>
           {/* Kıble açısı */}
-          <AppText style={{fontSize: 32, fontWeight: '800', color: colors.qiblaGold, fontVariant: ['tabular-nums']}}>
+          <AppText style={{fontSize: 32, fontWeight: '800', color: palette.needle, fontVariant: ['tabular-nums']}}>
             {formatQiblaDirection(qiblaBearing)}
           </AppText>
 
@@ -393,17 +395,17 @@ export function QiblaScreen() {
               borderWidth: 1,
               borderColor: isAligned
                 ? 'rgba(123, 174, 141, 0.3)'
-                : colors.border,
+                : palette.hairline,
             }}>
             <View
               style={{
                 width: 8,
                 height: 8,
                 borderRadius: 4,
-                backgroundColor: isAligned ? '#7BAE8D' : colors.textMuted,
+                backgroundColor: isAligned ? '#7BAE8D' : palette.inkMuted,
               }}
             />
-            <AppText style={{fontSize: 13, fontWeight: '600', color: isAligned ? '#7BAE8D' : colors.textMuted}}>
+            <AppText style={{fontSize: 13, fontWeight: '600', color: isAligned ? '#7BAE8D' : palette.inkMuted}}>
               {isAligned ? 'Kıbleye dönük' : 'Döndürmeye devam edin'}
             </AppText>
           </Animated.View>
@@ -416,7 +418,7 @@ export function QiblaScreen() {
               borderRadius: radius.lg,
               overflow: 'hidden',
               borderWidth: 1,
-              borderColor: colors.border,
+              borderColor: palette.hairline,
               marginTop: 8,
             }}>
             <WebView

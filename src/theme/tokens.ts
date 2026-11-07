@@ -1,57 +1,87 @@
-export const colors = {
-  background: '#0D111F',
-  backgroundAlt: '#090C16',
-  surface: '#161B2B',
-  surfaceSoft: '#1A2035',
-  surfaceMuted: '#111624',
-  border: 'rgba(155, 154, 144, 0.12)',
-  borderStrong: 'rgba(214, 180, 106, 0.26)',
-  text: '#F4F1EA',
-  textMuted: 'rgba(244, 241, 234, 0.62)',
-  textSubtle: 'rgba(244, 241, 234, 0.38)',
-  accent: '#D6B46A',
-  accentSoft: 'rgba(214, 180, 106, 0.12)',
-  accentMuted: 'rgba(214, 180, 106, 0.62)',
-  green: '#7BAE8D',
-  greenSoft: 'rgba(123, 174, 141, 0.14)',
-  danger: '#D9875F',
-  dangerSoft: 'rgba(217, 135, 95, 0.14)',
-  blackOverlay: 'rgba(0, 0, 0, 0.62)',
-  /** Pusula ve kıble için kullanılan renkler */
-  compassNorth: '#E87171',
-  compassSouth: '#7BAE8D',
-  qiblaGold: '#D6B46A',
-} as const;
-
-export const radius = {
-  sm: 10,
-  md: 14,
-  lg: 18,
-  xl: 24,
-} as const;
+import {Platform, TextStyle} from 'react-native';
 
 export const spacing = {
   xs: 4,
   sm: 8,
   md: 12,
   lg: 16,
-  xl: 20,
-  xxl: 28,
+  xl: 24,
+  xxl: 32,
+  xxxl: 44,
 } as const;
 
-export const shadows = {
-  card: {
-    shadowColor: '#0D111F',
-    shadowOffset: {width: 0, height: 10},
-    shadowOpacity: 0.4,
-    shadowRadius: 22,
-    elevation: 10,
-  },
-  subtle: {
-    shadowColor: '#0D111F',
-    shadowOffset: {width: 0, height: 6},
-    shadowOpacity: 0.3,
-    shadowRadius: 14,
-    elevation: 5,
-  },
+export const radius = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 18,
+  xl: 26,
+  full: 999,
 } as const;
+
+export const motion = {
+  fast: 140,
+  base: 220,
+  slow: 320,
+} as const;
+
+const serif = 'Alegreya-SemiBold';
+const serifBold = 'Alegreya-Bold';
+const sans = Platform.select({ios: 'System', default: 'sans-serif'});
+
+export type TextVariant =
+  | 'display'
+  | 'title'
+  | 'headline'
+  | 'body'
+  | 'caption'
+  | 'label'
+  | 'numeric'
+  | 'time';
+
+/**
+ * Tipografi ölçeği.
+ *
+ * Başlıklar Alegreya (almanak karakteri), gövde ve sayılar sistem sansı.
+ * Zaman değerleri `tabular-nums` ile sabit genişlikte: geri sayım saniye
+ * saniye değişirken metin zıplamaz.
+ */
+export const typography: Record<TextVariant, TextStyle> = {
+  display: {
+    fontFamily: serifBold,
+    fontSize: 40,
+    lineHeight: 46,
+    letterSpacing: -1.2,
+  },
+  title: {
+    fontFamily: serif,
+    fontSize: 24,
+    lineHeight: 30,
+    letterSpacing: -0.4,
+  },
+  headline: {
+    fontFamily: serif,
+    fontSize: 18,
+    lineHeight: 24,
+    letterSpacing: -0.2,
+  },
+  body: {fontFamily: sans, fontSize: 15, lineHeight: 22},
+  caption: {fontFamily: sans, fontSize: 13, lineHeight: 18},
+  label: {fontFamily: sans, fontSize: 12, lineHeight: 16, letterSpacing: 0.2},
+  numeric: {
+    fontFamily: sans,
+    fontSize: 46,
+    lineHeight: 52,
+    letterSpacing: -1.6,
+    fontWeight: '500',
+    fontVariant: ['tabular-nums'],
+  },
+  time: {
+    fontFamily: sans,
+    fontSize: 17,
+    lineHeight: 22,
+    letterSpacing: -0.2,
+    fontWeight: '500',
+    fontVariant: ['tabular-nums'],
+  },
+};

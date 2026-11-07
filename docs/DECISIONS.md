@@ -76,6 +76,29 @@ testlidir. UI testleri tasarım yenilendiğinde eklenecek.
 
 ---
 
+## 6. Tasarım sistemi: tek tema, güneşe göre açık/karanlık
+
+**Karar.** Arayüz "almanak" diline geçti: kâğıt zemin, mürekkep metin, tek
+kızıl vurgu (elyazması geleneğindeki rubrik). Palet `src/theme/palette.ts`,
+ölçekler `src/theme/tokens.ts`. Ekranlar ham renk/ölçü yazmaz; `src/ui/`
+primitifleri (`Text`, `Surface`, `Divider`) ve `useTheme()` kullanır.
+
+**Tema seçimi otomatik.** Gün doğumu–gün batımı arası açık, dışı karanlık
+(`src/theme/sun.ts`, test edilmiş). Kullanıcı seçimi yok: v1'de tek kural.
+
+**İmza bileşen.** `features/prayer-times/DayStrip.tsx` — günü yatay zaman
+çizgisi olarak gösterir; vakitler çentik, "şimdi" işaretçi, kerahat aralıkları
+bant. Kerahat verisi zaten hesaplandığı için farkı görünür kılıyor.
+
+**Tipografi.** Başlıklar Alegreya, gövde ve zaman değerleri sistem sansı.
+Zamanlar `tabular-nums`: geri sayım akarken metin zıplamaz.
+
+**Bilinen geçiş borcu.** `QiblaScreen` ve `SettingsScreen` yeni temaya ve
+palete bağlandı ama yerleşimleri eski; `AppText` (tipografi yardımcısı) yalnızca
+bu iki ekran için duruyor. İkisi yeniden tasarlandığında `AppText` silinecek.
+
+---
+
 ## 5. Dağıtım: APK, mağazasız
 
 Uygulama Play Store'a yüklenmeyecek; imzalı APK GitHub Releases üzerinden

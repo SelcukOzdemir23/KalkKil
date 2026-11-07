@@ -1,7 +1,6 @@
 import React, {Component, ReactNode, ErrorInfo} from 'react';
-import {View, Pressable} from 'react-native';
-import {AppText} from './AppText';
-import {colors, radius} from '../theme/tokens';
+import {View, Pressable, Text} from 'react-native';
+import {lightPalette} from '../theme/palette';
 
 interface Props {
   children: ReactNode;
@@ -12,6 +11,10 @@ interface State {
   error: Error | null;
 }
 
+/**
+ * Yakalayıcı, ThemeProvider'ın dışında durur: uygulama çöktüğünde tema
+ * bağlamı da çökmüş olabilir. Bu yüzden burada açık palet sabit kullanılır.
+ */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -32,51 +35,57 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      const palette = lightPalette;
+
       return (
-        <View style={{flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32}}>
-          {/* Icon */}
-          <View style={{width: 72, height: 72, borderRadius: 36, backgroundColor: colors.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 24}}>
-            <AppText style={{fontSize: 36}}>⚠️</AppText>
-          </View>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: palette.background,
+            justifyContent: 'center',
+            paddingHorizontal: 32,
+          }}>
+          <Text style={{fontFamily: 'Alegreya-Bold', fontSize: 24, color: palette.ink}}>
+            Beklenmeyen bir hata oluştu
+          </Text>
 
-          {/* Title */}
-          <AppText style={{fontSize: 22, fontWeight: '700', color: colors.text, textAlign: 'center', marginBottom: 8}}>
-            Beklenmeyen Bir Hata Oluştu
-          </AppText>
+          <Text
+            style={{
+              fontSize: 15,
+              lineHeight: 22,
+              color: palette.inkMuted,
+              marginTop: 10,
+            }}>
+            Uygulamayı yeniden başlatmayı deneyebilir veya aşağıdaki butonla
+            tekrar deneyebilirsiniz.
+          </Text>
 
-          {/* Description */}
-          <AppText style={{fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 20, marginBottom: 32}}>
-            Üzgünüz, bir şeyler ters gitti. Uygulamayı yeniden başlatmayı deneyebilir veya aşağıdaki butona tıklayarak tekrar deneyebilirsiniz.
-          </AppText>
-
-          {/* Error detail */}
-          <View style={{backgroundColor: colors.surface, borderRadius: radius.md, padding: 16, width: '100%', marginBottom: 24, borderWidth: 1, borderColor: colors.border}}>
-            <AppText style={{fontSize: 11, color: colors.textSubtle, fontFamily: 'monospace', lineHeight: 16}} numberOfLines={4}>
+          <View
+            style={{
+              backgroundColor: palette.surfaceMuted,
+              borderRadius: 12,
+              padding: 14,
+              marginTop: 24,
+            }}>
+            <Text
+              style={{fontSize: 11, color: palette.inkSubtle, lineHeight: 16}}
+              numberOfLines={4}>
               {this.state.error?.message || 'Bilinmeyen hata'}
-            </AppText>
+            </Text>
           </View>
 
-          {/* Retry button */}
           <Pressable
             onPress={this.handleReset}
             style={({pressed}) => ({
-              backgroundColor: colors.accent,
-              opacity: pressed ? 0.8 : 1,
-              paddingHorizontal: 32,
+              backgroundColor: palette.accent,
+              opacity: pressed ? 0.85 : 1,
               paddingVertical: 14,
-              borderRadius: radius.md,
-              width: '100%',
+              borderRadius: 12,
+              marginTop: 24,
               alignItems: 'center',
             })}>
-            <AppText style={{fontSize: 16, fontWeight: '700', color: colors.background}}>
-              Tekrar Dene
-            </AppText>
+            <Text style={{fontSize: 15, color: palette.background}}>Tekrar dene</Text>
           </Pressable>
-
-          {/* Restart hint */}
-          <AppText style={{fontSize: 12, color: colors.textSubtle, textAlign: 'center', marginTop: 20}}>
-            Hata devam ederse uygulamayı kapatıp tekrar açın
-          </AppText>
         </View>
       );
     }

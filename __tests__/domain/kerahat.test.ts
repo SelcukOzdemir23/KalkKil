@@ -1,10 +1,6 @@
 import {describe, expect, it} from '@jest/globals';
 
-import {
-  computeKerahatWindows,
-  findActiveKerahat,
-  isInKerahat,
-} from '../../src/domain/prayer';
+import {computeKerahatWindows, findActiveKerahat} from '../../src/domain/prayer';
 import {DailyTimes} from '../../src/domain/prayer/types';
 
 /** 3 Kasım 2026, İstanbul: güneş 07:30, öğle 12:53, gerçek batış 17:58, akşam 18:05. */
@@ -70,10 +66,10 @@ describe('findActiveKerahat', () => {
   });
 
   it('öğle penceresinden önce değil', () => {
-    expect(isInKerahat(computeKerahatWindows(istanbulTimes()), at(12, 40))).toBe(false);
+    expect(findActiveKerahat(computeKerahatWindows(istanbulTimes()), at(12, 40))).toBeNull();
   });
 
   it('akşam ezanı saatinde (18:05) kerahat bitmiş olur', () => {
-    expect(isInKerahat(computeKerahatWindows(istanbulTimes()), at(18, 5))).toBe(false);
+    expect(findActiveKerahat(computeKerahatWindows(istanbulTimes()), at(18, 5))).toBeNull();
   });
 });

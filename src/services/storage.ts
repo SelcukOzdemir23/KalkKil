@@ -8,7 +8,6 @@ const KEYS = {
   LONGITUDE: 'location.longitude',
   CITY: 'location.city',
   DISTRICT: 'location.district',
-  USE_MANUAL_CITY: 'location.useManual',
   NOTIFICATIONS_ENABLED: 'settings.notifications',
   NOTIFICATION_TIMING: 'settings.notifTiming',
   NOTIFICATION_FAJR: 'settings.notifFajr',
@@ -17,7 +16,6 @@ const KEYS = {
   NOTIFICATION_ASR: 'settings.notifAsr',
   NOTIFICATION_MAGHRIB: 'settings.notifMaghrib',
   NOTIFICATION_ISHA: 'settings.notifIsha',
-  THEME_MODE: 'settings.theme',
   PRAYER_MODE: 'settings.prayerMode',
   CACHED_PRAYER_TIMES: 'cache.prayerTimes',
   LOCATION_PERMISSION: 'permissions.location',
@@ -176,18 +174,6 @@ export function setPrayerNotificationEnabled(prayerName: string, enabled: boolea
   if (key) setValue(key, enabled);
 }
 
-export function getThemeMode(): 'light' | 'dark' | 'system' {
-  const val = getString(KEYS.THEME_MODE);
-  if (val === 'light' || val === 'dark' || val === 'system') {
-    return val;
-  }
-  return 'system';
-}
-
-export function setThemeMode(mode: 'light' | 'dark' | 'system'): void {
-  setValue(KEYS.THEME_MODE, mode);
-}
-
 export interface CachedPrayerTimes {
   /** Epoch ms cinsinden vakitler (bkz. domain/prayer serializeTimes). */
   times: Record<string, number>;
@@ -241,6 +227,3 @@ export function setLocationPermissionGranted(granted: boolean): void {
   setValue(KEYS.LOCATION_PERMISSION, granted);
 }
 
-export function getLocationPermissionGranted(): boolean {
-  return getBoolean(KEYS.LOCATION_PERMISSION) ?? false;
-}

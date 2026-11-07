@@ -53,6 +53,3 @@ export function findActiveKerahat(
   );
 }
 
-export function isInKerahat(windows: KerahatWindow[], at: Date): boolean {
-  return findActiveKerahat(windows, at) !== null;
-}

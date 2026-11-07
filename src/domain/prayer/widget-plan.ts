@@ -1,5 +1,4 @@
-import {buildEntries, findNextEntry} from './schedule';
-import {DailyTimes, PRAYER_KEYS, PrayerEntry} from './types';
+import {DailyTimes, PRAYER_KEYS} from './types';
 
 export interface WidgetSchedule {
   /** "İmsak|Güneş|..." — günler arka arkaya, `timestamps` ile paralel. */
@@ -31,10 +30,3 @@ export function buildWidgetSchedule(
   return {names: names.join('|'), timestamps: timestamps.join('|')};
 }
 
-/** Widget başlığında görünecek vakit. */
-export function nextWidgetEvent(
-  days: DailyTimes[],
-  now: Date,
-): PrayerEntry | null {
-  return findNextEntry(days.flatMap(day => buildEntries(day, now)));
-}

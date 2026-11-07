@@ -1,13 +1,14 @@
 import React from 'react';
 import {View} from 'react-native';
 import {AppText} from './AppText';
-import {PrayerTimeEntry} from '../services/prayerTimes';
+import {PrayerEntry} from '../domain/prayer';
 import {formatTime} from '../utils/format';
+import {PRAYER_LABELS} from '../i18n/tr';
 import {colors, radius, shadows} from '../theme/tokens';
 import {AlertTriangle} from 'lucide-react-native';
 
 interface CountdownTimerProps {
-  nextPrayer: PrayerTimeEntry | null;
+  nextPrayer: PrayerEntry | null;
   countdown: string;
   kerahatActive?: boolean;
   kerahatLabel?: string;
@@ -93,7 +94,7 @@ export function CountdownTimer({nextPrayer, countdown, kerahatActive, kerahatLab
             {isKerahat ? 'Dikkat' : 'Sıradaki Vakit'}
           </AppText>
           <AppText style={{fontSize: 26, fontWeight: '700', color: colors.text, marginTop: 2}}>
-            {nextPrayer.nameTr}
+            {PRAYER_LABELS[nextPrayer.key]}
           </AppText>
           <AppText style={{fontSize: 14, fontWeight: '500', color: colors.textMuted, marginTop: 1, fontVariant: ['tabular-nums']}}>
             {formatTime(nextPrayer.time)}

@@ -1,26 +1,26 @@
 import React from 'react';
 import {View} from 'react-native';
 import {AppText} from './AppText';
-import {PrayerTimeEntry} from '../services/prayerTimes';
+import {PrayerEntry} from '../domain/prayer';
+import {PRAYER_LABELS} from '../i18n/tr';
 import {formatTime} from '../utils/format';
 import {colors, radius} from '../theme/tokens';
 
 interface PrayerCardProps {
-  entry: PrayerTimeEntry;
+  entry: PrayerEntry;
   isNext: boolean;
 }
 
 export function PrayerCard({entry, isNext}: PrayerCardProps) {
-  const isKerahat = entry.isKerahat;
   const isPassed = entry.isPassed;
-  const accentColor = isKerahat ? colors.danger : colors.accent;
+  const accentColor = colors.accent;
 
   return (
     <View
       style={{
         borderRadius: radius.lg,
         borderWidth: 1,
-        borderColor: isNext ? (isKerahat ? 'rgba(217, 135, 95, 0.34)' : colors.borderStrong) : colors.border,
+        borderColor: isNext ? colors.borderStrong : colors.border,
         paddingVertical: 13,
         paddingHorizontal: 14,
         marginBottom: 8,
@@ -33,7 +33,11 @@ export function PrayerCard({entry, isNext}: PrayerCardProps) {
             width: 9,
             height: 9,
             borderRadius: 5,
-            backgroundColor: isNext ? accentColor : isPassed ? 'rgba(244, 241, 234, 0.18)' : colors.accentMuted,
+            backgroundColor: isNext
+              ? accentColor
+              : isPassed
+              ? 'rgba(244, 241, 234, 0.18)'
+              : colors.accentMuted,
             marginRight: 12,
           }}
         />
@@ -46,13 +50,13 @@ export function PrayerCard({entry, isNext}: PrayerCardProps) {
                 fontWeight: isNext ? '700' : '600',
                 color: isPassed && !isNext ? colors.textSubtle : colors.text,
               }}>
-              {entry.nameTr}
+              {PRAYER_LABELS[entry.key]}
             </AppText>
             {isNext && (
               <View
                 style={{
                   borderRadius: radius.sm,
-                  backgroundColor: isKerahat ? colors.dangerSoft : colors.accentSoft,
+                  backgroundColor: colors.accentSoft,
                   paddingHorizontal: 8,
                   paddingVertical: 2,
                 }}>
@@ -62,11 +66,6 @@ export function PrayerCard({entry, isNext}: PrayerCardProps) {
               </View>
             )}
           </View>
-          {isKerahat && !isPassed && (
-            <AppText style={{fontSize: 11, color: colors.danger, marginTop: 3}}>
-              Kerâhet vakti
-            </AppText>
-          )}
         </View>
 
         <AppText

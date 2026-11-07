@@ -15,9 +15,11 @@ import {updateWidget, startPrayerForegroundService, stopPrayerForegroundService}
 import {getCurrentLocation, requestLocationPermission, checkLocationPermission, reverseGeocode} from '../services/location';
 import {saveLocation, setLocationPermissionGranted, getLocation, getLocationLabel, getPrayerMode} from '../services/storage';
 import {colors, radius} from '../theme/tokens';
+import {findActiveKerahat} from '../domain/prayer';
+import {KERAHAT_LABELS, PRAYER_LABELS} from '../i18n/tr';
 
 export function HomeScreen() {
-  const {notificationsEnabled, kerahatTimes, requestRefresh, notificationTiming, prayerNotifications} = useAppContext();
+  const {notificationsEnabled, kerahatWindows, requestRefresh, notificationTiming, prayerNotifications} = useAppContext();
   const insets = useSafeAreaInsets();
   const {entries, nextPrayer, dailyTimes, isLoading, error} = usePrayerTimes();
   const {countdown} = useCountdown(nextPrayer ? nextPrayer.time : null);
@@ -102,26 +104,27 @@ export function HomeScreen() {
 
   useEffect(() => {
     if (!nextPrayer) return;
-    if (prevNextPrayerName.current !== null && prevNextPrayerName.current !== nextPrayer.name) {
+    if (prevNextPrayerName.current !== null && prevNextPrayerName.current !== nextPrayer.key) {
       const timeStr = `${nextPrayer.time.getHours().toString().padStart(2, '0')}:${nextPrayer.time.getMinutes().toString().padStart(2, '0')}`;
+      const prayerLabel = PRAYER_LABELS[nextPrayer.key];
 
       if (getPrayerMode()) {
         // Namazdayım: sadece sıradaki vakit için bildirimleri 15dk ertele
         if (dailyTimes) schedulePrayerNotifications(dailyTimes, 15);
         showAlert(
-          `${nextPrayer.nameTr} vakti girdi`,
-          `Namazdayım modu aktif. Bildirimler 15 dakika susturuldu.\n\n${nextPrayer.nameTr} - ${timeStr}`,
+          `${prayerLabel} vakti girdi`,
+          `Namazdayım modu aktif. Bildirimler 15 dakika susturuldu.\n\n${prayerLabel} - ${timeStr}`,
           <AppText style={{fontSize: 22}}>☾</AppText>,
         );
       } else {
         showAlert(
-          `${nextPrayer.nameTr} vakti girdi`,
-          `Saat ${timeStr} itibarıyla ${nextPrayer.nameTr} vakti başladı.`,
+          `${prayerLabel} vakti girdi`,
+          `Saat ${timeStr} itibarıyla ${prayerLabel} vakti başladı.`,
           <AppText style={{fontSize: 22}}>🕋</AppText>,
         );
       }
     }
-    prevNextPrayerName.current = nextPrayer.name;
+    prevNextPrayerName.current = nextPrayer.key;
   }, [nextPrayer, showAlert, dailyTimes]);
 
   useEffect(() => {
@@ -152,10 +155,7 @@ export function HomeScreen() {
     };
   }, [dailyTimes, notificationsEnabled, notificationTiming, prayerNotifications]);
 
-  const activeKerahat = kerahatTimes.find(k => {
-    const now = Date.now();
-    return now >= k.start.getTime() && now < k.end.getTime();
-  });
+  const activeKerahat = findActiveKerahat(kerahatWindows, new Date());
 
   const today = new Date();
   const dateStr = today.toLocaleDateString('tr-TR', {weekday: 'long', day: 'numeric', month: 'long'});
@@ -245,7 +245,7 @@ export function HomeScreen() {
         ) : null}
 
         <View style={{marginBottom: 18}}>
-          <CountdownTimer nextPrayer={nextPrayer} countdown={countdown} kerahatActive={!!activeKerahat} kerahatLabel={activeKerahat?.label} />
+          <CountdownTimer nextPrayer={nextPrayer} countdown={countdown} kerahatActive={!!activeKerahat} kerahatLabel={activeKerahat ? KERAHAT_LABELS[activeKerahat.reason] : undefined} />
         </View>
 
         <PrayerList entries={entries} nextPrayer={nextPrayer} />

@@ -1,105 +1,85 @@
 import {useState, useEffect, useCallback} from 'react';
 import {
-  calculatePrayerTimes,
-  getPrayerTimeEntries,
-  getNextPrayer,
-  getCurrentPrayerIndex,
-  calculateKerahatTimes,
-  isTimeInKerahat,
-  DailyPrayerTimes,
-  PrayerTimeEntry,
-  getPrayerTimesAsStrings,
+  DailyTimes,
+  PrayerEntry,
+  buildEntries,
+  calculateDailyTimes,
+  computeKerahatWindows,
+  deserializeTimes,
+  findLastPassedIndex,
+  findNextEntry,
   isSameDay,
-} from '../services/prayerTimes';
+  serializeTimes,
+} from '../domain/prayer';
 import {getDateKey} from '../utils/format';
 import {getLocation, saveCachedPrayerTimes, getCachedPrayerTimes} from '../services/storage';
 import {useAppContext} from '../context/AppContext';
 
 interface UsePrayerTimesResult {
-  entries: PrayerTimeEntry[];
-  nextPrayer: PrayerTimeEntry | null;
+  entries: PrayerEntry[];
+  nextPrayer: PrayerEntry | null;
   currentIndex: number;
-  dailyTimes: DailyPrayerTimes | null;
+  dailyTimes: DailyTimes | null;
   isLoading: boolean;
   error: string | null;
   refresh: () => void;
 }
 
-function parseTimeString(timeStr: string, referenceDate: Date): Date {
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  const date = new Date(referenceDate);
-  date.setHours(hours, minutes, 0, 0);
-  return date;
-}
+type StoredLocation = {latitude: number; longitude: number};
 
-function addKerahat(entries: PrayerTimeEntry[], times: DailyPrayerTimes) {
-  const kerahatList = calculateKerahatTimes(times);
-  const entriesWithKerahat = entries.map(e => {
-    const k = isTimeInKerahat(e.time, kerahatList);
-    return {...e, isKerahat: k.isKerahat, kerahatLabel: k.label};
-  });
-  return {kerahatList, entriesWithKerahat};
-}
-
-function readCachedTimesForDate(date: Date): DailyPrayerTimes | null {
-  const cached = getCachedPrayerTimes();
-  const dateKey = getDateKey(date);
-  if (!cached || cached.date !== dateKey) {
-    return null;
-  }
-
-  return {
-    fajr: parseTimeString(cached.times.fajr, date),
-    sunrise: parseTimeString(cached.times.sunrise, date),
-    dhuhr: parseTimeString(cached.times.dhuhr, date),
-    asr: parseTimeString(cached.times.asr, date),
-    maghrib: parseTimeString(cached.times.maghrib, date),
-    isha: parseTimeString(cached.times.isha, date),
-  };
-}
-
-function calculateAndCache(latitude: number, longitude: number, date: Date): DailyPrayerTimes {
-  const times = calculatePrayerTimes(latitude, longitude, date);
-  saveCachedPrayerTimes(getPrayerTimesAsStrings(times), getDateKey(date));
-  return times;
+function sameLocation(a: StoredLocation, b: StoredLocation): boolean {
+  // Kaba eşitlik yeterli: önbellek yalnızca aynı ilçe için geçerli olmalı.
+  return (
+    Math.abs(a.latitude - b.latitude) < 1e-3 &&
+    Math.abs(a.longitude - b.longitude) < 1e-3
+  );
 }
 
 export function usePrayerTimes(): UsePrayerTimesResult {
-  const [entries, setEntries] = useState<PrayerTimeEntry[]>([]);
-  const [dailyTimes, setDailyTimes] = useState<DailyPrayerTimes | null>(null);
+  const [entries, setEntries] = useState<PrayerEntry[]>([]);
+  const [dailyTimes, setDailyTimes] = useState<DailyTimes | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [localRefresh, setLocalRefresh] = useState(0);
-  const {refreshKey: contextRefreshKey, setKerahatTimes} = useAppContext();
+  const {refreshKey: contextRefreshKey, setKerahatWindows} = useAppContext();
 
   const refresh = useCallback(() => {
     setLocalRefresh(k => k + 1);
   }, []);
 
-  const loadForDate = useCallback((date: Date, now: Date): {times: DailyPrayerTimes; entries: PrayerTimeEntry[]} | null => {
-    const location = getLocation();
-    if (!location) {
-      return null;
-    }
+  /** Önbellek aynı gün + aynı konum için geçerliyse onu, değilse yeni hesap. */
+  const timesForDate = useCallback(
+    (date: Date, location: StoredLocation): DailyTimes => {
+      const dateKey = getDateKey(date);
+      const cached = getCachedPrayerTimes();
+      if (cached && cached.date === dateKey && sameLocation(cached, location)) {
+        const restored = deserializeTimes(cached.times);
+        if (restored) {
+          return restored;
+        }
+      }
 
-    let times = readCachedTimesForDate(date);
-    if (!times) {
-      times = calculateAndCache(location.latitude, location.longitude, date);
-    }
+      const times = calculateDailyTimes(location.latitude, location.longitude, date);
+      saveCachedPrayerTimes(
+        serializeTimes(times),
+        dateKey,
+        location.latitude,
+        location.longitude,
+      );
+      return times;
+    },
+    [],
+  );
 
-    return {
-      times,
-      entries: getPrayerTimeEntries(times, now),
-    };
-  }, []);
-
-  const publish = useCallback((times: DailyPrayerTimes, nextEntries: PrayerTimeEntry[]) => {
-    const {kerahatList, entriesWithKerahat} = addKerahat(nextEntries, times);
-    setDailyTimes(times);
-    setKerahatTimes(kerahatList);
-    setEntries(entriesWithKerahat);
-    setError(null);
-  }, [setKerahatTimes]);
+  const publish = useCallback(
+    (times: DailyTimes, nextEntries: PrayerEntry[]) => {
+      setDailyTimes(times);
+      setKerahatWindows(computeKerahatWindows(times));
+      setEntries(nextEntries);
+      setError(null);
+    },
+    [setKerahatWindows],
+  );
 
   const loadPrayerTimes = useCallback(() => {
     setIsLoading(true);
@@ -113,31 +93,22 @@ export function usePrayerTimes(): UsePrayerTimesResult {
     }
 
     const now = new Date();
-    const todayResult = loadForDate(now, now);
-    if (!todayResult) {
-      setError('Konum bilgisi bulunamadı. Ayarlardan konum seçin.');
+    const todayTimes = timesForDate(now, location);
+    const todayEntries = buildEntries(todayTimes, now);
+
+    if (findNextEntry(todayEntries)) {
+      publish(todayTimes, todayEntries);
       setIsLoading(false);
       return;
     }
 
-    const todayNext = getNextPrayer(todayResult.entries);
-    if (todayNext) {
-      publish(todayResult.times, todayResult.entries);
-      setIsLoading(false);
-      return;
-    }
-
-    // Yatsı sonrası: aynı ekran açılışında yarının İmsak vaktine geç.
+    // Yatsıdan sonra: aynı ekran açılışında yarının İmsak vaktine geç.
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowResult = loadForDate(tomorrow, now);
-    if (tomorrowResult) {
-      publish(tomorrowResult.times, tomorrowResult.entries);
-    } else {
-      publish(todayResult.times, todayResult.entries);
-    }
+    const tomorrowTimes = timesForDate(tomorrow, location);
+    publish(tomorrowTimes, buildEntries(tomorrowTimes, now));
     setIsLoading(false);
-  }, [loadForDate, publish]);
+  }, [publish, timesForDate]);
 
   useEffect(() => {
     try {
@@ -155,25 +126,27 @@ export function usePrayerTimes(): UsePrayerTimesResult {
 
     const interval = setInterval(() => {
       const now = new Date();
+      const updated = buildEntries(dailyTimes, now);
 
-      // Gün değiştiyse veya mevcut dailyTimes'taki tüm vakitler geçtiyse baştan yükle.
-      const updated = getPrayerTimeEntries(dailyTimes, now);
-      const allPassed = updated.every(e => e.isPassed);
-      if (allPassed || !isSameDay(now, dailyTimes.fajr)) {
+      // Gün değiştiyse veya gösterilen günün tüm vakitleri geçtiyse baştan yükle.
+      if (!findNextEntry(updated) || !isSameDay(now, dailyTimes.fajr)) {
         loadPrayerTimes();
         return;
       }
 
-      const {kerahatList, entriesWithKerahat} = addKerahat(updated, dailyTimes);
-      setKerahatTimes(kerahatList);
-      setEntries(entriesWithKerahat);
+      setEntries(updated);
     }, 15_000);
 
     return () => clearInterval(interval);
-  }, [dailyTimes, loadPrayerTimes, setKerahatTimes]);
+  }, [dailyTimes, loadPrayerTimes]);
 
-  const nextPrayer = getNextPrayer(entries);
-  const currentIndex = getCurrentPrayerIndex(entries);
-
-  return {entries, nextPrayer, currentIndex, dailyTimes, isLoading, error, refresh};
+  return {
+    entries,
+    nextPrayer: findNextEntry(entries),
+    currentIndex: findLastPassedIndex(entries),
+    dailyTimes,
+    isLoading,
+    error,
+    refresh,
+  };
 }

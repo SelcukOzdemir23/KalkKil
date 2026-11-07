@@ -1,13 +1,13 @@
 import React from 'react';
 import {View} from 'react-native';
 import {AppText} from './AppText';
-import {PrayerTimeEntry} from '../services/prayerTimes';
+import {PrayerEntry} from '../domain/prayer';
 import {PrayerCard} from './PrayerCard';
 import {colors} from '../theme/tokens';
 
 interface PrayerListProps {
-  entries: PrayerTimeEntry[];
-  nextPrayer: PrayerTimeEntry | null;
+  entries: PrayerEntry[];
+  nextPrayer: PrayerEntry | null;
 }
 
 export function PrayerList({entries, nextPrayer}: PrayerListProps) {
@@ -30,9 +30,9 @@ export function PrayerList({entries, nextPrayer}: PrayerListProps) {
       </View>
       {entries.map(entry => (
         <PrayerCard
-          key={entry.name}
+          key={entry.key}
           entry={entry}
-          isNext={nextPrayer !== null && entry.name === nextPrayer.name}
+          isNext={nextPrayer !== null && entry.key === nextPrayer.key}
         />
       ))}
     </View>

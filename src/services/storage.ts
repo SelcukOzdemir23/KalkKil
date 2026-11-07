@@ -20,7 +20,6 @@ const KEYS = {
   THEME_MODE: 'settings.theme',
   PRAYER_MODE: 'settings.prayerMode',
   CACHED_PRAYER_TIMES: 'cache.prayerTimes',
-  CACHED_DATE: 'cache.date',
   LOCATION_PERMISSION: 'permissions.location',
 } as const;
 
@@ -189,21 +188,50 @@ export function setThemeMode(mode: 'light' | 'dark' | 'system'): void {
   setValue(KEYS.THEME_MODE, mode);
 }
 
-export function saveCachedPrayerTimes(times: Record<string, string>, date: string): void {
-  cache.set(KEYS.CACHED_PRAYER_TIMES, JSON.stringify(times));
-  cache.set(KEYS.CACHED_DATE, date);
-  AsyncStorage.setItem(KEYS.CACHED_PRAYER_TIMES, JSON.stringify(times)).catch(() => {});
-  AsyncStorage.setItem(KEYS.CACHED_DATE, date).catch(() => {});
+export interface CachedPrayerTimes {
+  /** Epoch ms cinsinden vakitler (bkz. domain/prayer serializeTimes). */
+  times: Record<string, number>;
+  /** YYYY-MM-DD */
+  date: string;
+  latitude: number;
+  longitude: number;
 }
 
-export function getCachedPrayerTimes(): {times: Record<string, string>; date: string} | null {
-  const timesStr = getString(KEYS.CACHED_PRAYER_TIMES);
-  const date = getString(KEYS.CACHED_DATE);
-  if (!timesStr || !date) {
+/**
+ * Günlük vakitleri önbelleğe yazar.
+ *
+ * Konum da saklanır: kullanıcı başka bir ilçeye geçtiğinde aynı günün eski
+ * vakitleri gösterilmesin diye okuma tarafı konumu da karşılaştırır.
+ */
+export function saveCachedPrayerTimes(
+  times: Record<string, number>,
+  date: string,
+  latitude: number,
+  longitude: number,
+): void {
+  const payload: CachedPrayerTimes = {times, date, latitude, longitude};
+  const raw = JSON.stringify(payload);
+  cache.set(KEYS.CACHED_PRAYER_TIMES, raw);
+  AsyncStorage.setItem(KEYS.CACHED_PRAYER_TIMES, raw).catch(() => {});
+}
+
+export function getCachedPrayerTimes(): CachedPrayerTimes | null {
+  const raw = cache.get(KEYS.CACHED_PRAYER_TIMES);
+  if (!raw) {
     return null;
   }
   try {
-    return {times: JSON.parse(timesStr), date};
+    const parsed = JSON.parse(raw) as Partial<CachedPrayerTimes>;
+    if (
+      typeof parsed.date !== 'string' ||
+      typeof parsed.latitude !== 'number' ||
+      typeof parsed.longitude !== 'number' ||
+      typeof parsed.times !== 'object' ||
+      parsed.times === null
+    ) {
+      return null;
+    }
+    return parsed as CachedPrayerTimes;
   } catch {
     return null;
   }

@@ -1,9 +1,11 @@
 import {NativeModules, Platform} from 'react-native';
 import {
-  calculatePrayerTimes,
-  getPrayerTimeEntries,
-  PrayerTimeEntry,
-} from './prayerTimes';
+  DailyTimes,
+  PrayerEntry,
+  buildEntries,
+  calculateDailyTimes,
+} from '../domain/prayer';
+import {PRAYER_LABELS} from '../i18n/tr';
 import {formatTime} from '../utils/format';
 import {getLocation} from './storage';
 
@@ -17,47 +19,50 @@ function stripSeconds(countdown: string): string {
   return countdown;
 }
 
-function buildNextDayEntries(entries: PrayerTimeEntry[]): PrayerTimeEntry[] {
+function buildNextDayEntries(baseDate: Date): PrayerEntry[] {
   const location = getLocation();
-  if (!location || entries.length === 0) {
+  if (!location) {
     return [];
   }
 
-  const baseDate = new Date(entries[0].time);
   const tomorrow = new Date(baseDate);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
   try {
-    const tomorrowTimes = calculatePrayerTimes(location.latitude, location.longitude, tomorrow);
-    return getPrayerTimeEntries(tomorrowTimes, new Date());
+    const tomorrowTimes: DailyTimes = calculateDailyTimes(
+      location.latitude,
+      location.longitude,
+      tomorrow,
+    );
+    return buildEntries(tomorrowTimes, new Date());
   } catch {
     return [];
   }
 }
 
-function buildDisplayTimesString(entries: PrayerTimeEntry[]): string {
-  return entries.map(e => `${e.nameTr}|${formatTime(e.time)}`).join('|');
+function buildDisplayTimesString(entries: PrayerEntry[]): string {
+  return entries.map(e => `${PRAYER_LABELS[e.key]}|${formatTime(e.time)}`).join('|');
 }
 
-function buildAllTimestampsString(entries: PrayerTimeEntry[]): string {
+function buildAllTimestampsString(entries: PrayerEntry[]): string {
   return entries.map(e => String(e.time.getTime())).join('|');
 }
 
 export function updateWidget(
-  nextPrayer: PrayerTimeEntry | null,
+  nextPrayer: PrayerEntry | null,
   countdown: string,
-  entries: PrayerTimeEntry[],
+  entries: PrayerEntry[],
 ): void {
   if (Platform.OS !== 'android' || !PrayerWidgetBridge) {
     return;
   }
 
-  const tomorrowEntries = buildNextDayEntries(entries);
+  const tomorrowEntries = entries.length > 0 ? buildNextDayEntries(entries[0].time) : [];
   const eventEntries = [...entries, ...tomorrowEntries].sort(
     (a, b) => a.time.getTime() - b.time.getTime(),
   );
 
-  const nextName = nextPrayer ? nextPrayer.nameTr : '--';
+  const nextName = nextPrayer ? PRAYER_LABELS[nextPrayer.key] : '--';
   const nextTime = nextPrayer ? formatTime(nextPrayer.time) : '--:--';
   const countdownNoSec = stripSeconds(countdown);
   const displayTimes = buildDisplayTimesString(eventEntries);

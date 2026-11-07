@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useMemo} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {View, Animated, Vibration, Dimensions} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {WebView} from 'react-native-webview';
@@ -12,7 +12,7 @@ import {
   smoothCompass,
   formatQiblaDirection,
   KAABA_COORDS,
-} from '../utils/qibla';
+} from '../domain/qibla';
 import {getLocation} from '../services/storage';
 
 const SCREEN_W = Dimensions.get('window').width;
@@ -137,7 +137,8 @@ export function QiblaScreen() {
     );
   }
 
-  const mapHtml = useMemo(() => `
+  // Harita şablonu hook değil: erken dönüşlerin ardından da güvenle kurulabilir.
+  const mapHtml = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -191,7 +192,7 @@ export function QiblaScreen() {
       </script>
     </body>
     </html>
-  `, [latitude, longitude]);
+  `;
 
   const R = COMPASS_SIZE / 2;
 

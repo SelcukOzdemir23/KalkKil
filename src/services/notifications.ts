@@ -6,7 +6,8 @@ import notifee, {
   TriggerType,
 } from '@notifee/react-native';
 import {Platform} from 'react-native';
-import {calculatePrayerTimes, DailyPrayerTimes} from './prayerTimes';
+import {DailyTimes, PRAYER_KEYS, calculateDailyTimes} from '../domain/prayer';
+import {PRAYER_LABELS} from '../i18n/tr';
 import {formatTime} from '../utils/format';
 import {getLocation, getNotificationTiming, getPrayerNotificationEnabled} from './storage';
 
@@ -31,25 +32,9 @@ export async function cancelAllNotifications(): Promise<void> {
   await notifee.cancelTriggerNotifications();
 }
 
-const PRAYER_VISIBLE_NAMES: Record<string, string> = {
-  fajr: 'İmsak',
-  sunrise: 'Güneş',
-  dhuhr: 'Öğle',
-  asr: 'İkindi',
-  maghrib: 'Akşam',
-  isha: 'Yatsı',
-};
+const PRAYER_VISIBLE_NAMES = PRAYER_LABELS;
 
-const PRAYER_NAMES = [
-  {name: 'fajr', time: (t: DailyPrayerTimes) => t.fajr},
-  {name: 'sunrise', time: (t: DailyPrayerTimes) => t.sunrise},
-  {name: 'dhuhr', time: (t: DailyPrayerTimes) => t.dhuhr},
-  {name: 'asr', time: (t: DailyPrayerTimes) => t.asr},
-  {name: 'maghrib', time: (t: DailyPrayerTimes) => t.maghrib},
-  {name: 'isha', time: (t: DailyPrayerTimes) => t.isha},
-];
-
-function getNextDayTimes(times: DailyPrayerTimes): DailyPrayerTimes | null {
+function getNextDayTimes(times: DailyTimes): DailyTimes | null {
   const location = getLocation();
   if (!location) {
     return null;
@@ -59,14 +44,14 @@ function getNextDayTimes(times: DailyPrayerTimes): DailyPrayerTimes | null {
   nextDay.setDate(nextDay.getDate() + 1);
 
   try {
-    return calculatePrayerTimes(location.latitude, location.longitude, nextDay);
+    return calculateDailyTimes(location.latitude, location.longitude, nextDay);
   } catch {
     return null;
   }
 }
 
 export async function schedulePrayerNotifications(
-  times: DailyPrayerTimes,
+  times: DailyTimes,
   delayMinutes: number = 0,
 ): Promise<void> {
   await setupNotificationChannel();
@@ -83,12 +68,12 @@ export async function schedulePrayerNotifications(
   }
 
   for (const dayTimes of daysToSchedule) {
-    for (const prayer of PRAYER_NAMES) {
-      if (!getPrayerNotificationEnabled(prayer.name)) {
+    for (const key of PRAYER_KEYS) {
+      if (!getPrayerNotificationEnabled(key)) {
         continue;
       }
 
-      const prayerDate = prayer.time(dayTimes);
+      const prayerDate = dayTimes[key];
       const prayerTime = prayerDate.getTime();
       const notifyTime = prayerTime - timingMinutes * 60 * 1000;
       const finalTime = notifyTime + delayMs;
@@ -97,7 +82,7 @@ export async function schedulePrayerNotifications(
         continue;
       }
 
-      const nameTr = PRAYER_VISIBLE_NAMES[prayer.name] || prayer.name;
+      const nameTr = PRAYER_VISIBLE_NAMES[key] || key;
       const isExactTime = timingMinutes === 0;
       const title = isExactTime
         ? `☾ ${nameTr} vakti girdi`
@@ -108,7 +93,7 @@ export async function schedulePrayerNotifications(
 
       await notifee.createTriggerNotification(
         {
-          id: `prayer-${prayer.name}-${prayerDate.toISOString().slice(0, 10)}`,
+          id: `prayer-${key}-${prayerDate.toISOString().slice(0, 10)}`,
           title,
           body,
           android: {

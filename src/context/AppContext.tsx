@@ -16,7 +16,7 @@ import {
   setPrayerMode,
   getLocation,
 } from '../services/storage';
-import {KerahatVakti} from '../services/prayerTimes';
+import {KerahatWindow} from '../domain/prayer';
 
 interface PrayerNotificationToggles {
   fajr: boolean;
@@ -38,8 +38,8 @@ interface AppContextType {
   refreshLocationStatus: () => void;
   requestRefresh: () => void;
   refreshKey: number;
-  kerahatTimes: KerahatVakti[];
-  setKerahatTimes: (times: KerahatVakti[]) => void;
+  kerahatWindows: KerahatWindow[];
+  setKerahatWindows: (windows: KerahatWindow[]) => void;
   prayerMode: boolean;
   togglePrayerMode: () => void;
 }
@@ -60,7 +60,7 @@ export function AppProvider({children}: {children: ReactNode}) {
   }));
   const [hasLocation, setHasLocation] = useState(!!getLocation());
   const [refreshKey, setRefreshKey] = useState(0);
-  const [kerahatTimes, setKerahatTimes] = useState<KerahatVakti[]>([]);
+  const [kerahatWindows, setKerahatWindows] = useState<KerahatWindow[]>([]);
 
   const requestRefresh = useCallback(() => {
     setRefreshKey(k => k + 1);
@@ -105,8 +105,8 @@ export function AppProvider({children}: {children: ReactNode}) {
         refreshLocationStatus,
         requestRefresh,
         refreshKey,
-        kerahatTimes,
-        setKerahatTimes,
+        kerahatWindows,
+        setKerahatWindows,
         prayerMode,
         togglePrayerMode,
       }}>

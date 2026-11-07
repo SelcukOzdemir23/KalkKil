@@ -26,8 +26,7 @@
     "react-native-safe-area-context": "^5.1.0",
     "react-native-screens": "^4.4.0",
     "react-native-sensors": "^7.3.6",
-    "react-native-svg": "^15.11.2",
-    "react-native-webview": "^13.16.1"
+    "react-native-svg": "^15.11.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

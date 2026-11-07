@@ -14,7 +14,9 @@ interface DayStripProps {
 /** Etiketin çentiğe göre yarım genişliği; taşmayı engellemek için. */
 const LABEL_WIDTH = 44;
 const RAIL_TOP = 26;
-const STRIP_HEIGHT = 62;
+const STRIP_HEIGHT = 80;
+/** Etiketler iki satıra kaçırılır: komşu vakitlerde uzun adlar çakışmasın. */
+const LABEL_ROW_OFFSET = 17;
 
 /**
  * Gün Şeridi — uygulamanın imza bileşeni.
@@ -127,7 +129,8 @@ export function DayStrip({entries, kerahatWindows, now}: DayStripProps) {
                       Math.max(x - LABEL_WIDTH / 2, 0),
                       Math.max(width - LABEL_WIDTH, 0),
                     ),
-                    top: RAIL_TOP + 12,
+                    // Tek/çift sıra: "İmsak" ile "Güneş" alt alta düşsün.
+                    top: RAIL_TOP + 12 + (index % 2) * LABEL_ROW_OFFSET,
                     width: LABEL_WIDTH,
                     alignItems: 'center',
                   }}>

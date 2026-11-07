@@ -1,7 +1,6 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {View, Animated, Vibration, Dimensions} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {WebView} from 'react-native-webview';
 import {magnetometer, SensorTypes, setUpdateIntervalForType} from 'react-native-sensors';
 import {AppText} from '../components/AppText';
 import {Compass} from 'lucide-react-native';
@@ -12,7 +11,6 @@ import {
   magnetometerToHeading,
   smoothCompass,
   formatQiblaDirection,
-  KAABA_COORDS,
 } from '../domain/qibla';
 import {getLocation} from '../services/storage';
 
@@ -138,63 +136,6 @@ export function QiblaScreen() {
       </View>
     );
   }
-
-  // Harita şablonu hook değil: erken dönüşlerin ardından da güvenle kurulabilir.
-  const mapHtml = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-      <style>
-        *{margin:0;padding:0}
-        html,body{width:100%;height:100%;background:#0D111F}
-        #map{width:100%;height:100%}
-        .leaflet-control-zoom{display:none!important}
-        .leaflet-control-attribution{display:none!important}
-      </style>
-    </head>
-    <body>
-      <div id="map"></div>
-      <script>
-        var userLat = ${latitude};
-        var userLng = ${longitude};
-        var kaabaLat = ${KAABA_COORDS.latitude};
-        var kaabaLng = ${KAABA_COORDS.longitude};
-        var centerLat = (userLat + kaabaLat) / 2;
-        var centerLng = (userLng + kaabaLng) / 2;
-        var map = L.map('map', {
-          center: [centerLat, centerLng],
-          zoom: 4,
-          zoomControl: false,
-          attributionControl: false,
-          dragging: false,
-          scrollWheelZoom: false,
-          doubleClickZoom: false,
-          touchZoom: false,
-          keyboard: false,
-        });
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-          maxZoom: 19,
-        }).addTo(map);
-        L.circleMarker([userLat, userLng], {
-          radius: 7, fillColor: '#7BAE8D', color: '#F4F1EA', weight: 2, fillOpacity: 1,
-        }).addTo(map);
-        L.marker([kaabaLat, kaabaLng], {
-          icon: L.divIcon({
-            className: '',
-            html: '<div style="font-size:28px;text-align:center;line-height:1">🕋</div>',
-            iconSize: [28, 28], iconAnchor: [14, 14],
-          })
-        }).addTo(map);
-        L.polyline([[userLat, userLng], [kaabaLat, kaabaLng]], {
-          color: '#D6B46A', weight: 2.5, opacity: 0.5, dashArray: '10, 8',
-        }).addTo(map);
-      </script>
-    </body>
-    </html>
-  `;
 
   const R = COMPASS_SIZE / 2;
 
@@ -410,28 +351,6 @@ export function QiblaScreen() {
             </AppText>
           </Animated.View>
 
-          {/* Mini harita */}
-          <View
-            style={{
-              width: SCREEN_W - 48,
-              height: 100,
-              borderRadius: radius.lg,
-              overflow: 'hidden',
-              borderWidth: 1,
-              borderColor: palette.hairline,
-              marginTop: 8,
-            }}>
-            <WebView
-              source={{html: mapHtml}}
-              style={{flex: 1, backgroundColor: 'transparent'}}
-              scrollEnabled={false}
-              bounces={false}
-              overScrollMode="never"
-              showsVerticalScrollIndicator={false}
-              showsHorizontalScrollIndicator={false}
-              androidLayerType="hardware"
-            />
-          </View>
         </View>
       </View>
     </View>

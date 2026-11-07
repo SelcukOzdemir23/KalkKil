@@ -86,9 +86,15 @@ primitifleri (`Text`, `Surface`, `Divider`) ve `useTheme()` kullanır.
 **Tema seçimi otomatik.** Gün doğumu–gün batımı arası açık, dışı karanlık
 (`src/theme/sun.ts`, test edilmiş). Kullanıcı seçimi yok: v1'de tek kural.
 
-**İmza bileşen.** `features/prayer-times/DayStrip.tsx` — günü yatay zaman
-çizgisi olarak gösterir; vakitler çentik, "şimdi" işaretçi, kerahat aralıkları
-bant. Kerahat verisi zaten hesaplandığı için farkı görünür kılıyor.
+**İmza bileşen.** `features/prayer-times/DayTimeline.tsx` — günü **dikey ve
+zamanla orantılı** eksen olarak gösterir.
+
+İlk deneme yatay bir şeritti; altı vakit etiketi sığmadığı için etiketler iki
+satıra kaçırılıyordu. Bu bir tasarım değil, çakışma yamasıydı. Dikey eksende
+sıkışma yok ve aralıklar gerçek zamana orantılı olduğu için günün yapısı
+(imsak–güneş kısa, güneş–öğle uzun) doğrudan okunuyor. Uzun boşluklar "boşluk"
+gibi görünmesin diye saate çentikleri eklendi. Kerahat aralıkları ince şerit;
+düğümleri yutan geniş bant denemesi bırakıldı.
 
 **Tipografi.** Başlıklar Alegreya, gövde ve zaman değerleri sistem sansı.
 Zamanlar `tabular-nums`: geri sayım akarken metin zıplamaz.

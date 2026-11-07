@@ -69,8 +69,12 @@ gerektiren yerlerde sans kullan.
 - `ui/Text` — tek metin bileşeni. Varyant + ton. Ekranlar ham renk/boyut yazmaz.
 - `ui/Divider` — 1px saç teli.
 - `ui/EmptyState` — boş ekran bırakılmaz; ne olduğunu ve ne yapılacağını söyler.
-- `features/prayer-times/DayStrip` — imza bileşen. Günü yatay zaman çizgisi olarak
-  gösterir: vakitler çentik, "şimdi" işaretçi, kerahat bant.
+- `features/prayer-times/DayTimeline` — imza bileşen. Günü **dikey ve zamanla
+  orantılı** bir eksen olarak gösterir. Yatay şerit denendi ve bırakıldı: altı
+  etiket sığmadığı için kaydırılıyordu, bu bilgi taşımayan bir hileydi. Dikey
+  eksende sıkışma yok, ayrıca aralıkların gerçek uzunluğu görünüyor.
+  Katmanlar: saat çentikleri → kerahat şeritleri → geçen gün → kalan süre
+  (vurgu rengi) → vakit düğümleri.
 - İkonlar `lucide-react-native`, tek aile, `strokeWidth` 1.7–2.4.
 
 ## Hareket

@@ -28,6 +28,8 @@ export interface Palette {
 
   accent: string;
   accentSoft: string;
+  /** Kerahat gibi "dikkat ama bağırma" bölgeleri için bir tık daha belirgin. */
+  accentFaint: string;
   accentMuted: string;
 
   success: string;
@@ -55,6 +57,7 @@ export const lightPalette: Palette = {
 
   accent: '#A6382F',
   accentSoft: 'rgba(166, 56, 47, 0.09)',
+  accentFaint: 'rgba(166, 56, 47, 0.16)',
   accentMuted: 'rgba(166, 56, 47, 0.60)',
 
   success: '#3E6B4F',
@@ -81,6 +84,7 @@ export const darkPalette: Palette = {
 
   accent: '#E0705E',
   accentSoft: 'rgba(224, 112, 94, 0.14)',
+  accentFaint: 'rgba(224, 112, 94, 0.22)',
   accentMuted: 'rgba(224, 112, 94, 0.66)',
 
   success: '#83AE91',

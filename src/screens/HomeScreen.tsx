@@ -9,9 +9,8 @@ import {usePrayerTimes} from '../hooks/usePrayerTimes';
 import {useCountdown} from '../hooks/useCountdown';
 import {AlertModal} from '../components/AlertModal';
 import {EmptyState} from '../ui/EmptyState';
-import {DayStrip} from '../features/prayer-times/DayStrip';
+import {DayTimeline} from '../features/prayer-times/DayTimeline';
 import {NextPrayerHero} from '../features/prayer-times/NextPrayerHero';
-import {PrayerRows} from '../features/prayer-times/PrayerRows';
 import {findActiveKerahat, isSameDay} from '../domain/prayer';
 import {KERAHAT_LABELS, PRAYER_LABELS} from '../i18n/tr';
 import {useTheme} from '../theme/ThemeProvider';
@@ -281,8 +280,13 @@ export function HomeScreen() {
           <NextPrayerHero nextPrayer={nextPrayer} countdown={countdown} />
         </View>
 
-        <View style={{marginTop: spacing.xl}}>
-          <DayStrip
+        <View style={{marginTop: spacing.xxl}}>
+          {!isSameDay(now, dailyTimes ? dailyTimes.fajr : now) && (
+            <Text variant="label" tone="accent" style={{marginBottom: spacing.md}}>
+              Yarın
+            </Text>
+          )}
+          <DayTimeline
             entries={entries}
             kerahatWindows={kerahatWindows}
             now={now}
@@ -311,14 +315,6 @@ export function HomeScreen() {
           </View>
         )}
 
-        <View style={{marginTop: 36}}>
-          {!isSameDay(now, dailyTimes ? dailyTimes.fajr : now) && (
-            <Text variant="label" tone="accent" style={{marginBottom: spacing.sm}}>
-              Yarın
-            </Text>
-          )}
-          <PrayerRows entries={entries} />
-        </View>
 
         <Text
           variant="label"

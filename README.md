@@ -23,10 +23,12 @@ KalkKıl'ın üç kuralı var:
 
 - **Vakitler** — Diyanet yöntemiyle hesaplanır; imsak, güneş, öğle, ikindi,
   akşam, yatsı.
-- **Gün Şeridi** — Günü yatay bir zaman çizgisi olarak gösterir: vakitler
-  çentik, "şimdi" işaretçi, kerahat aralıkları bant.
-- **Kerahat vakitleri** — Hanefi'ye göre üç kerahat penceresi; gün şeridinde
-  görünür, sıradaki vakit kartında uyarı olarak çıkar.
+- **Gün Çizgisi** — Günü dikey ve **zamanla orantılı** bir eksen olarak
+  gösterir: vakitler düğüm, saatler çentik, kerahat aralıkları ince şerit.
+  "Şimdi" ile sıradaki vakit arasındaki eksen parçası vurgu renginde — kalan
+  süre hem sayıyla hem uzunlukla.
+- **Kerahat vakitleri** — Hanefi'ye göre üç kerahat penceresi; gün çizgisinde
+  şerit olarak görünür, uyarı olarak da çıkar.
 - **Bildirimler** — Her vakit için ayrı aç/kapa; vaktinde veya 5/15/30 dk
   önce. Tam zamanlı alarm, 7 günlük yuvarlanan plan.
 - **Widget** — Ana ekranda sıradaki vakit ve canlı geri sayım. Sayaç
@@ -58,7 +60,7 @@ src/
   services/      Platform adaptörleri: bildirim, konum, depolama, widget köprüsü
   theme/         Palet, tipografi, güneşe göre tema seçimi
   ui/            Text, Divider, EmptyState — ekranlar stil objesi yazmıyor
-  features/      DayStrip, NextPrayerHero, PrayerRows
+  features/      DayTimeline, NextPrayerHero
   screens/       Home, Qibla, Settings
   i18n/          Arayüz metinleri (v1 tek dil)
   hooks/         usePrayerTimes, useCountdown

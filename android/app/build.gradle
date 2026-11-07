@@ -72,6 +72,12 @@ def enableProguardInReleaseBuilds = true
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
 
+// Yayin akisi surum bilgisini etiketten gecer; yerelde varsayilan kalir.
+def envVersionCode = System.getenv("ANDROID_VERSION_CODE")
+def envVersionName = System.getenv("ANDROID_VERSION_NAME")
+def appVersionCode = envVersionCode != null ? Integer.parseInt(envVersionCode) : 1
+def appVersionName = envVersionName != null ? envVersionName : "1.0"
+
 android {
 buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
@@ -81,8 +87,9 @@ buildToolsVersion rootProject.ext.buildToolsVersion
         applicationId "com.kalkkil"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // Sürüm bilgisi yayin akisindan gelir; yerelde varsayilan kalir.
+        versionCode appVersionCode
+        versionName appVersionName
     }
     signingConfigs {
         debug {
@@ -91,15 +98,28 @@ buildToolsVersion rootProject.ext.buildToolsVersion
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+
+        // Release imzasi ortam degiskenlerinden gelir; keystore repoya girmez.
+        // Yerelde bu degiskenler yoksa release build debug anahtariyla imzalanir
+        // (yalnizca gelistirme icin). Yayin bu yolla YAPILMAZ:
+        // .github/workflows/release.yml imzayi apksigner ile dogrular.
+        release {
+            if (System.getenv('ANDROID_KEYSTORE_PATH')) {
+                storeFile file(System.getenv('ANDROID_KEYSTORE_PATH'))
+                storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('ANDROID_KEY_PASSWORD')
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig System.getenv('ANDROID_KEYSTORE_PATH')
+                ? signingConfigs.release
+                : signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }

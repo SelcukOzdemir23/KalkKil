@@ -6,6 +6,7 @@ Reklamsız, çevrimdışı, Türkiye'ye göre doğru namaz vakti uygulaması.
   <img src="docs/screenshots/home-light.png" width="240" alt="Ana ekran, gündüz" />
   <img src="docs/screenshots/home-dark.png" width="240" alt="Ana ekran, akşam" />
   <img src="docs/screenshots/qibla-light.png" width="240" alt="Kıble" />
+  <img src="docs/screenshots/settings-light.png" width="240" alt="Ayarlar" />
 </p>
 
 ## Neden
@@ -34,7 +35,8 @@ KalkKıl'ın üç kuralı var:
 - **Widget** — Ana ekranda sıradaki vakit ve canlı geri sayım. Sayaç
   `Chronometer` ile native akar; arka planda servis çalışmaz, uygulama
   açılmasa da 7 gün doğru kalır.
-- **Kıble** — Manyetometre ile pusula, hizalama titreşimi.
+- **Kıble** — Manyetometre ile pusula: kardinal harfler dik kalır, iğne kıbleyi
+  gösterir, hizalanınca titreşir ve renk döner.
 - **Gün ışığına göre tema** — Gün doğumu–gün batımı arası açık, dışı karanlık.
 
 ## Doğruluk

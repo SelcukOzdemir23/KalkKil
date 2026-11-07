@@ -9,6 +9,7 @@ interface EmptyStateProps {
   body: string;
   actionLabel?: string;
   onAction?: () => void;
+  icon?: React.ReactNode;
 }
 
 /**
@@ -16,7 +17,13 @@ interface EmptyStateProps {
  *
  * Boş ekran bırakmak yerine ne olduğunu ve ne yapılacağını söyler.
  */
-export function EmptyState({title, body, actionLabel, onAction}: EmptyStateProps) {
+export function EmptyState({
+  title,
+  body,
+  actionLabel,
+  onAction,
+  icon,
+}: EmptyStateProps) {
   const {palette, spacing} = useTheme();
 
   return (
@@ -38,7 +45,7 @@ export function EmptyState({title, body, actionLabel, onAction}: EmptyStateProps
           justifyContent: 'center',
           marginBottom: spacing.xl,
         }}>
-        <MapPin size={24} color={palette.accent} />
+        {icon ?? <MapPin size={24} color={palette.accent} />}
       </View>
 
       <Text variant="title" style={{textAlign: 'center'}}>

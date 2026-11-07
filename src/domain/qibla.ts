@@ -59,12 +59,18 @@ export function smoothCompass(
   return (((previousHeading + alpha * diff) % 360) + 360) % 360;
 }
 
-export function bearingToCardinal(degrees: number): string {
-  const directions = ['K', 'KD', 'D', 'GD', 'G', 'GB', 'B', 'KB'];
-  return directions[Math.round(degrees / 45) % 8];
+/** Örn: "Kuzeydoğu" — kısaltma yerine okunur ad. */
+export function bearingToCardinalName(degrees: number): string {
+  const names = [
+    'Kuzey',
+    'Kuzeydoğu',
+    'Doğu',
+    'Güneydoğu',
+    'Güney',
+    'Güneybatı',
+    'Batı',
+    'Kuzeybatı',
+  ];
+  return names[Math.round(degrees / 45) % 8];
 }
 
-/** Örn: "157° GD" */
-export function formatQiblaDirection(degrees: number): string {
-  return `${Math.round(degrees)}° ${bearingToCardinal(degrees)}`;
-}

@@ -69,6 +69,7 @@ gerektiren yerlerde sans kullan.
 - `ui/Text` — tek metin bileşeni. Varyant + ton. Ekranlar ham renk/boyut yazmaz.
 - `ui/Divider` — 1px saç teli.
 - `ui/EmptyState` — boş ekran bırakılmaz; ne olduğunu ve ne yapılacağını söyler.
+- `ui/Chip` — seçilebilir etiket (ör. bildirim zamanlaması).
 - `features/prayer-times/DayTimeline` — imza bileşen. Günü **dikey ve zamanla
   orantılı** bir eksen olarak gösterir. Yatay şerit denendi ve bırakıldı: altı
   etiket sığmadığı için kaydırılıyordu, bu bilgi taşımayan bir hileydi. Dikey
@@ -105,5 +106,5 @@ gerektiren yerlerde sans kullan.
 - Azaltılmış hareket (`prefers-reduced-motion` / Android animasyon ölçeği)
   henüz dinlenmiyor.
 - Yükleme durumu iskelet değil, dönen gösterge.
-- `QiblaScreen` ve `SettingsScreen` hâlâ eski yerleşimde (palet ve tema bağlı,
-  kart yığını korunuyor).
+- Kıble ekranında kadranın altında kalan boşluk, ekran boyuna göre
+  dengelenmiyor; küçük ekranlarda sıkışabilir.

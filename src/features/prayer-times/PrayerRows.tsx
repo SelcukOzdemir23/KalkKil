@@ -50,7 +50,7 @@ export function PrayerRows({entries}: PrayerRowsProps) {
               {/* Vakit adları hep aynı ailede (serif); hiyerarşi renkle kurulur. */}
               <Text
                 variant="headline"
-                tone={isNext ? 'primary' : entry.isPassed ? 'subtle' : 'muted'}>
+                tone={isNext || !entry.isPassed ? 'primary' : 'muted'}>
                 {PRAYER_LABELS[entry.key]}
               </Text>
 
@@ -58,7 +58,7 @@ export function PrayerRows({entries}: PrayerRowsProps) {
 
               <Text
                 variant="time"
-                tone={isNext ? 'accent' : entry.isPassed ? 'subtle' : 'muted'}>
+                tone={isNext ? 'accent' : entry.isPassed ? 'muted' : 'primary'}>
                 {formatTime(entry.time)}
               </Text>
             </View>

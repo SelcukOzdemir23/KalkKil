@@ -136,7 +136,7 @@ export function DayStrip({entries, kerahatWindows, now}: DayStripProps) {
                   }}>
                   <Text
                     variant="label"
-                    tone={isNext ? 'accent' : entry.isPassed ? 'subtle' : 'muted'}
+                    tone={isNext ? 'accent' : 'muted'}
                     numberOfLines={1}>
                     {PRAYER_LABELS[entry.key]}
                   </Text>

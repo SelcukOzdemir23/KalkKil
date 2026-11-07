@@ -264,7 +264,7 @@ export function HomeScreen() {
                 maxWidth: 150,
               }}>
               <MapPin size={12} color={palette.inkSubtle} />
-              <Text variant="label" tone="subtle" numberOfLines={1}>
+              <Text variant="label" tone="muted" numberOfLines={1}>
                 {locationInfo}
               </Text>
             </View>
@@ -322,7 +322,7 @@ export function HomeScreen() {
 
         <Text
           variant="label"
-          tone="subtle"
+          tone="muted"
           style={{marginTop: spacing.xxl, textAlign: 'center'}}>
           Vakitler cihazınızda hesaplanır · Diyanet yöntemi
         </Text>

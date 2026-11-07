@@ -47,8 +47,8 @@ export const lightPalette: Palette = {
   surfaceMuted: '#E8E6DF',
 
   ink: '#15171C',
-  inkMuted: 'rgba(21, 23, 28, 0.58)',
-  inkSubtle: 'rgba(21, 23, 28, 0.36)',
+  inkMuted: 'rgba(21, 23, 28, 0.64)',
+  inkSubtle: 'rgba(21, 23, 28, 0.48)',
 
   hairline: 'rgba(21, 23, 28, 0.13)',
   hairlineStrong: 'rgba(21, 23, 28, 0.24)',
@@ -74,7 +74,7 @@ export const darkPalette: Palette = {
 
   ink: '#EFE9DE',
   inkMuted: 'rgba(239, 233, 222, 0.62)',
-  inkSubtle: 'rgba(239, 233, 222, 0.36)',
+  inkSubtle: 'rgba(239, 233, 222, 0.38)',
 
   hairline: 'rgba(239, 233, 222, 0.13)',
   hairlineStrong: 'rgba(239, 233, 222, 0.24)',

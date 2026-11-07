@@ -57,7 +57,7 @@ export function NextPrayerHero({nextPrayer, countdown}: NextPrayerHeroProps) {
           marginTop: spacing.lg,
         }}>
         <Text variant="numeric">{countdown}</Text>
-        <Text variant="caption" tone="subtle">
+        <Text variant="caption" tone="muted">
           kaldı
         </Text>
       </View>

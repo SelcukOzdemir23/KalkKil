@@ -307,7 +307,7 @@ export function SettingsScreen() {
                   {locationLabel}
                 </AppText>
                 {savedLocation && (
-                  <AppText style={{fontSize: 11, color: palette.inkSubtle, marginTop: 1}}>
+                  <AppText style={{fontSize: 11, color: palette.inkMuted, marginTop: 1}}>
                     Vakitler bu konuma göre hesaplanıyor
                   </AppText>
                 )}

@@ -98,7 +98,9 @@ Keystore üretimi, secret'lar ve etiket akışı: [docs/RELEASE.md](docs/RELEASE
 
 ## Kararlar
 
-Neden böyle yapıldığını (ölçümlerle) tutan kayıt: [docs/DECISIONS.md](docs/DECISIONS.md).
+- [docs/DESIGN.md](docs/DESIGN.md) — görsel kimlik: palet, tipografi, bileşen kuralları,
+  sevk öncesi kontrol listesi.
+- [docs/DECISIONS.md](docs/DECISIONS.md) — neden böyle yapıldığı, ölçümlerle.
 
 ## Lisans
 

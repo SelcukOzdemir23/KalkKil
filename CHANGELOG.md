@@ -13,8 +13,11 @@ dağıtılacak.
 - Diyanet yöntemiyle cihazda hesaplanan vakitler; kerahat pencereleri.
 - 1076 ilçelik konum listesi. Koordinatlar Diyanet'in yayınladığı saatlerden
   en küçük karelerle çözüldü; eğitim penceresinde ±1 dk, pencere dışında ±2 dk.
-- Üç adımlı onboarding: karşılama, ilçe seçimi (GPS önerisi + arama), bildirim
-  izni.
+- Tek ekranlık onboarding: GPS kendiliğinden ilçeyi önerir ve o ilçenin bugünkü
+  vakitlerini gösterir; tek dokunuşla başlanır. Ne GPS ne bildirim izni akışı
+  bekletir.
+- GPS önerisindeki sistematik enlem kayması düzeltildi (12 gerçek noktada
+  doğru il: 1/12 → 10/12).
 - **Gün Çizgisi**: günü dikey, zamanla orantılı eksen olarak gösteren ana ekran.
 - Bildirimler: vakit bazında aç/kapa, 5/15/30 dk önce, 7 günlük yuvarlanan plan.
 - Android widget: `Chronometer` ile canlı geri sayım, `AlarmManager` ile vakit
@@ -22,7 +25,7 @@ dağıtılacak.
 - Kıble pusulası; hizalanma titreşimi.
 - Gün doğumu/gün batımına göre otomatik açık-karanlık tema.
 - Tasarım sistemi: palet, tipografi ölçeği, `ui/` primitifleri, `docs/DESIGN.md`.
-- Test altyapısı ve CI: 73 test, typecheck, lint.
+- Test altyapısı ve CI: 84 test, typecheck, lint.
 - GitHub Release iş akışı; imza doğrulaması (`apksigner`).
 
 ### Kaldırıldı

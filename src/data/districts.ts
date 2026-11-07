@@ -1140,6 +1140,14 @@ export function searchDistricts(query: string, limit = 20): District[] {
   return [...starts, ...contains].slice(0, limit);
 }
 
+/**
+ * Koordinatlar Diyanet'in referans noktası; ölçümde bunlar gerçek coğrafi
+ * merkezlerin yaklaşık 0.24° güneyine düşüyor (Diyanet'in bölgesel temkin
+ * payı enlem sapmasına dönüşüyor). GPS noktası bu kayma kadar güneye
+ * çekilip öyle karşılaştırılıyor, yoksa öneri komşu ilçeye kayıyor.
+ */
+const REFERENCE_LAT_BIAS = 0.24;
+
 /** En yakın ilçe — GPS izni verildiğinde öneri olarak kullanılır. */
 export function nearestDistrict(
   latitude: number,
@@ -1147,12 +1155,23 @@ export function nearestDistrict(
 ): District | null {
   let best: District | null = null;
   let bestDistance = Infinity;
+  const targetLat = latitude - REFERENCE_LAT_BIAS;
+
+  // Aynı il merkezine bağlı ilçeler birebir aynı koordinatta olabiliyor
+  // (approximate kayıtlar). Beraberlikte il merkezini yeğle: "İSTANBUL"
+  // önerisi, rastgele bir ilçe adından daha dürüst.
+  const EPSILON = 1e-4;
 
   for (const district of DISTRICTS) {
-    const dLat = district.latitude - latitude;
+    const dLat = district.latitude - targetLat;
     const dLon = (district.longitude - longitude) * Math.cos((latitude * Math.PI) / 180);
     const distance = dLat * dLat + dLon * dLon;
-    if (distance < bestDistance) {
+
+    const isTie = distance <= bestDistance + EPSILON;
+    const isCenter = district.name === district.province;
+    const bestIsCenter = best !== null && best.name === best.province;
+
+    if (distance < bestDistance - EPSILON || (isTie && isCenter && !bestIsCenter)) {
       bestDistance = distance;
       best = district;
     }

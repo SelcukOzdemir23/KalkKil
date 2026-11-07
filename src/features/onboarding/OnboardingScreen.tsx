@@ -1,52 +1,81 @@
-import React, {useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   View,
   TextInput,
   Pressable,
   ScrollView,
+  Switch,
   ActivityIndicator,
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {Check, Navigation} from 'lucide-react-native';
+import {Navigation} from 'lucide-react-native';
 import {District, searchDistricts} from '../../data/districts';
+import {
+  buildEntries,
+  calculateDailyTimes,
+  findNextEntry,
+} from '../../domain/prayer';
+import {PRAYER_LABELS} from '../../i18n/tr';
 import {detectDistrict} from '../../services/location';
 import {requestNotificationPermission} from '../../services/notifications';
 import {
   saveLocation,
   setOnboardingCompleted,
   setLocationPermissionGranted,
-  getLocation,
 } from '../../services/storage';
 import {useTheme} from '../../theme/ThemeProvider';
 import {Button} from '../../ui/Button';
+import {Divider} from '../../ui/Divider';
 import {Text} from '../../ui/Text';
 
 interface OnboardingScreenProps {
   onFinish: () => void;
 }
 
+type Phase = 'detecting' | 'ready' | 'browsing';
+
 /**
- * İlk açılış akışı: karşılama → ilçe → bildirim.
+ * Tek ekranlık ilk açılış.
  *
- * Konum burada seçilir; ana ekran artık GPS izni istemez. Vakitler seçilen
- * ilçenin Diyanet referans noktasından hesaplanır.
+ * Önceki sürüm üç adımlıydı (karşılama → ilçe → bildirim) ve her adımda
+ * "Devam" istiyordu; ilk açılış için gereğinden yavaştı. Şimdi GPS kendiliğinden
+ * denenir, ilçe bulunursa doğrudan seçili gelir ve tek dokunuşla başlanır.
+ *
+ * İki yerde bekleme yok: GPS'i beklemek zorunlu değil (kullanıcı hemen kendi
+ * seçebilir) ve bildirim izni "Başla"yı bloklamaz.
+ *
+ * Konum burada seçilir; ana ekran artık GPS izni istemez.
  */
 export function OnboardingScreen({onFinish}: OnboardingScreenProps) {
   const {palette, spacing} = useTheme();
   const insets = useSafeAreaInsets();
-  const [step, setStep] = useState(0);
+  const [phase, setPhase] = useState<Phase>('detecting');
+  const [selected, setSelected] = useState<District | null>(null);
   const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState<District | null>(
-    () => null,
-  );
-  const [locating, setLocating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [notificationsOn, setNotificationsOn] = useState(false);
-  const [askingPermission, setAskingPermission] = useState(false);
+  const [notifications, setNotifications] = useState(true);
+  const [starting, setStarting] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  /** Kullanıcı elle seçime geçtiyse GPS sonucu artık uygulanmaz. */
+  const userChose = useRef(false);
 
   const results = searchDistricts(query, 12);
 
-  const choose = (district: District) => {
+  /** Seçilen ilçenin bugünkü vakitleri — onboarding'in "kanıt" bölümü. */
+  const entries = useMemo(() => {
+    if (!selected) {
+      return null;
+    }
+    const now = new Date();
+    return buildEntries(
+      calculateDailyTimes(selected.latitude, selected.longitude, now),
+      now,
+    );
+  }, [selected]);
+
+  const nextPrayer = entries ? findNextEntry(entries) : null;
+
+  const choose = useCallback((district: District) => {
+    userChose.current = true;
     saveLocation(
       district.latitude,
       district.longitude,
@@ -55,223 +84,261 @@ export function OnboardingScreen({onFinish}: OnboardingScreenProps) {
     );
     setLocationPermissionGranted(true);
     setSelected(district);
-    setError(null);
-  };
+    setPhase('ready');
+    setQuery('');
+  }, []);
 
-  const handleGps = async () => {
-    setLocating(true);
-    setError(null);
-    const result = await detectDistrict();
-    if (result.success) {
-      choose(result.district);
-    } else {
-      setError(result.error);
+  // Açılışta izin isteyip en yakın ilçeyi kendiliğinden dene.
+  useEffect(() => {
+    let alive = true;
+
+    detectDistrict().then(result => {
+      if (!alive || userChose.current) {
+        return;
+      }
+      if (result.success) {
+        choose(result.district);
+      } else {
+        setPhase('browsing');
+        setNote('Konum bulunamadı — ilçenizi arayarak seçin.');
+      }
+    });
+
+    return () => {
+      alive = false;
+    };
+  }, [choose]);
+
+  /**
+   * İzin isteğini bekleme.
+   *
+   * Önceki sürüm `await requestNotificationPermission()` yaptığı için sistem
+   * diyaloğu kapanana kadar "Başla" dönüyordu; ikinci bir dokunuş gibi
+   * hissediliyordu. İzin diyaloğu JS'ten bağımsız olarak ekranda kaldığı için
+   * burada beklemek gereksiz: istek başlatılır, geçiş hemen yapılır.
+   */
+  const start = () => {
+    setStarting(true);
+    if (notifications) {
+      requestNotificationPermission().catch(() => {});
     }
-    setLocating(false);
-  };
-
-  const handleEnableNotifications = async () => {
-    setAskingPermission(true);
-    const granted = await requestNotificationPermission();
-    setNotificationsOn(granted);
-    setAskingPermission(false);
-  };
-
-  const finish = () => {
     setOnboardingCompleted();
     onFinish();
   };
-
-  const steps = [
-    // 1 — Karşılama
-    <View key="welcome" style={{flex: 1, justifyContent: 'center'}}>
-      <Text variant="display">KalkKıl</Text>
-      <Text variant="body" tone="muted" style={{marginTop: spacing.lg, maxWidth: 300}}>
-        Reklamsız namaz vakti. Vakitler cihazınızda hesaplanır, konumunuz hiçbir
-        sunucuya gönderilmez.
-      </Text>
-    </View>,
-
-    // 2 — İlçe
-    <View key="location" style={{flex: 1}}>
-      <Text variant="title">Nerede namaz kılıyorsunuz?</Text>
-      <Text variant="caption" tone="muted" style={{marginTop: spacing.sm}}>
-        Vakitler ilçenin Diyanet referans noktasından hesaplanır. Konumunuz
-        cihazınızda kalır.
-      </Text>
-
-      <Pressable
-        onPress={handleGps}
-        disabled={locating}
-        style={({pressed}) => ({
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.sm,
-          marginTop: spacing.xl,
-          paddingVertical: spacing.md,
-          paddingHorizontal: spacing.lg,
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: palette.hairlineStrong,
-          opacity: locating ? 0.5 : pressed ? 0.6 : 1,
-        })}>
-        {locating ? (
-          <ActivityIndicator size="small" color={palette.accent} />
-        ) : (
-          <Navigation size={15} color={palette.accent} />
-        )}
-        <Text variant="label" tone="accent">
-          GPS ile bul
-        </Text>
-      </Pressable>
-
-      <TextInput
-        value={query}
-        onChangeText={setQuery}
-        placeholder="İlçe ara (ör. Kadıköy)"
-        placeholderTextColor={palette.inkSubtle}
-        autoCorrect={false}
-        style={{
-          marginTop: spacing.lg,
-          paddingVertical: spacing.md,
-          borderBottomWidth: 1,
-          borderBottomColor: palette.hairlineStrong,
-          color: palette.ink,
-          fontSize: 16,
-        }}
-      />
-
-      {error && (
-        <Text variant="caption" tone="accent" style={{marginTop: spacing.md}}>
-          {error}
-        </Text>
-      )}
-
-      <ScrollView
-        style={{flex: 1, marginTop: spacing.md}}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
-        {results.map(district => {
-          const isSelected =
-            selected?.name === district.name &&
-            selected?.province === district.province;
-          return (
-            <Pressable
-              key={`${district.province}-${district.name}`}
-              onPress={() => choose(district)}
-              style={({pressed}) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: spacing.sm,
-                paddingVertical: spacing.md,
-                borderBottomWidth: 1,
-                borderBottomColor: palette.hairline,
-                opacity: pressed ? 0.6 : 1,
-              })}>
-              <View style={{flex: 1}}>
-                <Text variant="body">{district.name}</Text>
-                {district.name !== district.province && (
-                  <Text variant="caption" tone="muted">
-                    {district.province}
-                  </Text>
-                )}
-              </View>
-              {isSelected && <Check size={16} color={palette.accent} />}
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-    </View>,
-
-    // 3 — Bildirim
-    <View key="notifications" style={{flex: 1}}>
-      <Text variant="title">Vakitten önce haber verelim mi?</Text>
-      <Text variant="caption" tone="muted" style={{marginTop: spacing.sm}}>
-        Seçtiğiniz vakitler için bildirim gönderilir. İstediğiniz zaman
-        Ayarlar'dan kapatabilirsiniz.
-      </Text>
-
-      <View style={{marginTop: spacing.xl}}>
-        {notificationsOn ? (
-          <View style={{flexDirection: 'row', alignItems: 'center', gap: spacing.sm}}>
-            <Check size={16} color={palette.success} />
-            <Text variant="body" tone="success">
-              Bildirimler açık
-            </Text>
-          </View>
-        ) : (
-          <Button
-            label="Bildirimleri aç"
-            variant="ghost"
-            onPress={handleEnableNotifications}
-            busy={askingPermission}
-          />
-        )}
-      </View>
-
-      <View style={{flex: 1}} />
-
-      <Text variant="caption" tone="muted" style={{marginBottom: spacing.lg}}>
-        Diyanet yöntemi ·{' '}
-        {getLocation()?.city ?? ''}
-        {getLocation()?.district && getLocation()?.district !== getLocation()?.city
-          ? ` / ${getLocation()?.district}`
-          : ''}
-      </Text>
-    </View>,
-  ];
-
-  const isLast = step === steps.length - 1;
-  // Son adım her zaman devam edebilir; ilçe adımı seçim ister.
-  const canContinue = step === 0 || step === steps.length - 1 || selected !== null;
 
   return (
     <View
       style={{
         flex: 1,
         backgroundColor: palette.background,
-        paddingTop: insets.top + spacing.xl,
-        paddingBottom: insets.bottom + spacing.xl,
+        paddingTop: insets.top + spacing.xxl,
+        paddingBottom: insets.bottom + spacing.lg,
         paddingHorizontal: 26,
       }}>
-      <View style={{flex: 1}}>{steps[step]}</View>
+      <Text variant="label" tone="accent">
+        KalkKıl
+      </Text>
+      <Text variant="title" style={{marginTop: spacing.md, maxWidth: 320}}>
+        Nerede namaz kılıyorsunuz?
+      </Text>
+      <Text variant="caption" tone="muted" style={{marginTop: spacing.sm}}>
+        Vakitler ilçenin Diyanet referans noktasından hesaplanır. Konumunuz
+        cihazınızdan çıkmaz.
+      </Text>
 
-      {/* Adım noktaları */}
+      <Divider style={{marginTop: spacing.xl}} />
+
+      {/* Konum bloğu — liste açılınca üstten akar, kalan boşluk alta düşer. */}
+      <View
+        style={{
+          flex: phase === 'browsing' ? 1 : 0,
+          marginTop: spacing.lg,
+        }}>
+        {phase === 'detecting' && (
+          <View>
+            <View
+              style={{flexDirection: 'row', alignItems: 'center', gap: spacing.sm}}>
+              <ActivityIndicator size="small" color={palette.accent} />
+              <Text variant="body" tone="muted">
+                Konumunuz bulunuyor…
+              </Text>
+            </View>
+            {/* GPS'i beklemek zorunlu değil: kullanıcı hemen kendisi seçebilir. */}
+            <Pressable
+              onPress={() => {
+                userChose.current = true;
+                setPhase('browsing');
+              }}
+              style={({pressed}) => ({
+                opacity: pressed ? 0.6 : 1,
+                marginTop: spacing.md,
+              })}>
+              <Text variant="label" tone="accent">
+                İlçeyi kendim seçeceğim
+              </Text>
+            </Pressable>
+          </View>
+        )}
+
+        {phase === 'ready' && selected && (
+          <View>
+            {/* Tek satır dilbilgisi: ad solda, eylem sağda. */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'baseline',
+                justifyContent: 'space-between',
+              }}>
+              <Text variant="headline">{selected.name}</Text>
+              <Pressable
+                onPress={() => setPhase('browsing')}
+                style={({pressed}) => ({opacity: pressed ? 0.6 : 1})}>
+                <Text variant="label" tone="accent">
+                  Değiştir
+                </Text>
+              </Pressable>
+            </View>
+            <Text variant="caption" tone="muted" style={{marginTop: 2}}>
+              {selected.name !== selected.province
+                ? selected.province
+                : 'İl merkezi'}
+              {selected.approximate ? ' · yaklaşık' : ''}
+            </Text>
+          </View>
+        )}
+
+        {/* Günün tamamı — seçim doğruysa vakitler de doğru. İlk ekranda
+            boşluk yerine ürünün kendisi duruyor. */}
+        {phase === 'ready' && entries && (
+          <View style={{marginTop: spacing.lg}}>
+            <Divider />
+            {entries.map(entry => {
+              const passed = entry.isPassed;
+              const isNext = entry.key === nextPrayer?.key;
+              return (
+                <View key={entry.key}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'baseline',
+                      justifyContent: 'space-between',
+                    }}>
+                    <Text
+                      variant="body"
+                      tone={isNext ? 'accent' : passed ? 'subtle' : 'primary'}>
+                      {PRAYER_LABELS[entry.key]}
+                    </Text>
+                    <Text
+                      variant="time"
+                      tone={isNext ? 'accent' : passed ? 'subtle' : 'primary'}>
+                      {formatClock(entry.time)}
+                    </Text>
+                  </View>
+                  <Divider style={{marginTop: 8, marginBottom: 8}} />
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        {phase === 'browsing' && (
+          <View style={{flex: 1}}>
+            {note && (
+              <Text
+                variant="caption"
+                tone="muted"
+                style={{marginBottom: spacing.sm}}>
+                {note}
+              </Text>
+            )}
+            <View
+              style={{flexDirection: 'row', alignItems: 'center', gap: spacing.sm}}>
+              <Navigation size={14} color={palette.accent} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="İlçe ara (ör. Kadıköy)"
+                placeholderTextColor={palette.inkSubtle}
+                autoCorrect={false}
+                autoFocus
+                style={{
+                  flex: 1,
+                  paddingVertical: spacing.sm,
+                  borderBottomWidth: 1,
+                  borderBottomColor: palette.hairlineStrong,
+                  color: palette.ink,
+                  fontSize: 16,
+                }}
+              />
+            </View>
+            <ScrollView
+              style={{marginTop: spacing.md}}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}>
+              {results.map(district => (
+                <View key={`${district.province}-${district.name}`}>
+                  <Pressable
+                    onPress={() => choose(district)}
+                    style={({pressed}) => ({
+                      paddingVertical: spacing.md,
+                      opacity: pressed ? 0.6 : 1,
+                    })}>
+                    <Text variant="body">{district.name}</Text>
+                    {district.name !== district.province && (
+                      <Text variant="caption" tone="muted">
+                        {district.province}
+                      </Text>
+                    )}
+                  </Pressable>
+                  <Divider />
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+      </View>
+
+      {/* Seçim hazırken kalan boşluk buraya düşer; eylemler alta yapışır. */}
+      <View style={{flex: phase === 'browsing' ? 0 : 1}} />
+
+      {/* Bildirim — ayrı adım değil, tek satır */}
       <View
         style={{
           flexDirection: 'row',
-          justifyContent: 'center',
-          gap: 6,
-          marginBottom: spacing.xl,
+          alignItems: 'center',
+          gap: spacing.md,
+          paddingVertical: spacing.md,
         }}>
-        {steps.map((_, index) => (
-          <View
-            key={index}
-            style={{
-              width: index === step ? 18 : 6,
-              height: 6,
-              borderRadius: 3,
-              backgroundColor:
-                index === step ? palette.accent : palette.hairlineStrong,
-            }}
-          />
-        ))}
+        <View style={{flex: 1}}>
+          <Text variant="body">Vakitten önce bildir</Text>
+          <Text variant="caption" tone="muted" style={{marginTop: 2}}>
+            İstediğiniz zaman kapatabilirsiniz
+          </Text>
+        </View>
+        <Switch
+          value={notifications}
+          onValueChange={setNotifications}
+          trackColor={{false: palette.hairline, true: palette.accentSoft}}
+          thumbColor={notifications ? palette.accent : palette.inkSubtle}
+        />
       </View>
 
       <Button
-        label={isLast ? 'Vakitleri göster' : 'Devam'}
-        onPress={() => (isLast ? finish() : setStep(step + 1))}
-        disabled={!canContinue}
+        label="Başla"
+        onPress={start}
+        busy={starting}
+        disabled={!selected || phase === 'detecting'}
+        style={{marginTop: spacing.md}}
       />
-
-      {step === 1 && (selected === null ? (
-        <Text
-          variant="caption"
-          tone="muted"
-          style={{textAlign: 'center', marginTop: spacing.sm}}>
-          Devam etmek için bir ilçe seçin
-        </Text>
-      ) : null)}
     </View>
+  );
+}
+
+/** SS:DD — onboarding'de tek bir saat gösterilir, tam saat biçimi yeter. */
+function formatClock(date: Date): string {
+  return (
+    String(date.getHours()).padStart(2, '0') +
+    ':' +
+    String(date.getMinutes()).padStart(2, '0')
   );
 }

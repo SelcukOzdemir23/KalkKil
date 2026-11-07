@@ -117,8 +117,9 @@ düğümleri yutan geniş bant denemesi bırakıldı.
 Zamanlar `tabular-nums`: geri sayım akarken metin zıplamaz.
 
 **Bilinen geçiş borcu.** `QiblaScreen` ve `SettingsScreen` yeni temaya ve
-palete bağlandı ama yerleşimleri eski; `AppText` (tipografi yardımcısı) yalnızca
-bu iki ekran için duruyor. İkisi yeniden tasarlandığında `AppText` silinecek.
+palete bağlandı ve yeniden tasarlandı; eski `AppText` yardımcısı ve `Surface`
+kartı bu geçişte silindi. `ui/` kümesi artık `Text`, `Divider`, `Chip`,
+`Button`, `EmptyState`.
 
 ---
 
@@ -137,6 +138,32 @@ kullanılır; simge ailesi tek.
 
 **Boş ve hata durumları.** Boş ekran bırakılmaz: `ui/EmptyState` ne olduğunu ve
 ne yapılacağını söyler.
+
+---
+
+## 8. İlk açılış: tek ekran, kanıt olarak vakitler
+
+**Sorun.** Üç adımlı akış (karşılama → ilçe → bildirim) hem yavaş hem boştu:
+her adım "Devam" istiyordu, ilk ekran bilgi taşımıyordu ve GPS beklerken
+ekran kilitleniyordu.
+
+**Karar.** Onboarding tek ekran. GPS kendiliğinden denenir; kullanıcı beklemez
+("İlçeyi kendim seçeceğim" her an açık, geç dönen GPS sonucu kullanıcının
+seçimini ezmez). Bildirim izni `await` edilmez: istek başlatılır, geçiş hemen
+yapılır. Seçim yapılır yapılmaz o ilçenin bugünkü altı vakti listelenir —
+kurulumun ortasında ürünün çıktısı görünür.
+
+**GPS önerisindeki sistematik kayma.** Çözülen koordinatlar Diyanet'in referans
+noktası; coğrafi merkezlerin ~0.24° güneyine düşüyorlar. En yakın ilçe
+araması bu kaymayı düzeltmezse İstanbul'un tamamı SULTANGAZİ'ye, Çankaya
+KAHRAMANKAZAN'a düşüyordu. Ölçülen GPS noktası aynı kayma kadar güneye
+çekilerek karşılaştırılıyor (`REFERENCE_LAT_BIAS`): 12 gerçek noktada doğru il
+sayısı 1/12'den 10/12'ye çıktı; kalan ikisi aynı ilde komşu ilçe.
+
+**İlçe adı yerine il merkezi.** Diyanet'in yayınlamadığı ilçeler (Kadıköy
+dahil) il merkezi koordinatına bağlı. Aynı koordinatı paylaşan kayıtlarda
+beraberliği il merkezine vermek, rastgele bir ilçe adı göstermekten dürüst:
+kullanıcı "İSTANBUL" görür ve gerekirse "Değiştir" ile kendi ilçesini seçer.
 
 ---
 

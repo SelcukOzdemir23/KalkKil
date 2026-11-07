@@ -200,6 +200,35 @@ describe('ilçe verisi', () => {
   it('en yakın ilçeyi bulur', () => {
     expect(nearestDistrict(41.0, 29.0)?.province).toBe('İSTANBUL');
   });
+
+  /**
+   * GPS önerisi, gerçek cihaz noktalarında doğru ili vermeli.
+   *
+   * Çözülen koordinatlar Diyanet'in referans noktası; gerçek coğrafi
+   * merkezlerin ~0.24° kuzeyinde kalıyorlar. `nearestDistrict` ölçülen GPS
+   * noktasını aynı kayma kadar güneye çekip karşılaştırıyor. Bu düzeltme
+   * olmadan İstanbul'un tamamı SULTANGAZİ'ye, Ankara ÇANKAYA KAHRAMANKAZAN'a
+   * düşüyordu (yalnızca 1/12 nokta doğruydu); düzeltmeyle 10/12.
+   */
+  const GPS_POINTS: Array<[string, number, number]> = [
+    ['İSTANBUL', 41.0186, 28.9395], // Fatih, tarihi yarımada
+    ['İSTANBUL', 40.9903, 29.0303], // Kadıköy
+    ['İSTANBUL', 41.0422, 29.0094], // Beşiktaş
+    ['İSTANBUL', 41.0265, 29.015], // Üsküdar
+    ['ANKARA', 39.9208, 32.8541], // Çankaya
+    ['GAZİANTEP', 37.05, 37.32], // Şahinbey
+    ['BURSA', 40.212, 28.94], // Nilüfer
+    ['KAYSERİ', 38.73, 35.49], // Melikgazi
+    ['ADANA', 36.99, 35.32], // Seyhan
+    ['TRABZON', 41.002, 39.716], // Merkez
+    ['ERZURUM', 39.905, 41.27], // Yakutiye
+  ];
+
+  for (const [province, latitude, longitude] of GPS_POINTS) {
+    it('GPS ' + province + ' (' + latitude + ', ' + longitude + ') doğru ili verir', () => {
+      expect(nearestDistrict(latitude, longitude)?.province).toBe(province);
+    });
+  }
 });
 
 describe('Diyanet uyumu (gönderilen koordinatlarla)', () => {

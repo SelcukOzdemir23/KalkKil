@@ -58,13 +58,14 @@ export function HomeScreen() {
     setAlertState(prev => ({...prev, visible: false}));
   }, []);
 
-  // Konum onboarding'de seçilir; burada yalnızca okunur.
+  // Konum onboarding'de seçilir; burada yalnızca okunur. Bildirim izni de
+  // onboarding'de bir kez istenir — her açılışta tekrar sormak, izni reddetmiş
+  // kullanıcıya ana ekranda sürekli diyalog göstermek demek.
   useEffect(() => {
     const cached = getLocation();
     if (cached) {
       setLocationInfo(getLocationLabel());
     }
-    requestNotificationPermission().catch(() => {});
     setLocationLoading(false);
   }, []);
 
@@ -181,12 +182,15 @@ export function HomeScreen() {
             justifyContent: 'space-between',
             gap: spacing.md,
           }}>
+          {/* Almanak sayfası gibi: selamlama küçük, tarih başlık.
+              "İyi günler" tek başına başlık olunca jenerik bir mobil klişe
+              oluyordu; burada tarih taşıyıcı, selamlama üst satır. */}
           <View style={{flex: 1}}>
             <Text variant="label" tone="accent">
-              {dateStr}
+              {getGreeting()}
             </Text>
             <Text variant="title" style={{marginTop: spacing.xs}}>
-              {getGreeting()}
+              {dateStr}
             </Text>
           </View>
 

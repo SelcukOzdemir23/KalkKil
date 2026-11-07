@@ -78,6 +78,21 @@ gerektiren yerlerde sans kullan.
   (vurgu rengi) → vakit düğümleri.
 - İkonlar `lucide-react-native`, tek aile, `strokeWidth` 1.7–2.4.
 
+## İlk açılış
+
+Onboarding tek ekrandır. Üç adımlı akış (karşılama → ilçe → bildirim) iki
+nedenle bırakıldı: her adım bir "Devam" dokunuşu istiyordu ve ilk ekran
+bilgi taşımıyordu.
+
+- **Bekleme yok.** GPS kendiliğinden denenir ama beklenmez; "İlçeyi kendim
+  seçeceğim" her an açık. Bildirim izni "Başla"yı bloklamaz — diyalog JS'ten
+  bağımsız ekranda kalır, geçiş hemen yapılır.
+- **Kanıt, soru değil.** Seçim yapılır yapılmaz o ilçenin bugünkü altı vakti
+  saç teli satırlarla listelenir, sıradaki vakit vurgu renginde. Kullanıcı
+  kurulumu bitirmeden ürünün çıktısını görür.
+- **Tek satır dilbilgisi.** "İSTANBUL · Değiştir" aynı hizada; seçim değişikliği
+  ayrı bir düğme değil.
+
 ## Hareket
 
 - Sadece `transform` ve `opacity`.

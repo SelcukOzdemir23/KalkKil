@@ -119,7 +119,12 @@ export function getLocation(): {latitude: number; longitude: number; city?: stri
 export function getLocationLabel(): string {
   const loc = getLocation();
   if (!loc) return 'Konum ayarlanmadı';
-  if (loc.city && loc.district) return `${loc.city}, ${loc.district}`;
+  // İl merkezi seçildiğinde il ve ilçe adı aynı oluyor; "İSTANBUL, İSTANBUL"
+  // yazmak yerine tek ad yeter.
+  if (loc.city && loc.district && loc.district !== loc.city) {
+    return `${loc.city}, ${loc.district}`;
+  }
+  if (loc.district) return loc.district;
   if (loc.city) return loc.city;
   return 'Kayıtlı konum';
 }
